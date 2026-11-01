@@ -1,0 +1,22 @@
+[Unit]
+Description=Quantified Cognition main-branch verification on Silentworker
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /opt/quantified-cognition-tests/poll.py
+TimeoutStartSec=50min
+UMask=0022
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths=/var/lib/quantified-cognition-tests
+MemoryMax=256M
+CPUQuota=25%
+Nice=15

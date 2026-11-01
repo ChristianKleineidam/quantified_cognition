@@ -175,6 +175,11 @@ versions and sanitized errors, rather than your collection, CSV or health data.
 
 ## Development
 
+Automated verification runs directly on [Silentworker](docs/SILENTWORKER.md).
+This project does not use GitHub Actions. New commits on `main` run the test
+suites, statistical regression gates, lint and package checks in an isolated
+executor; unchanged commits reuse their recorded result.
+
 For release preparation, use the [beta checklist](docs/BETA_CHECKLIST.md).
 The hosted service has [request/storage quotas and private monitoring](docs/BACKEND_OPERATIONS.md);
 Oura, Google Health and research uploads remain disabled.
