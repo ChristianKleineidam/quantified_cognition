@@ -1,0 +1,27 @@
+.venv/
+.venv-*/
+.reference/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+dist/
+*.anki2*
+*.png
+.env
+.env.*
+!.env.example
+node_modules/
+supabase/.temp/
+supabase/.branches/
+
+# Local exports, profile databases and generated packages.
+*.csv
+*.tsv
+*.sqlite*
+*.db
+*.apkg
+*.colpkg
+*.ankiaddon
+*.log
+.coverage
+htmlcov/

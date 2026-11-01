@@ -1,0 +1,32 @@
+{
+  "project_name": "anki-quantified-self",
+  "project_ref": "wfjlzecckihsgcvauqwt",
+  "organization_name": "Tempo",
+  "organization_id": "ijyclgcdzvwvjokydplg",
+  "region": "eu-central-1",
+  "service_url": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service",
+  "dashboard_url": "https://supabase.com/dashboard/project/wfjlzecckihsgcvauqwt",
+  "environment": {
+    "OURA_ENABLED": "false",
+    "GOOGLE_HEALTH_ENABLED": "false",
+    "RESEARCH_ENABLED": "false",
+    "SERVICE_URL": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service",
+    "RESEARCH_NOTICE_VERSION": "research-sharing-v5",
+    "RESEARCH_NOTICE_HASH": "02f224caafde55625e4f103bf0b1ab448816d93237c927c39aa0dafb7e6ec753"
+  },
+  "policy_published": false,
+  "oura_approval_recorded": false,
+  "google_health_approval_recorded": false,
+  "production_access_enabled": false,
+  "verified_at_utc": "2026-10-26T23:15:43Z",
+  "function_version": 9,
+  "migration_version": "20261026231031",
+  "operations_version": 1,
+  "monitor_job": "qs-operations-monitor",
+  "monitor_interval_minutes": 5,
+  "monitor_expected_features_disabled": true,
+  "operator_notifications_configured": false,
+  "desktop_beta_recheck_date": "2026-10-30",
+  "project_status_at_desktop_recheck": "INACTIVE",
+  "live_recheck_available": false
+}

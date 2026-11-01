@@ -1,0 +1,1456 @@
+{
+  "synthetic_only": true,
+  "release": "0.17.0",
+  "memory_method": 5,
+  "insights_method": 5,
+  "baseline": {
+    "formation": {
+      "three_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1178,
+        "coverage": 0.7853333333333333,
+        "monte_carlo_95": [
+          0.7638394360662494,
+          0.8053694486992738
+        ],
+        "bias": -0.4746666666666844,
+        "mean_width": 42.292761814978476,
+        "false_direction": 0.21466666666666667
+      },
+      "five_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1287,
+        "coverage": 0.858,
+        "monte_carlo_95": [
+          0.83941999482939,
+          0.874750965729222
+        ],
+        "bias": 0.06222222222222551,
+        "mean_width": 35.03350132838086,
+        "false_direction": 0.142
+      },
+      "twelve_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1362,
+        "coverage": 0.908,
+        "monte_carlo_95": [
+          0.8923125834071463,
+          0.9216029247155179
+        ],
+        "bias": 0.1411111111111305,
+        "mean_width": 24.21308570205013,
+        "false_direction": 0.092
+      },
+      "many_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1398,
+        "coverage": 0.932,
+        "monte_carlo_95": [
+          0.918124861064725,
+          0.9436680298886839
+        ],
+        "bias": 0.006666666666686401,
+        "mean_width": 14.86535103624849,
+        "false_direction": 0.068
+      },
+      "dominant_day": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 438,
+        "coverage": 0.292,
+        "monte_carlo_95": [
+          0.26954450850308925,
+          0.3155181736304546
+        ],
+        "bias": -0.00933333333338691,
+        "mean_width": 16.85420233682948,
+        "false_direction": 0.708
+      },
+      "unequal_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1085,
+        "coverage": 0.7233333333333334,
+        "monte_carlo_95": [
+          0.7001455159423425,
+          0.7453801298437562
+        ],
+        "bias": 0.2415555555555181,
+        "mean_width": 33.231359254000274,
+        "false_direction": 0.27666666666666667
+      }
+    },
+    "phase": {
+      "iid_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 289,
+          "coverage": 0.9633333333333334,
+          "monte_carlo_95": [
+            0.9355455130036123,
+            0.9794049085318193
+          ],
+          "bias": 0.009459494562507609,
+          "mean_width": 0.6846092024026574,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": 0.025759154590984323,
+          "mean_width": 0.8209836895675484,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 286,
+          "coverage": 0.9533333333333334,
+          "monte_carlo_95": [
+            0.9232019646862172,
+            0.9720013254491692
+          ],
+          "bias": -0.016299660028476604,
+          "mean_width": 1.064294531528344,
+          "false_direction": null
+        }
+      },
+      "total_only_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 287,
+          "coverage": 0.9566666666666667,
+          "monte_carlo_95": [
+            0.927281870871939,
+            0.9745037963967957
+          ],
+          "bias": 0.00945949456250764,
+          "mean_width": 0.6842352171175284,
+          "false_direction": 0.043333333333333335
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 283,
+          "coverage": 0.9433333333333334,
+          "monte_carlo_95": [
+            0.9111333346485289,
+            0.9643228240868122
+          ],
+          "bias": 0.02575915459098433,
+          "mean_width": 0.821621207293785,
+          "false_direction": 0.056666666666666664
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 283,
+          "coverage": 0.9433333333333334,
+          "monte_carlo_95": [
+            0.9111333346485289,
+            0.9643228240868122
+          ],
+          "bias": -0.016299660028476694,
+          "mean_width": 1.0639097602124719,
+          "false_direction": 0.056666666666666664
+        }
+      },
+      "serial_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 289,
+          "coverage": 0.9633333333333334,
+          "monte_carlo_95": [
+            0.9355455130036123,
+            0.9794049085318193
+          ],
+          "bias": -0.012411000859666621,
+          "mean_width": 1.029921039236358,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 280,
+          "coverage": 0.9333333333333333,
+          "monte_carlo_95": [
+            0.8992762041322797,
+            0.9564328232030161
+          ],
+          "bias": 0.022309857702766223,
+          "mean_width": 1.2494706293551012,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 280,
+          "coverage": 0.9333333333333333,
+          "monte_carlo_95": [
+            0.8992762041322797,
+            0.9564328232030161
+          ],
+          "bias": -0.03472085856243279,
+          "mean_width": 1.6147483258133555,
+          "false_direction": null
+        }
+      },
+      "serial_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": -0.012411000859666696,
+          "mean_width": 1.0265281786471596,
+          "false_direction": 0.05
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 279,
+          "coverage": 0.93,
+          "monte_carlo_95": [
+            0.8953632441625534,
+            0.953763406039394
+          ],
+          "bias": 0.022309857702766403,
+          "mean_width": 1.2431143694272564,
+          "false_direction": 0.07
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 282,
+          "coverage": 0.94,
+          "monte_carlo_95": [
+            0.90715983751747,
+            0.9617139440845225
+          ],
+          "bias": -0.0347208585624331,
+          "mean_width": 1.6138549470990087,
+          "false_direction": 0.06
+        }
+      },
+      "gaps_and_months": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 274,
+          "coverage": 0.9133333333333333,
+          "monte_carlo_95": [
+            0.8760432544899761,
+            0.940171510045229
+          ],
+          "bias": 0.05340394607230081,
+          "mean_width": 0.9987560332321592,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 280,
+          "coverage": 0.9333333333333333,
+          "monte_carlo_95": [
+            0.8992762041322797,
+            0.9564328232030161
+          ],
+          "bias": 0.01485593629521531,
+          "mean_width": 1.218172087325652,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 272,
+          "coverage": 0.9066666666666666,
+          "monte_carlo_95": [
+            0.8684138011961098,
+            0.9346362090723985
+          ],
+          "bias": 0.03854800977708561,
+          "mean_width": 1.5757462092724326,
+          "false_direction": null
+        }
+      },
+      "nap_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 277,
+          "coverage": 0.9233333333333333,
+          "monte_carlo_95": [
+            0.8875891334382622,
+            0.9483727624969882
+          ],
+          "bias": 0.027969537389097465,
+          "mean_width": 0.8670300498571043,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 287,
+          "coverage": 0.9566666666666667,
+          "monte_carlo_95": [
+            0.927281870871939,
+            0.9745037963967957
+          ],
+          "bias": 0.004709129406032575,
+          "mean_width": 1.0344555541967413,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 278,
+          "coverage": 0.9266666666666666,
+          "monte_carlo_95": [
+            0.8914679042010732,
+            0.9510763688675256
+          ],
+          "bias": 0.023260407983064946,
+          "mean_width": 1.3461420397100305,
+          "false_direction": null
+        }
+      }
+    },
+    "memory_method": 4,
+    "insights_method": 4,
+    "phase_bootstrap_replicates": 999
+  },
+  "development_correction": {
+    "synthetic_only": true,
+    "seed_version": 1,
+    "formation": {
+      "three_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1447,
+        "coverage": 0.9646666666666667,
+        "monte_carlo_95": [
+          0.9540733019549572,
+          0.972886026740299
+        ],
+        "bias": -0.4746666666666844,
+        "mean_width": 62.33790221868948,
+        "false_direction": 0.035333333333333335
+      },
+      "five_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1431,
+        "coverage": 0.954,
+        "monte_carlo_95": [
+          0.9421890593182041,
+          0.9634914325633877
+        ],
+        "bias": 0.06222222222222551,
+        "mean_width": 43.47902106036736,
+        "false_direction": 0.046
+      },
+      "twelve_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1426,
+        "coverage": 0.9506666666666667,
+        "monte_carlo_95": [
+          0.9385094562049638,
+          0.9605213991723578
+        ],
+        "bias": 0.1411111111111305,
+        "mean_width": 26.183586685463514,
+        "false_direction": 0.04933333333333333
+      },
+      "many_days": {
+        "trials": 1500,
+        "usable": 1500,
+        "covered": 1422,
+        "coverage": 0.948,
+        "monte_carlo_95": [
+          0.9355756109511894,
+          0.958135535222716
+        ],
+        "bias": 0.006666666666686401,
+        "mean_width": 15.165598383004886,
+        "false_direction": 0.052
+      },
+      "dominant_day": {
+        "trials": 1500,
+        "usable": 0,
+        "covered": 0,
+        "coverage": null,
+        "monte_carlo_95": [
+          null,
+          null
+        ],
+        "bias": -0.00933333333338691,
+        "mean_width": null,
+        "false_direction": null
+      },
+      "unequal_days": {
+        "trials": 1500,
+        "usable": 0,
+        "covered": 0,
+        "coverage": null,
+        "monte_carlo_95": [
+          null,
+          null
+        ],
+        "bias": 0.2415555555555181,
+        "mean_width": null,
+        "false_direction": null
+      }
+    },
+    "phase": {
+      "iid_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 293,
+          "coverage": 0.9766666666666667,
+          "monte_carlo_95": [
+            0.952627445667121,
+            0.9886524844017043
+          ],
+          "bias": 0.009459494562507609,
+          "mean_width": 0.7344685963904386,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 291,
+          "coverage": 0.97,
+          "monte_carlo_95": [
+            0.943976849008093,
+            0.9841383267940355
+          ],
+          "bias": 0.025759154590984323,
+          "mean_width": 0.8826403503193953,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 291,
+          "coverage": 0.97,
+          "monte_carlo_95": [
+            0.943976849008093,
+            0.9841383267940355
+          ],
+          "bias": -0.016299660028476604,
+          "mean_width": 1.1401299805094005,
+          "false_direction": null
+        }
+      },
+      "total_only_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 292,
+          "coverage": 0.9733333333333334,
+          "monte_carlo_95": [
+            0.9482704597024538,
+            0.9864270932330232
+          ],
+          "bias": 0.00945949456250764,
+          "mean_width": 0.7329176613443908,
+          "false_direction": 0.02666666666666667
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 290,
+          "coverage": 0.9666666666666667,
+          "monte_carlo_95": [
+            0.9397375485424309,
+            0.9817952501263492
+          ],
+          "bias": 0.02575915459098433,
+          "mean_width": 0.8797839054374066,
+          "false_direction": 0.03333333333333333
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 290,
+          "coverage": 0.9666666666666667,
+          "monte_carlo_95": [
+            0.9397375485424309,
+            0.9817952501263492
+          ],
+          "bias": -0.016299660028476694,
+          "mean_width": 1.1367184585793424,
+          "false_direction": 0.03333333333333333
+        }
+      },
+      "serial_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 290,
+          "coverage": 0.9666666666666667,
+          "monte_carlo_95": [
+            0.9397375485424309,
+            0.9817952501263492
+          ],
+          "bias": -0.012411000859666621,
+          "mean_width": 1.1143219911137927,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": 0.022309857702766223,
+          "mean_width": 1.3601874963785248,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": -0.03472085856243279,
+          "mean_width": 1.7578095008548866,
+          "false_direction": null
+        }
+      },
+      "serial_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 289,
+          "coverage": 0.9633333333333334,
+          "monte_carlo_95": [
+            0.9355455130036123,
+            0.9794049085318193
+          ],
+          "bias": -0.012411000859666696,
+          "mean_width": 1.1117873473582183,
+          "false_direction": 0.03666666666666667
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 283,
+          "coverage": 0.9433333333333334,
+          "monte_carlo_95": [
+            0.9111333346485289,
+            0.9643228240868122
+          ],
+          "bias": 0.022309857702766403,
+          "mean_width": 1.3527870620203848,
+          "false_direction": 0.056666666666666664
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": -0.0347208585624331,
+          "mean_width": 1.7486923941246646,
+          "false_direction": 0.05
+        }
+      },
+      "gaps_and_months": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 281,
+          "coverage": 0.9366666666666666,
+          "monte_carlo_95": [
+            0.9032079605174259,
+            0.9590834439512181
+          ],
+          "bias": 0.05340394607230081,
+          "mean_width": 1.0882464745016527,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 288,
+          "coverage": 0.96,
+          "monte_carlo_95": [
+            0.9313951365400219,
+            0.9769729078620613
+          ],
+          "bias": 0.01485593629521531,
+          "mean_width": 1.3284409655380112,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 278,
+          "coverage": 0.9266666666666666,
+          "monte_carlo_95": [
+            0.8914679042010732,
+            0.9510763688675256
+          ],
+          "bias": 0.03854800977708561,
+          "mean_width": 1.7152421586136242,
+          "false_direction": null
+        }
+      },
+      "nap_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": 0.027969537389097465,
+          "mean_width": 0.940268379185199,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 292,
+          "coverage": 0.9733333333333334,
+          "monte_carlo_95": [
+            0.9482704597024538,
+            0.9864270932330232
+          ],
+          "bias": 0.004709129406032575,
+          "mean_width": 1.121414681778332,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": 0.023260407983064946,
+          "mean_width": 1.4588648793850725,
+          "false_direction": null
+        }
+      }
+    }
+  },
+  "intermediate_validation_before_regression_df_floor": {
+    "synthetic_only": true,
+    "seed_version": 1,
+    "seed_offset": 100000,
+    "bootstrap_replicates": 999,
+    "formation": {
+      "three_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1915,
+        "coverage": 0.9575,
+        "monte_carlo_95": [
+          0.9477468849007025,
+          0.9654989524948283
+        ],
+        "bias": 0.19766666666664945,
+        "mean_width": 62.87881626313604,
+        "false_direction": 0.0425
+      },
+      "five_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1899,
+        "coverage": 0.9495,
+        "monte_carlo_95": [
+          0.9390118381839994,
+          0.9582646730931397
+        ],
+        "bias": -0.23466666666666372,
+        "mean_width": 43.73984851052655,
+        "false_direction": 0.0505
+      },
+      "twelve_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1915,
+        "coverage": 0.9575,
+        "monte_carlo_95": [
+          0.9477468849007025,
+          0.9654989524948283
+        ],
+        "bias": -0.0036666666666487296,
+        "mean_width": 26.429937915596593,
+        "false_direction": 0.0425
+      },
+      "many_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1907,
+        "coverage": 0.9535,
+        "monte_carlo_95": [
+          0.9433701034030341,
+          0.9618910709333007
+        ],
+        "bias": -0.037499999999980736,
+        "mean_width": 15.26194247906937,
+        "false_direction": 0.0465
+      },
+      "dominant_day": {
+        "trials": 2000,
+        "usable": 0,
+        "covered": 0,
+        "coverage": null,
+        "monte_carlo_95": [
+          null,
+          null
+        ],
+        "bias": 0.10516666666661163,
+        "mean_width": null,
+        "false_direction": null
+      },
+      "unequal_days": {
+        "trials": 2000,
+        "usable": 0,
+        "covered": 0,
+        "coverage": null,
+        "monte_carlo_95": [
+          null,
+          null
+        ],
+        "bias": -0.013833333333369412,
+        "mean_width": null,
+        "false_direction": null
+      },
+      "high_recall": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1880,
+        "coverage": 0.94,
+        "monte_carlo_95": [
+          0.9287239719834315,
+          0.949588964528117
+        ],
+        "bias": -0.11900000000000542,
+        "mean_width": 17.863984706811582,
+        "false_direction": 0.06
+      },
+      "unequal_supported": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1920,
+        "coverage": 0.96,
+        "monte_carlo_95": [
+          0.9504928712535343,
+          0.9677433805539937
+        ],
+        "bias": -0.07300000000001222,
+        "mean_width": 50.48321959053868,
+        "false_direction": 0.04
+      },
+      "positive_effect": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1889,
+        "coverage": 0.9445,
+        "monte_carlo_95": [
+          0.9335869764568508,
+          0.9537087059962933
+        ],
+        "bias": -0.028833333333318834,
+        "mean_width": 24.761205334450302,
+        "false_direction": null
+      },
+      "negative_effect": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1924,
+        "coverage": 0.962,
+        "monte_carlo_95": [
+          0.9526960596538981,
+          0.9695325236832278
+        ],
+        "bias": -0.002666666666661044,
+        "mean_width": 27.68345593750323,
+        "false_direction": null
+      }
+    },
+    "phase": {
+      "iid_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": 0.0034255176848363433,
+          "mean_width": 0.7379414917936117,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": 5.184702412008857e-06,
+          "mean_width": 0.8888041019976697,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 292,
+          "coverage": 0.9733333333333334,
+          "monte_carlo_95": [
+            0.9482704597024538,
+            0.9864270932330232
+          ],
+          "bias": 0.003420332982424501,
+          "mean_width": 1.1624513283731954,
+          "false_direction": null
+        }
+      },
+      "total_only_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": 0.003425517684836446,
+          "mean_width": 0.7379011139933769,
+          "false_direction": 0.05333333333333334
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": 5.184702412014863e-06,
+          "mean_width": 0.8866399250154514,
+          "false_direction": 0.05333333333333334
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 293,
+          "coverage": 0.9766666666666667,
+          "monte_carlo_95": [
+            0.952627445667121,
+            0.9886524844017043
+          ],
+          "bias": 0.0034203329824244308,
+          "mean_width": 1.1621041337650397,
+          "false_direction": 0.023333333333333334
+        }
+      },
+      "serial_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 280,
+          "coverage": 0.9333333333333333,
+          "monte_carlo_95": [
+            0.8992762041322797,
+            0.9564328232030161
+          ],
+          "bias": -0.028834845266935916,
+          "mean_width": 1.1298780213816342,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 281,
+          "coverage": 0.9366666666666666,
+          "monte_carlo_95": [
+            0.9032079605174259,
+            0.9590834439512181
+          ],
+          "bias": -0.004861706592477033,
+          "mean_width": 1.3578537209529273,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 277,
+          "coverage": 0.9233333333333333,
+          "monte_carlo_95": [
+            0.8875891334382622,
+            0.9483727624969882
+          ],
+          "bias": -0.023973138674458827,
+          "mean_width": 1.770077024559796,
+          "false_direction": null
+        }
+      },
+      "serial_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 282,
+          "coverage": 0.94,
+          "monte_carlo_95": [
+            0.90715983751747,
+            0.9617139440845225
+          ],
+          "bias": -0.028834845266935947,
+          "mean_width": 1.1328965724817532,
+          "false_direction": 0.06
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 280,
+          "coverage": 0.9333333333333333,
+          "monte_carlo_95": [
+            0.8992762041322797,
+            0.9564328232030161
+          ],
+          "bias": -0.004861706592477189,
+          "mean_width": 1.3551833786337533,
+          "false_direction": 0.06666666666666667
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 276,
+          "coverage": 0.92,
+          "monte_carlo_95": [
+            0.883725988586447,
+            0.9456535302154552
+          ],
+          "bias": -0.023973138674458754,
+          "mean_width": 1.7660957929759509,
+          "false_direction": 0.08
+        }
+      },
+      "gaps_and_months": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 290,
+          "coverage": 0.9666666666666667,
+          "monte_carlo_95": [
+            0.9397375485424309,
+            0.9817952501263492
+          ],
+          "bias": -0.013801157832208255,
+          "mean_width": 1.0943852802330896,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 296,
+          "coverage": 0.9866666666666667,
+          "monte_carlo_95": [
+            0.9662239391535502,
+            0.9948031223153205
+          ],
+          "bias": 0.040737818126400094,
+          "mean_width": 1.3340899129942287,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 290,
+          "coverage": 0.9666666666666667,
+          "monte_carlo_95": [
+            0.9397375485424309,
+            0.9817952501263492
+          ],
+          "bias": -0.05453897595860835,
+          "mean_width": 1.7443249861462296,
+          "false_direction": null
+        }
+      },
+      "nap_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 286,
+          "coverage": 0.9533333333333334,
+          "monte_carlo_95": [
+            0.9232019646862172,
+            0.9720013254491692
+          ],
+          "bias": -0.016273845651357477,
+          "mean_width": 0.9343757088204031,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 291,
+          "coverage": 0.97,
+          "monte_carlo_95": [
+            0.943976849008093,
+            0.9841383267940355
+          ],
+          "bias": 0.035818285592000176,
+          "mean_width": 1.1366515678565907,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 287,
+          "coverage": 0.9566666666666667,
+          "monte_carlo_95": [
+            0.927281870871939,
+            0.9745037963967957
+          ],
+          "bias": -0.05209213124335754,
+          "mean_width": 1.4715852374097074,
+          "false_direction": null
+        }
+      }
+    }
+  },
+  "final_independent_validation": {
+    "synthetic_only": true,
+    "seed_version": 1,
+    "seed_offset": 400000,
+    "bootstrap_replicates": 999,
+    "formation": {
+      "three_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1904,
+        "coverage": 0.952,
+        "monte_carlo_95": [
+          0.9417337026074779,
+          0.9605332230816583
+        ],
+        "bias": 0.019999999999978167,
+        "mean_width": 62.13923555390525,
+        "false_direction": 0.048
+      },
+      "five_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1894,
+        "coverage": 0.947,
+        "monte_carlo_95": [
+          0.936296403548334,
+          0.9559896933168074
+        ],
+        "bias": 0.25000000000000344,
+        "mean_width": 43.192847395586625,
+        "false_direction": 0.053
+      },
+      "twelve_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1907,
+        "coverage": 0.9535,
+        "monte_carlo_95": [
+          0.9433701034030341,
+          0.9618910709333007
+        ],
+        "bias": 0.12116666666668557,
+        "mean_width": 26.363150089786984,
+        "false_direction": 0.0465
+      },
+      "many_days": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1908,
+        "coverage": 0.954,
+        "monte_carlo_95": [
+          0.9439161420196693,
+          0.9623431151990649
+        ],
+        "bias": 0.07212500000001883,
+        "mean_width": 15.240567375532871,
+        "false_direction": 0.046
+      },
+      "dominant_day": {
+        "trials": 2000,
+        "usable": 0,
+        "covered": 0,
+        "coverage": null,
+        "monte_carlo_95": [
+          null,
+          null
+        ],
+        "bias": 0.3584999999999444,
+        "mean_width": null,
+        "false_direction": null
+      },
+      "unequal_days": {
+        "trials": 2000,
+        "usable": 0,
+        "covered": 0,
+        "coverage": null,
+        "monte_carlo_95": [
+          null,
+          null
+        ],
+        "bias": 0.23049999999996265,
+        "mean_width": null,
+        "false_direction": null
+      },
+      "high_recall": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1874,
+        "coverage": 0.937,
+        "monte_carlo_95": [
+          0.9254911725624734,
+          0.9468332666546785
+        ],
+        "bias": 0.018166666666661568,
+        "mean_width": 17.573256937404345,
+        "false_direction": 0.063
+      },
+      "unequal_supported": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1914,
+        "coverage": 0.957,
+        "monte_carlo_95": [
+          0.9471986939284612,
+          0.9650490605846699
+        ],
+        "bias": 0.1901666666666496,
+        "mean_width": 49.685406338139714,
+        "false_direction": 0.043
+      },
+      "positive_effect": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1897,
+        "coverage": 0.9485,
+        "monte_carlo_95": [
+          0.9379249175274234,
+          0.9573554279849166
+        ],
+        "bias": 0.10066666666668045,
+        "mean_width": 24.632421225602076,
+        "false_direction": null
+      },
+      "negative_effect": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1916,
+        "coverage": 0.958,
+        "monte_carlo_95": [
+          0.9482954037452289,
+          0.9659485165327013
+        ],
+        "bias": 0.09033333333333982,
+        "mean_width": 27.703471366924003,
+        "false_direction": null
+      },
+      "varying_predictions": {
+        "trials": 2000,
+        "usable": 2000,
+        "covered": 1918,
+        "coverage": 0.959,
+        "monte_carlo_95": [
+          0.9493934473954164,
+          0.9668466386473127
+        ],
+        "bias": -0.12249999999998759,
+        "mean_width": 24.88059588473878,
+        "false_direction": 0.041
+      }
+    },
+    "phase": {
+      "iid_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 283,
+          "coverage": 0.9433333333333334,
+          "monte_carlo_95": [
+            0.9111333346485289,
+            0.9643228240868122
+          ],
+          "bias": 0.007351002912633575,
+          "mean_width": 0.7524367475643117,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 287,
+          "coverage": 0.9566666666666667,
+          "monte_carlo_95": [
+            0.927281870871939,
+            0.9745037963967957
+          ],
+          "bias": 0.017699343958638813,
+          "mean_width": 0.9165099563526395,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 291,
+          "coverage": 0.97,
+          "monte_carlo_95": [
+            0.943976849008093,
+            0.9841383267940355
+          ],
+          "bias": -0.010348341046005016,
+          "mean_width": 1.1814935805721316,
+          "false_direction": null
+        }
+      },
+      "total_only_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 283,
+          "coverage": 0.9433333333333334,
+          "monte_carlo_95": [
+            0.9111333346485289,
+            0.9643228240868122
+          ],
+          "bias": 0.007351002912633723,
+          "mean_width": 0.754496561133271,
+          "false_direction": 0.056666666666666664
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 288,
+          "coverage": 0.96,
+          "monte_carlo_95": [
+            0.9313951365400219,
+            0.9769729078620613
+          ],
+          "bias": 0.017699343958638772,
+          "mean_width": 0.9166191199433745,
+          "false_direction": 0.04
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 293,
+          "coverage": 0.9766666666666667,
+          "monte_carlo_95": [
+            0.952627445667121,
+            0.9886524844017043
+          ],
+          "bias": -0.010348341046005051,
+          "mean_width": 1.1833629494654736,
+          "false_direction": 0.023333333333333334
+        }
+      },
+      "serial_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 282,
+          "coverage": 0.94,
+          "monte_carlo_95": [
+            0.90715983751747,
+            0.9617139440845225
+          ],
+          "bias": 0.014142101508286098,
+          "mean_width": 1.1437078571387145,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": 0.002286847750904597,
+          "mean_width": 1.3900255777117574,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 286,
+          "coverage": 0.9533333333333334,
+          "monte_carlo_95": [
+            0.9232019646862172,
+            0.9720013254491692
+          ],
+          "bias": 0.011855253757381501,
+          "mean_width": 1.789178021687516,
+          "false_direction": null
+        }
+      },
+      "serial_null": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 283,
+          "coverage": 0.9433333333333334,
+          "monte_carlo_95": [
+            0.9111333346485289,
+            0.9643228240868122
+          ],
+          "bias": 0.01414210150828607,
+          "mean_width": 1.1437390083792007,
+          "false_direction": 0.056666666666666664
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 285,
+          "coverage": 0.95,
+          "monte_carlo_95": [
+            0.9191522802928904,
+            0.9694686327091473
+          ],
+          "bias": 0.002286847750904627,
+          "mean_width": 1.3925768232874707,
+          "false_direction": 0.05
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 284,
+          "coverage": 0.9466666666666667,
+          "monte_carlo_95": [
+            0.9151301612527315,
+            0.966908374615958
+          ],
+          "bias": 0.01185525375738144,
+          "mean_width": 1.787384049371947,
+          "false_direction": 0.05333333333333334
+        }
+      },
+      "gaps_and_months": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 293,
+          "coverage": 0.9766666666666667,
+          "monte_carlo_95": [
+            0.952627445667121,
+            0.9886524844017043
+          ],
+          "bias": 0.034331153189315566,
+          "mean_width": 1.1459730778111636,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 288,
+          "coverage": 0.96,
+          "monte_carlo_95": [
+            0.9313951365400219,
+            0.9769729078620613
+          ],
+          "bias": -0.01169373354891684,
+          "mean_width": 1.3897201864390787,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 287,
+          "coverage": 0.9566666666666667,
+          "monte_carlo_95": [
+            0.927281870871939,
+            0.9745037963967957
+          ],
+          "bias": 0.04602488673823246,
+          "mean_width": 1.7868106428783994,
+          "false_direction": null
+        }
+      },
+      "nap_effect": {
+        "deep_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 297,
+          "coverage": 0.99,
+          "monte_carlo_95": [
+            0.9710159953649371,
+            0.9965934432372818
+          ],
+          "bias": 0.030625010737527436,
+          "mean_width": 0.9825989178250365,
+          "false_direction": null
+        },
+        "rem_for_light": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 287,
+          "coverage": 0.9566666666666667,
+          "monte_carlo_95": [
+            0.927281870871939,
+            0.9745037963967957
+          ],
+          "bias": -0.006939525669050539,
+          "mean_width": 1.1583611003857612,
+          "false_direction": null
+        },
+        "deep_for_rem": {
+          "trials": 300,
+          "usable": 300,
+          "covered": 289,
+          "coverage": 0.9633333333333334,
+          "monte_carlo_95": [
+            0.9355455130036123,
+            0.9794049085318193
+          ],
+          "bias": 0.037564536406577975,
+          "mean_width": 1.5159470708971186,
+          "false_direction": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,288 @@
+"""Oura OAuth and direct API sync, entirely independent of Anki's collection."""
+
+from __future__ import annotations
+
+import base64
+import hashlib
+import secrets
+import time
+import webbrowser
+from datetime import date, timedelta
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlencode, urlsplit
+
+from .health import load_health, save_oura_import
+from .oura import OuraImport, parse_oura_records
+from .service import ServiceError, call_service, request_json
+from .storage import profile_job_lock
+from .vault import read_secret, write_secret
+
+SLEEP_PROJECTION = (
+    "id,day,type,bedtime_start,bedtime_end,total_sleep_duration,light_sleep_duration,"
+    "deep_sleep_duration,rem_sleep_duration,awake_time,sleep_algorithm_version"
+)
+
+
+def _clear_local(source, sharing):
+    from .insights import delete_cached_insights
+
+    result = save_oura_import(source, OuraImport((), ()), sharing=sharing, clear=True)
+    delete_cached_insights(source, "oura")
+    return result
+
+
+def _tokens(value, config):
+    if (
+        not isinstance(value, dict)
+        or not isinstance(value.get("access_token"), str)
+        or not value["access_token"]
+        or not isinstance(value.get("refresh_token"), str)
+        or not value["refresh_token"]
+        or not isinstance(value.get("expires_in"), (int, float))
+        or not 0 < value["expires_in"] < 366 * 86400
+    ):
+        raise ServiceError("The connection service returned invalid credentials.")
+    return {
+        "access_token": value["access_token"],
+        "refresh_token": value["refresh_token"],
+        "expires_at": time.time() + value["expires_in"],
+        "service": config.validated_url(),
+    }
+
+
+class Loopback:
+    """Single-use random path + state + PKCE; authorization codes never logged."""
+
+    def __init__(self):
+        self.state = secrets.token_urlsafe(32)
+        self.path = "/" + secrets.token_urlsafe(32)
+        self.result = None
+        owner = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                uri = urlsplit(self.path)
+                query = parse_qs(uri.query)
+                valid = (
+                    uri.path == owner.path
+                    and query.get("state") == [owner.state]
+                    and owner.result is None
+                )
+                self.send_response(200 if valid else 400)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Referrer-Policy", "no-referrer")
+                self.end_headers()
+                if valid:
+                    owner.result = query
+                self.wfile.write(
+                    b"You can return to Anki." if valid else b"Invalid sign-in response."
+                )
+
+            def log_message(self, *_args):
+                pass
+
+        class Server(HTTPServer):
+            def get_request(self):
+                connection, address = super().get_request()
+                connection.settimeout(2)
+                return connection, address
+
+        self.server = Server(("127.0.0.1", 0), Handler)
+        self.server.timeout = 0.25
+        self.return_uri = f"http://127.0.0.1:{self.server.server_port}{self.path}"
+
+    def wait(self, check_cancelled, timeout=180, provider="Oura"):
+        deadline = time.monotonic() + timeout
+        while self.result is None:
+            check_cancelled()
+            if time.monotonic() >= deadline:
+                raise ServiceError(f"Sign-in timed out. Select Connect {provider} to try again.")
+            self.server.handle_request()
+        if self.result.get("error") or len(self.result.get("code", [])) != 1:
+            raise ServiceError(f"{provider} sign-in was cancelled or denied.")
+        return self.result["code"][0]
+
+    def close(self):
+        self.server.server_close()
+
+
+def connect_oura(source, config, sharing, check_cancelled=lambda: None, open_browser=None):
+    config.validated_url()
+    with profile_job_lock(source, "oura"):
+        # Verify the OS vault is usable before the user spends time signing in.
+        write_secret(source, "probe", None)
+        callback = Loopback()
+        verifier = secrets.token_urlsafe(48)
+        challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
+            .decode()
+            .rstrip("=")
+        )
+        try:
+            started = call_service(
+                config,
+                "/oauth/start",
+                {
+                    "return_uri": callback.return_uri,
+                    "state": callback.state,
+                    "code_challenge": challenge,
+                },
+            )
+            url = started.get("authorize_url", "")
+            if (
+                urlsplit(url)._replace(query="", fragment="").geturl()
+                != "https://cloud.ouraring.com/oauth/authorize"
+            ):
+                raise ServiceError("The connection service returned an invalid sign-in address.")
+            if not (open_browser or webbrowser.open)(url):
+                raise ServiceError("The browser could not open the Oura sign-in page.")
+            code = callback.wait(check_cancelled)
+            check_cancelled()
+            value = call_service(
+                config,
+                "/oauth/exchange",
+                {"code": code, "code_verifier": verifier, "flow": started["flow"]},
+            )
+            credentials = _tokens(value, config)
+            # Rotated credentials must be durable even if Qt/profile closes now.
+            credentials["connected_at"] = time.time()
+            credentials["needs_clear"] = True
+            write_secret(source, "oura", credentials)
+            # Never mix the previous account's local history into the new account.
+            _clear_local(source, sharing)
+            credentials.pop("needs_clear")
+            write_secret(source, "oura", credentials)
+        finally:
+            callback.close()
+    return sync_oura(source, config, sharing, force=True, check_cancelled=check_cancelled)
+
+
+def _access(source, config, credentials, *, refresh=False):
+    if credentials.get("service") != config.validated_url():
+        raise ServiceError("The connection service changed. Connect Oura again.")
+    if refresh or credentials.get("expires_at", 0) < time.time() + 120:
+        value = call_service(
+            config, "/oauth/refresh", {"refresh_token": credentials["refresh_token"]}
+        )
+        credentials.update(_tokens(value, config))
+        write_secret(source, "oura", credentials)  # Single-use refresh token rotates.
+    return credentials["access_token"]
+
+
+def _collection(source, config, credentials, kind, start, end, check_cancelled):
+    records, seen, cursor = [], set(), None
+    while True:
+        check_cancelled()
+        params = {
+            "start_date": start,
+            "end_date": end,
+            "fields": SLEEP_PROJECTION if kind == "sleep" else "id,day,steps",
+        }
+        if cursor:
+            params["next_token"] = cursor
+        url = "https://api.ouraring.com/v2/usercollection/" + kind + "?" + urlencode(params)
+        try:
+            page = request_json(url, token=_access(source, config, credentials))
+        except ServiceError as error:
+            if error.status != 401:
+                raise
+            page = request_json(url, token=_access(source, config, credentials, refresh=True))
+        if not isinstance(page, dict) or not isinstance(page.get("data"), list):
+            raise ServiceError("Oura returned an invalid data page. Saved data is unchanged.")
+        records.extend(page["data"])
+        if len(records) > 200000 or len(seen) > 10000:
+            raise ServiceError("The Oura response exceeded the record limit.")
+        cursor = page.get("next_token")
+        if cursor is None:
+            return records
+        if not isinstance(cursor, str) or not cursor or len(cursor) > 8192 or cursor in seen:
+            raise ServiceError("Oura returned an invalid pagination cursor.")
+        seen.add(cursor)
+
+
+def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: None):
+    # This lock serializes single-use refresh tokens across overlapping processes.
+    # It never blocks Anki operations, CSV updates, or the collection worker queue.
+    with profile_job_lock(source, "oura"):
+        credentials = read_secret(source, "oura")
+        now = time.time()
+        if not credentials or (not force and now < credentials.get("retry_at", 0)):
+            return None
+        if credentials.get("reauth_required"):
+            if force:
+                raise ServiceError("Oura authorization expired. Select Connect Oura again.")
+            return None
+        backfill = credentials.get("sleep_session_version") != 1
+        if not force and not backfill and now - credentials.get("last_sync", 0) < 3600:
+            return None
+        if credentials.get("needs_clear"):
+            _clear_local(source, sharing)
+            credentials.pop("needs_clear")
+            write_secret(source, "oura", credentials)
+        today = date.today()
+        full = backfill or now - credentials.get("last_full_sync", 0) > 7 * 86400
+        start = "2000-01-01" if full else (today - timedelta(days=30)).isoformat()
+        end = (today + timedelta(days=2)).isoformat()  # Includes provider days east of local time.
+        try:
+            nights = _collection(source, config, credentials, "sleep", start, end, check_cancelled)
+            activity = _collection(
+                source, config, credentials, "daily_activity", start, end, check_cancelled
+            )
+            prepared = parse_oura_records(nights, activity)
+            # Oura may include an inclusive end boundary. Commit only our window.
+            prepared = OuraImport(
+                tuple(r for r in prepared.sleep if start <= r.day < end),
+                tuple(r for r in prepared.activity if start <= r.day < end),
+            )
+            check_cancelled()
+            result = save_oura_import(
+                source,
+                prepared,
+                sharing=sharing,
+                authoritative_window=(start, end),
+                check_cancelled=check_cancelled,
+            )
+            credentials.update(last_sync=now, last_error="", retry_at=0)
+            if full:
+                credentials["last_full_sync"] = now
+                credentials["sleep_session_version"] = 1
+            write_secret(source, "oura", credentials)
+            return result
+        except ServiceError as error:
+            credentials.update(last_error=str(error), retry_at=now + error.retry_after)
+            if error.status == 401:
+                credentials["reauth_required"] = True
+            write_secret(source, "oura", credentials)
+            raise
+
+
+def disconnect_oura(source, config, sharing):
+    with profile_job_lock(source, "oura"):
+        credentials = read_secret(source, "oura")
+        write_secret(source, "oura", None)
+        result = _clear_local(source, sharing)
+        message = "Disconnected. Local Oura data was deleted and future syncing stopped."
+        if result.csv_error:
+            message += " Fixed CSV update is pending: " + result.csv_error
+        if credentials:
+            try:
+                call_service(config, "/oauth/revoke", {"access_token": credentials["access_token"]})
+            except ServiceError:
+                message += (
+                    " Also revoke this app in your Oura account; the service could not be reached."
+                )
+        return result.snapshot, message
+
+
+def connection_summary(source):
+    credentials = read_secret(source, "oura")
+    if not credentials:
+        return "Oura is not connected."
+    if credentials.get("last_error"):
+        return credentials["last_error"]
+    return "Oura is connected. Sleep and steps sync automatically while Anki is open."
+
+
+def saved_oura(source):
+    return load_health(source), connection_summary(source)

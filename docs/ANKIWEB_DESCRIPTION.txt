@@ -1,0 +1,12 @@
+Quantified Cognition
+Discover how your ability to learn varies from day to day.
+
+Quantified Cognition automatically turns your existing Anki history into daily estimates of memory formation and recall performance, giving you useful data from the studying you already do.
+
+Its main addition to Anki’s statistics is a measure of how effectively you learned on an earlier day. If you study a card on Monday and review it on Friday, Friday’s answer contributes to Monday’s formation score. Comparing later answers with Anki’s predictions helps account for differences in the cards studied and the time between reviews.
+
+Use these scores to understand patterns in your learning or evaluate personal experiments with supplements, study routines and other changes. Results include uncertainty and follow-up coverage, and you can export them for your own analysis. Your existing history provides the starting data, with no separate cognitive tests or daily logging required.
+
+Oura and Google Health integrations import sleep stages and daily steps alongside your Anki scores. Explore whether your performance is better when you sleep more, and how deep, REM and light sleep relate to your results. Stage comparisons account for total sleep duration, while main sleep and naps are analysed separately.
+
+You can also optionally contribute data to scientific research into learning, recall and sleep. You review the package before sending it. It includes daily scores, available sleep and activity summaries, and measurement and consent metadata. Card content, deck names, individual reviews and account credentials are excluded. Personal use does not require contributing, and research uploads are never automatic.

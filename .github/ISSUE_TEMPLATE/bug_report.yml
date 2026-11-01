@@ -1,0 +1,43 @@
+name: Desktop beta problem
+description: Report a reproducible problem without sharing personal study or health data.
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Include only sanitized information. Do not attach an Anki collection,
+        personal CSV, health database, credentials, or raw provider responses.
+        Remove names, profile paths and private URLs from errors and screenshots.
+  - type: input
+    id: versions
+    attributes:
+      label: Anki and add-on versions
+      description: Find Anki's version in Help → About and the add-on version in Tools → Add-ons.
+      placeholder: Anki 26.09.3; Quantified Cognition 0.18.0
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system, display scaling and light/dark mode
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce, expected result and actual result
+      description: Prefer a disposable profile with synthetic cards when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Sanitized error message or screenshot
+      description: Optional. Check for personal information before submitting.
+  - type: textarea
+    id: context
+    attributes:
+      label: Relevant settings
+      description: >-
+        For CSV problems, say whether automatic updates are enabled, whether the
+        destination is local/removable/network storage, and whether another
+        program has the file open. Do not include your full file path.
