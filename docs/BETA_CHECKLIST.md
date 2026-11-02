@@ -64,6 +64,13 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 
 ## Before any online pilot — separate launch decision
 
+- [x] Prepare the programme design, participant information, privacy text and
+  operational implementation plan together. See [RESEARCH_DESIGN.md](RESEARCH_DESIGN.md)
+  and [RESEARCH_OPERATIONS.md](RESEARCH_OPERATIONS.md). Publication and activation
+  controls below remain outstanding; prepared text is not evidence of deployment.
+- [x] Include the prepared research documents in the documentation-only v0.18.2
+  package. Inspect its 52 entries, internal research-document links, unchanged
+  application code and unchanged beta sharing notice/disabled deployment state.
 - [ ] Publish the final [policy](PRIVACY.md), recipient/contact and study
   information for JollyJoyJourney; configure the displayed notice and matching version/hash.
 - [ ] Complete [Oura approval](OURA_APPROVAL.md) and
@@ -80,6 +87,10 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   rows and function logs currently require inspection; no paging is configured.
 - [ ] Confirm platform log retention/redaction/access, administrator MFA, backup
   restoration and deletion replay, research retention and extract deletion.
+- [ ] Implement approved eligibility/explicit signed-consent enrollment and
+  server-side enforcement, update the sharing notice/version/hash, and preserve
+  original pre-view preference timing. Implement and verify the research-data
+  retention and collaborator-copy deletion controls in the operating plan.
 - [ ] Test explicit package preview/send, uncertain receipt retries, withdrawal
   and deletion with uploads disabled, including lost-credential recovery.
 - [ ] Run the closed-state verifier and operations report immediately before

@@ -136,6 +136,12 @@ research submissions have separate deletion controls.
 
 ## Research-specific requirements before activation
 
+The prepared [research design](RESEARCH_DESIGN.md),
+[participant information](RESEARCH_INFORMATION.md) and
+[operating plan](RESEARCH_OPERATIONS.md) supply the programme scope and intended
+enrollment statement. They are application materials, not an approved study or
+an implemented signed-consent flow.
+
 Google's Health Research Policy requires review-board approval or waiver,
 research intake/attestation and an exact data-use rationale. Eligibility must be
 confirmed before study consent and data-access permission. Required disclosures

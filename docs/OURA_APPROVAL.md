@@ -25,6 +25,12 @@ deployment controls; they do not imply Oura approval by themselves.
 
 ## Prepare before asking Oura
 
+- Use the prepared [research design](RESEARCH_DESIGN.md),
+  [participant information](RESEARCH_INFORMATION.md) and
+  [operating plan](RESEARCH_OPERATIONS.md). Their research scope allows new
+  questions within learning/recall, sleep/activity and measurement validation;
+  their controlled-collaboration and retention commitments still need accepted
+  permissions and implemented controls before activation.
 - Fill in and publish [PRIVACY.md](PRIVACY.md): operator/contact, study purpose,
   region, retention, permitted recipients, international transfers, backup/log
   retention, deletion process and study/ethics information as applicable. Do not

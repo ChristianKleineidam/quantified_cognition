@@ -1,252 +1,201 @@
-# JollyJoyJourney — Quantified Cognition privacy policy draft
+# Quantified Cognition privacy policy
 
-**Deployment draft, 30 October 2026.** Replace every bracketed field and publish
-this policy before enabling online research uploads or submitting the provider apps
-for approval. This file describes the implemented flow; it is not a claim that
-research arrangements, legal basis or provider approval have already been established.
+Prepared for publication on **2 November 2026**. Online health connections and
+research uploads remain disabled. These are the commitments for the online
+release; publication, provider approval and the checks in
+[Research operations](RESEARCH_OPERATIONS.md) must precede activation.
 
-## Who operates the service
+## Who we are and your choice
 
-JollyJoyJourney operates Quantified Cognition and the associated research service.
-Its registered business address is:
+**JollyJoyJourney**, operated by **Christian Kleineidam**, is responsible
+for the research service and its processing of personal data. Our address is
+Schweidnitzer Straße 6, 10709 Berlin, Germany. Contact
+[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com). The
+[research information](RESEARCH_INFORMATION.md) explains participation,
+benefits and risks.
 
-JollyJoyJourney  
-Schweidnitzer Straße 6  
-10709 Berlin  
-Germany
+You can use the add-on and export your results without joining research.
+Connecting a health account, agreeing to participate and sending a package are
+separate actions. Research participation is for adults aged 18 or over
+contributing their own data. Yes in the initial sharing prompt uploads nothing.
+Each submission requires a package preview and an explicit Send.
+Research uploads are never automatic.
 
-Contact [contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com) about
-participation, privacy, access or deletion.
-The public study information is at [study URL]. The published policy is at
-[policy URL], effective [date]. The study concerns associations between sleep,
-activity and memory; an association does not establish causation.
+## What stays local and what is shared
 
-The contact address forwards messages through Cloudflare Email Routing to a
-Gmail inbox used by JollyJoyJourney. Cloudflare handles email delivery; Google
-stores the messages in that inbox. Your sender address, message, attachments
-and delivery metadata are processed to deliver and answer your request. Contact
-correspondence is separate from the research dataset. See the
-[Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/) and
-[Google privacy policy](https://policies.google.com/privacy). [Specify
-contact-message retention and the applicable arrangements for these providers.]
+Anki analysis runs on your computer. Separate profile files hold calculated
+scores, health measurements, personal insights and sharing history. Local
+sleep sessions and review times support matching main sleep and naps to studying.
+Temporary Anki snapshots can contain card text. These local files are not
+uploaded as research data. Personal CSVs are saved to locations you choose.
 
-## Personal use and health connections
+Oura and Google Health connections import sleep durations/stages and daily steps
+directly from the provider. Google's activity permission covers more than the
+steps we fetch. Available history and missing measurements depend on the
+provider. Passwords are entered on the provider's website. Our OAuth service
+exchanges codes and renews tokens; tokens pass through it but are not deliberately
+logged or stored in the research database. Credentials are saved in your
+OS-protected local store.
 
-Your Anki calculations run on your computer. The add-on keeps a separate local
-results database, health database and sharing-choice audit in your Anki profile.
-It does not change scheduling. Temporary collection snapshots used for native
-FSRS calculations can contain card text; they remain local and are never part
-of a research upload. CSV files are written only to locations you choose.
-If review logs remain for deleted cards, they can contribute to the same daily
-aggregates when all current presets share the relevant FSRS reconstruction
-settings. Blank placeholder cards/notes exist only in the disposable local copy;
-lost question/answer content and deck assignments are not recovered. Conflicting
-presets leave those histories excluded. Included/skipped counts and the reason
-are saved locally; no new individual review or card fields enter research uploads.
-The results database also keeps each study day's first and last review instant
-locally to match preceding/following sleep. These exact instants are excluded
-from CSVs and research uploads; individual review-pair records are not stored.
+**The research package contains daily measurements:** recall and overall,
+short-term and long-term memory formation scores; predicted and observed recall;
+evaluated, cohort, pending and excluded counts; follow-up coverage, uncertainty and
+quality indicators. Available health data include total, light, deep, REM and
+awake sleep durations, Google's restless time, sleep-period counts and daily
+steps. Main sleep before/after studying, nap counts and phase/duration summaries,
+gaps to studying, between-review nap counts and matching status are included
+when available.
 
-Connecting Oura and submitting research data are separate actions. You can use
-Oura sync without submitting research data. The add-on requests Oura's `daily`
-permission and fetches sleep stages/durations and daily steps directly from
-Oura. It requests only the fields needed for these measurements. It retains
-sleep dates, period times, type and algorithm version locally to aggregate naps,
-detect overlaps and apply corrections; raw sleep-period identifiers are hashed
-locally. It does not request name, email, heart rate, location or workouts.
-
-Our OAuth service, hosted on Supabase in Frankfurt (`eu-central-1`), exchanges authorization
-codes and renews Oura tokens. Codes and tokens pass through this service but
-the application does not store them in its cloud database or log them. The Oura
-application secret remains on the server. Access and refresh tokens are saved
-in your OS-protected credential store (Windows DPAPI, macOS Keychain or Linux
-Secret Service). No token is included in your CSV or research package. Your Oura
-password is entered on Oura's website, not in Anki or our service.
-
-Sync runs in the background while Anki is open: an initial history fetch,
-normally hourly checks of the recent 30 days, and a weekly history refresh for
-older corrections/deletions. Provider rate limits and failed connections delay
-retries. Oura's assigned date is preserved rather than shifted to Anki's day
-boundary. A failed or incomplete fetch does not replace saved measurements.
-
-Google Health can also be connected separately for personal sleep/steps use. The
-add-on asks for Google Health sleep read access and activity/fitness read access;
-the latter covers more than steps, but only steps are fetched. If one permission
-is granted, only that dataset is imported. Users must first link Google Health
-to their account in its mobile app. Only cloud-available data can be read.
-Google sleep/step measurements travel directly to the desktop. Google tokens
-pass through the Supabase OAuth service without application database storage
-and are stored in the OS vault. The Google client secret stays server-side.
-Google sign-in uses Google's external website, not an embedded Anki browser.
-
-Google daily aggregates are stored locally: total/light/deep/REM/awake/restless
-sleep seconds, period count, sleep type/status, steps, day convention, sync time
-and data version. Selected Google sleep sessions retain start/end UTC instants,
-main-sleep/nap flags, processing status, durations and hashed record identifiers
-locally to match sleep to studying. Raw record/account/device IDs and individual
-step samples are not saved. Sleep summaries have whole-minute precision; classic
-sleep does not supply light/deep/REM values. Google uses the local sleep-end
-date and civil step date, which can differ from Anki's day boundary. The initial
-range defaults to a year and can be extended backwards. Background refresh and
-atomic cache/CSV retry behavior match Oura. Recent days may be incomplete.
-Google and Oura data stay in separate columns to avoid duplicate counting.
-
-Before enabling the Google research use, complete Google's research intake,
-review-board approval/waiver and approved eligibility/signed-consent process.
-The implemented local sharing choice and package confirmation alone are not that
-study enrollment process; see [GOOGLE_HEALTH.md](GOOGLE_HEALTH.md).
-
-## Choosing to contribute
-
-Personal insights computes historical correlations locally from saved daily
-measurements. The local `personal-insights.json` cache holds coefficients,
-uncertainty ranges, counts and method information, not individual reviews or
-raw health records. Up to eight input/settings variants are retained and
-provider disconnect/account replacement removes the cache. A separate personal
-summary CSV is saved only when requested; exported copies are user-managed.
-Personal insights also computes matched, fixed-total phase substitution models
-locally. Its cache stores their summary effects, ranges and readiness information,
-and its overview reports history coverage and formation follow-up counts. No
-new health fields are collected for these models. Phase summaries are included
-in the personal summary export, not in research uploads.
-The separate profile-local `personal-insights-visits.json` retains the latest
-displayed-visit snapshot for each provider: viewing time, date-level study and
-formation counts/readiness, health-day hashes, analysis settings and summary
-estimates/uncertainty. It does not copy raw health measurements, exact sleep or
-review times, card identifiers, review pairs or credentials. It supports added/
-backfilled history, formation follow-up and uncertainty comparisons on return.
-Each provider's snapshot is removed on disconnect/account replacement, including
-protection against queued writes restoring it. Personal summary exports include
-the selected visit comparisons; fixed daily CSVs and research uploads do not.
-The insights screen and nonempty personal exports are covered by the same
-first-results-exposure audit. These summaries are not added to research uploads
-automatically; the research package remains the disclosed daily measurements.
-
-Before the first opportunity to see results, the add-on asks Yes, Not now or No.
-All choices allow personal use. Answering Yes does not send measurements.
-Whenever you choose **Review and submit data**, it prepares a fixed package and
-shows its date range, day count, recipient and this policy. Nothing is submitted
-until you choose **Send this package**. There are no automatic research uploads.
-Retrying a failed submission sends the same package ID and is deduplicated.
-
-The complete research package contains daily recall and overall, short-term
-(up to 30 days) and long-term memory formation scores; predicted and observed
-recall, evaluated/cohort/pending/excluded counts, outcome-day counts, uncertainty,
-coverage, comparison labels and formation completeness. When available, it also
-contains Oura total/light/deep/REM/awake seconds, sleep-period counts and data
-status, daily steps, algorithm versions, source date basis, sync times and data
-version. The package also includes the Google daily aggregates described above,
-including restless time, classic/stages type and availability. It includes dates,
-separate main-sleep durations before/after studying, recorded-nap indicators,
-nap counts and total/light/deep/REM durations, gaps to studying, between-review nap counts,
-matching status and matching-method version when available. It includes
-Anki version, FSRS parameter/settings fingerprint,
-timezone, Anki day boundary, calculation settings/method and generation time.
-
-A random participant ID links contributions. The package includes current and
-initial sharing choices, notice version/hash, prompt/consent/exposure times and
-whether consent preceded the first recorded results exposure. These records
-help researchers examine selection effects. Unknown prior exposure stays
-unknown; the audit cannot prove that someone read a result or never saw their
-sleep information elsewhere. We do not collect the full local event log.
+It also contains dates, sources and method versions, Anki version, an FSRS
+settings fingerprint, timezone, Anki day boundary, calculation settings,
+generation/sync times, provider date conventions and relevant sleep
+types/algorithm versions. A random profile participant ID links contributions.
+Sharing choices, notice versions and prompt/consent-preference/results-exposure
+timing let us examine selection effects. Unknown earlier exposure stays unknown.
+The full local event log is excluded.
 
 **Excluded from the package:** card questions and answers; card/deck names and
-identifiers; individual reviews and review pairs; raw Oura sleep records or IDs;
-exact sleep or review times; raw Google records; heart rate; location; name; email;
-Oura/Google account or device IDs;
-passwords; access/refresh tokens. A separate random secret authorizes uploads
-and deletion; the public participant ID is never used as a password.
+IDs; individual reviews and review pairs; exact sleep or review times; raw health
+records and record IDs; heart rate; location; name and email; provider account or
+device IDs; passwords and tokens. Personal insight charts, cached correlations
+and return-visit snapshots are also excluded. Research analyses can be calculated
+from the submitted daily measurements.
 
-These are pseudonymous health-related measurements, not guaranteed anonymous
-data. Dates, behavior patterns and timezone can still be identifying. We use
-the data for [specific research purposes, recipients and publication plan].
-There are no leaderboards. [State whether any onward sharing will occur,
-its recipients and safeguards; obtain the necessary Oura permission first.]
+Eligibility and consent records are separate from measurements. They record the
+information agreed to, its version, date, eligibility and any signature required
+by the approved enrollment process. Required identifying details, if any, are
+explained before you join. Contact correspondence contains the sender address,
+message, attachments and delivery information. Please submit research packages
+through the add-on rather than emailing collections or health exports.
 
-## Cloud storage, access and retention
+These are **pseudonymous data, not guaranteed anonymous data**. Dates, timezone
+and patterns of behavior can still reveal information about a person.
 
-Confirmed packages are stored as JSON in private PostgreSQL tables on Supabase
-in Frankfurt (`eu-central-1`). Neither public clients nor other participants can read them. Access
-is restricted to [named research roles/authorized recipients]. HTTPS protects
-transit; OS storage protects local credentials. [Describe deployed cloud access
-controls, encryption/backup configuration and administrator access.] Supabase
-and Oura process requests under their own policies/contracts. [Describe any
-international transfers and safeguards applicable to this deployment.]
+## What the research covers
 
-The application does not deliberately log tokens, package bodies or measurement
-values. Hosting/gateway infrastructure can retain IP addresses, request times
-and technical request metadata; OAuth callback URLs can contain short-lived
-codes. [Specify actual log retention and URL redaction/access settings.] No user
-health data is sent to AI services by this application.
+We study **how learning and recall vary over time, how they relate to sleep,
+physical activity and study patterns, and how to measure these relationships
+reliably**. This includes validating learning and recall measures, comparing
+sleep stages and naps, examining changes within and between participants, and
+evaluating the reliability and limitations of the findings.
 
-For service quotas, the application stores daily rotating, server-keyed hashes
-of OAuth credentials/flows or the research capability identity, with request
-counts and UTC window boundaries. Raw credentials and participant IDs are not
-stored in those quota records. Windows older than 48 hours are removed by a
-five-minute maintenance job. Private operational metrics retain minute-level
-route/status counts and response durations for seven days. Application function
-logs contain random request IDs, fixed route labels, status and duration; their
-platform retention must be set by the operator. A small set of current alert
-states and health-check/maintenance timestamps supports service operation.
-These operational records are separate from research packages and are not
-included in personal CSVs or the research dataset. They do not contain sleep,
-steps, Anki scores or individual reviews. This automatic housekeeping does not
-set or replace the research-package retention period below.
+Questions and analytical methods can evolve within this area. The programme is
+not limited to one hypothesis, device, model or publication. This does not
+authorize unrelated research or undisclosed new data collection. Material
+changes to purposes, data or access require updated information and any necessary
+fresh consent before the changed use.
 
-Local measurements remain until you delete them or the Anki profile. Research
-packages are retained for [specific justified duration or study end date].
-[Set a database retention job consistent with the published duration.] Earlier
-submissions are kept as immutable snapshots so corrected/recalculated results
-can be distinguished; analysis must select the appropriate snapshot per day
-rather than count repeated uploads as independent observations.
+Results may appear in scientific publications, reports, presentations and public
+summaries. Public material uses anonymous summaries or synthetic examples,
+reviewed for identification risk. Individual daily histories are not an open
+dataset. Open-source licensing of the software does not make participants' data
+public.
 
-## Withdrawal, disconnecting and deletion
+## Access, service providers and international processing
 
-Changing Research sharing to Not now or No stops new submissions, removes any
-unsent package and queues deletion of all previous uploads from this profile.
-**Delete uploaded data** requests the same cloud deletion while leaving local
-measurements intact. When the service acknowledges deletion, all active research
-packages for that profile's upload identity are removed. A random UUID tombstone
-with a deletion timestamp remains solely to reject stale requests; it contains
-no measurements or credential hash. A later contribution uses a new upload
-identity. The local historical consent timing remains accurate.
+Access is limited to authorized JollyJoyJourney researchers and approved
+academic, nonprofit or commercial research collaborators who need it for this
+programme. Pseudonymous daily data may be provided only under agreements limiting
+purpose, access, security, retention and deletion, and where provider permissions
+allow it. Current partners and roles are identified in the research information
+before access. A partner acting as a separate controller must be identified and
+any required additional consent obtained first.
 
-If offline, the add-on retains an encrypted pending deletion request, blocks new
-uploads and retries every five minutes while Anki is open. It cannot deliver an
-offline request after the computer or Anki is closed. You can contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com) if you cannot
-reopen the profile. Keep your local profile until deletion is acknowledged; losing its credential may prevent automated deletion. [Provide
-an operator process for securely verifying and handling exceptional requests.]
+We do not sell pseudonymous participant data or supply it for advertising,
+marketing or individual employment, insurance or credit decisions. Research
+funding does not give partners broader data rights. The add-on does not send
+research measurements to AI services. Further tools and transfers remain subject
+to the disclosed purpose, provider restrictions and data-protection safeguards.
 
-Disconnect and delete on the Oura screen removes local Oura measurements, stops
-sync and attempts to revoke the Oura token. If unreachable, revoke the app in
-your Oura account too. It refreshes an enabled fixed CSV from saved Anki results
-when available. Previously saved/exported copies and previously submitted
-research packages are separate: delete the files or use Delete uploaded data.
-Research withdrawal does not disconnect a personal Oura connection.
+The research database is hosted by **Supabase in Frankfurt, Germany**. Hosting,
+OAuth Edge services, support and subprocessors can involve processing outside
+that database region. Supabase's
+[Data Processing Addendum](https://supabase.com/legal/dpa) describes its role
+and transfer safeguards, including Standard Contractual Clauses where applicable.
 
-The Google Health screen has the same provider-specific disconnect/delete
-control: it deletes Google's local aggregates, stops sync, refreshes the fixed
-CSV and attempts Google token revocation. If offline, remove the app's access
-in the Google account too. It preserves Oura measurements. Research deletion
-and copies of previously exported CSV files are managed separately. Provider
-revocation/deletion notifications, offline clients and backups must be resolved
-with Google before launch; the current implementation polls while Anki is open.
+Our contact address forwards through **Cloudflare Email Routing to Gmail**.
+Cloudflare delivers messages; Google stores them. Their
+[Cloudflare](https://www.cloudflare.com/privacypolicy/) and
+[Google](https://policies.google.com/privacy) policies describe that processing,
+which can involve countries outside the European Economic Area. Correspondence
+is separate from research measurements. Research access outside the EEA requires
+an applicable adequacy decision or appropriate transfer safeguards; contact us
+for details or a copy of the applicable safeguards.
 
-Supabase backups and independently saved research copies require a separate
-retention/deletion process. [State the configured maximum backup lifetime,
-restore-time deletion replay procedure, and how research extracts are deleted.]
-Do not promise that deleting live rows immediately removes every backup or a
-previously published aggregate. [Describe any justified limits and user rights
-applicable to the actual study.] The operator must meet the applicable Oura
-deletion obligations and resolve backup/revocation handling before launch.
+We use private access controls, encrypted connections, protected credentials and
+restricted research workspaces. Authorized hosting personnel can also process
+data to provide and secure the service. No security measure removes every risk
+of unauthorized access or identification.
 
-## Questions and changes
+## Legal basis and retention
 
-Contact [contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com) for
-access, correction, withdrawal, deletion or complaints.
-[Explain applicable rights, supervisory authority, legal basis for health data,
-age/eligibility requirements, and ethics/participant information for this study.]
-A changed sharing notice prompts a new choice before further submissions while
-preserving earlier consent timing. Policy and software versions are published
-at [project URL].
+Research relies on your consent under **Article 6(1)(a) GDPR** and your **explicit
+consent under Article 9(2)(a)** for health-related data. Connecting a personal
+health account is a separate consent-based operation; provider authorization
+does not enroll you in research. Necessary service security, handling enquiries
+and proportionate compliance evidence rely on legitimate interests under Article
+6(1)(f), or a legal obligation where applicable. These interests do not authorize
+continued research after withdrawal.
+
+We keep research measurements only while needed for this programme, for a
+maximum of **ten years after your last contribution**, unless you withdraw
+earlier. This supports longitudinal research, validation and checking findings.
+We review continued need and remove data earlier when it is no longer needed.
+Shorter legal or provider limits take precedence.
+
+Routine application security and service records are kept for no more than
+30 days, often less. They can include IP addresses, request times, route/status
+information and abuse-control counters. Application logging is designed to
+exclude measurements, package bodies and credentials. Relevant incident records
+can be kept longer when necessary for an investigation or legal obligation.
+
+Routine correspondence is normally deleted within two years after resolution.
+Minimal consent, withdrawal and rights-request evidence is kept while needed to
+demonstrate lawful processing and normally for three years after the associated
+research data is deleted. It does not preserve the deleted measurements. A
+specific legal obligation or claim can require a different period, limited to
+the necessary records.
+
+A random, measurement-free deletion marker can be retained longer where needed
+to reject stale requests from old clients or restored copies. It is not used
+for research or to reconstruct deleted measurements.
+
+Recovery copies are isolated from ordinary research use and retained for no more
+than 30 days. Deletions are reapplied before restored data can be used. A shorter
+applicable provider or legal deletion deadline also applies to recovery copies.
+Anonymous published summaries and synthetic data can remain available.
+
+## Withdrawal, deletion and your rights
+
+You can withdraw through Research sharing, or request deletion through
+**Delete uploaded data**. Changing
+sharing to Not now or No blocks new uploads, removes unsent packages and queues
+deletion of earlier submissions from that profile. Once we receive withdrawal,
+we stop using the affected data for research and remove it from active storage
+and research extracts, including controlled collaborator copies. Withdrawal does
+not change the lawfulness of earlier processing. A small, measurement-free
+deletion marker prevents stale uploads from restoring deleted data.
+
+An offline request cannot reach us until Anki can send it. Keep the profile
+until deletion is acknowledged, or contact us. Your participant ID or submission
+receipt helps locate the data. We request only information necessary to verify
+your request. Without enough information to identify a pseudonymous record, we
+may be unable to locate it; an email address alone is not a dataset identifier.
+
+Disconnecting a health provider removes its local measurements and attempts
+revocation. It is separate from deleting research submissions or your exported
+files. If offline, you can also revoke access in the provider's account settings.
+We apply relevant revocation/deletion requirements to data we hold; we cannot
+remotely erase files on an offline computer.
+
+Subject to the GDPR's conditions, you can request access, correction, erasure,
+restriction and a portable copy of your data, and object to legitimate-interest
+processing. We normally respond within one month and explain any lawful
+extension. These data are not used for solely automated decisions with legal or
+similarly significant effects. You can complain to a data-protection authority,
+including the
+[Berlin Commissioner for Data Protection and Freedom of Information](https://www.datenschutz-berlin.de/ueber-uns/kontakt).
+
+Policy and research-information updates carry version dates. Updates do not
+retrospectively expand consent. Contact
+[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com) with questions.

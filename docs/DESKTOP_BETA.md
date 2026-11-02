@@ -180,6 +180,13 @@ in the run directory, outside Git.
 
 ## Remaining checks
 
+Version **0.18.2** is a documentation/package update: it includes the prepared
+research programme, participant information, policy and operating plan. The
+archive now has **52 entries**. The application source, statistical methods,
+beta sharing-notice text/hash and disabled deployment settings are unchanged
+from v0.18.1; this update does not open research enrollment. Research-document
+links, source/archive identity, compilation, exclusions and Ruff were checked.
+
 macOS desktop/Keychain and independent user feedback still need direct testing.
 Actual AnkiWeb synchronization remains pending because there is no empty test
 account. A separate Windows profile on M: is prepared for interactive sign-in;

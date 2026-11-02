@@ -17,7 +17,7 @@ so existing installations retain their settings, saved results and sharing histo
 
 Requires Anki **25.09 or later** with FSRS enabled in Deck Options. No extra Python packages are required in Anki. The add-on runs on desktop; synced mobile/web reviews are analyzed on desktop.
 
-1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.18.1.ankiaddon`; generated packages are not committed to the repository.
+1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.18.2.ankiaddon`; generated packages are not committed to the repository.
 2. In Anki, select **Tools → Add-ons → Install from file**, select the file, and restart Anki.
 3. Open **Tools → Quantified Cognition…**.
 4. Choose **Daily recall** or an overall/short-term/long-term **Memory formation** metric. Inspect a day with the date selector or by clicking the chart. **Inspect daily data** switches to a detailed table.
@@ -187,6 +187,13 @@ suites, statistical regression gates, lint and package checks in an isolated
 executor; unchanged commits reuse their recorded result.
 
 For release preparation, use the [beta checklist](docs/BETA_CHECKLIST.md).
+The [research design](docs/RESEARCH_DESIGN.md),
+[participant information](docs/RESEARCH_INFORMATION.md) and
+[privacy policy](docs/PRIVACY.md) define the intended research programme.
+The [research operating plan](docs/RESEARCH_OPERATIONS.md) separates those
+commitments from the enrollment, retention and provider controls still needed
+before activation. Version 0.18.2 packages these documents; it does not open
+research enrollment or change the current sharing notice.
 The hosted service has [request/storage quotas and private monitoring](docs/BACKEND_OPERATIONS.md);
 Oura, Google Health and research uploads remain disabled.
 
