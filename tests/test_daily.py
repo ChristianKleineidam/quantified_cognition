@@ -86,6 +86,8 @@ def updater(app, tmp_path, monkeypatch):
     gui_hooks.state_did_change.remove(controller.state_changed)
     gui_hooks.reviewer_did_answer_card.remove(controller.card_answered)
     gui_hooks.reviewer_will_end.remove(controller.review_ending)
+    gui_hooks.sync_will_start.remove(controller.sync_starting)
+    gui_hooks.sync_did_finish.remove(controller.sync_finished)
 
 
 def test_disabled_daily_setting_does_not_calculate(updater, monkeypatch):
@@ -323,3 +325,37 @@ def test_queue_completion_respects_disabled_automatic_updates(updater):
     updater.state_changed("overview", "review")
     assert not QueuedJob.requests and not updater.busy
     assert not updater.completion_pending
+
+
+def test_sync_cancels_old_capture_without_its_callback_clearing_new_work(
+    updater, tmp_path, monkeypatch,
+):
+    from test_storage import report_with_followup
+
+    from addon.storage import UpdateResult
+
+    save_daily_settings(
+        updater.main_window.col.path, DailySettings(True, str(tmp_path / "scores.csv"))
+    )
+    monkeypatch.setattr(
+        QueuedJob, "calculate",
+        lambda *args, **kwargs: UpdateResult(report_with_followup(), True, csv_exported=True),
+    )
+    callbacks = []
+    monkeypatch.setattr(
+        daily.QTimer, "singleShot", lambda delay, callback: callbacks.append(callback)
+    )
+    updater.check(force=True)
+    old_job = QueuedJob.requests[-1]
+    updater.sync_starting()
+    assert old_job.cancelled
+    updater.check(force=True)
+    assert len(QueuedJob.requests) == 1
+    updater.sync_finished()
+    callbacks.pop()()
+    assert len(QueuedJob.requests) == 2 and updater.busy
+    old_job.complete(updater.main_window.col)
+    assert updater.busy  # The cancelled generation cannot clear the new job.
+    QueuedJob.requests[-1].complete(updater.main_window.col)
+    assert not updater.busy
+    assert updater.checked_sync_serial == updater.exported_sync_serial == 1

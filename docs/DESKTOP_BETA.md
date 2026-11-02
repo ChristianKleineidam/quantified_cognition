@@ -101,7 +101,7 @@ the sharing-notice hash are unchanged.
 Use a development environment with aqt installed and an existing packaged add-on:
 
 ```powershell
-python tools/desktop_beta.py --root M:\CodexTemp\new-beta-profile --package dist/quantified-cognition-0.18.0.ankiaddon --upgrade-from dist/quantified-self-memory-0.17.4.ankiaddon --choice opt_in --health-fixture --review-close
+python tools/desktop_beta.py --root M:\CodexTemp\new-beta-profile --package dist/quantified-cognition-0.18.1.ankiaddon --upgrade-from dist/quantified-self-memory-0.17.4.ankiaddon --choice opt_in --health-fixture --review-close
 ```
 
 The root must not already exist. The runner leaves screenshots and `result.json`
@@ -116,14 +116,77 @@ python -m pytest -q tests/test_ui.py tests/test_windows_export.py
 ruff check addon tests tools
 ```
 
+## Official builds and Linux, 2 November 2026
+
+The official Windows **26.09.3 x64 MSI** was downloaded from Ankitects' release
+and its signature verified as **Anki Software LLC**. Administrative extraction
+to M: provided the actual official executable without changing the normal Anki
+installation. The official Linux **26.09.3 x86-64** archive was checked against
+GitHub's release-asset SHA-256:
+`d70e01971a7aa190b189927573ee643f2525ff840eafaecc7a8f8cde505650b3`.
+Its executable ran under Xvfb on Debian 13 on Silentworker. Both official builds
+reported Python **3.13.15**, Anki/aqt **26.9.3** and Qt **6.11.0**.
+
+Each platform passed all **14 checks** on a fresh v0.18.0 profile and again on
+a dark-theme **v0.18.0-to-v0.18.1 upgrade**. The driver ran as a separate test
+add-on inside the official application. The product package and official
+runtime were unmodified. Reports, local synthetic health/nap/phase insights,
+consent timing, return visits, fixed CSV and the native final answer/close
+sequence passed. An independent development interpreter checked the final
+answer in CSV after the official executable exited. Successful runs recorded
+no application errors or blocked Python-network attempts. Anki's own Rust
+update check can attempt networking; no AnkiWeb account or health provider was
+connected during these automated runs.
+
+Linux also passed the development-runtime walkthrough and real Secret Service
+save/read/delete and profile-isolation checks. A new session bus, disposable home
+and synthetic keyring were used, with no access to personal credentials. The
+server test needed `libsecret-tools`, which was installed; missing Secret Service
+remains an explicit connection error with no plaintext fallback. The virtual
+display/keyring result does not establish macOS support or every Linux desktop
+and keyring combination. Test processes had restricted CPU/memory and external
+network access. No accessibility audit was completed; it was excluded at the
+user's request and the screen-reader test was stopped.
+
+The sync regression reproduced a stale-CSV bug: a sync completed after the day's
+export could import history without requesting fresh analysis. **v0.18.1** adds
+sync lifecycle handling. Existing automatic captures are cancelled before sync,
+including full-download reopen of the same Collection object. Completion queues
+a background input check; unchanged inputs reuse the saved FSRS result. Closing
+sync arms the durable export handoff even without local answers. Failed CSV
+publication still retries from saved results without scanning history again.
+Native collection/Qt hook regressions cover these paths and the old-callback
+race; they do not replace a live AnkiWeb round trip.
+
+The final Windows regression run passed **373 tests** and Ruff passed. The
+focused sync/daily/shutdown suite also passed **23 tests** with Anki **25.09.2**.
+The v0.18.1 archive contains 49 source/config/documentation entries, preserves
+the installer identity and saved AnkiWeb description, and excludes profiles,
+credentials and the disposable test driver. Its SHA-256 sidecar is in `dist/`.
+Oura, Google Health and research uploads remain disabled; statistical methods,
+schema versions and research-notice text/hash are unchanged.
+
+The reusable official-build driver is `tools/official_desktop_beta.py`:
+
+```powershell
+python tools/official_desktop_beta.py --root M:\CodexTemp\new-official-beta --package dist/quantified-cognition-0.18.1.ankiaddon --upgrade-from dist/quantified-cognition-0.18.0.ankiaddon --anki-exe M:\path\to\official\Anki.exe --dark
+```
+
+Use a new root every time. It creates only synthetic data and adds a development
+driver in that disposable profile; the driver is never included in the product.
+The existing development runner accepts `--platform xcb --timeout 240` for a
+virtual-display Linux run. Screenshots, runtime identity and `result.json` remain
+in the run directory, outside Git.
+
 ## Remaining checks
 
-macOS/Linux desktop, credential-store behaviour, official installer builds,
-screen-reader use and independent user feedback still need direct testing.
-Actual AnkiWeb synchronization was not performed without an account; native
-synced-history edits and shutdown/export lifecycle regressions were tested
-offline. Months of real-world follow-up cannot be replaced by the visit
-simulations. These distinctions remain visible in the [beta checklist](BETA_CHECKLIST.md).
+macOS desktop/Keychain and independent user feedback still need direct testing.
+Actual AnkiWeb synchronization remains pending because there is no empty test
+account. A separate Windows profile on M: is prepared for interactive sign-in;
+it has no personal collection or copied account credentials. Native synced-history
+edits and shutdown/export lifecycle regressions passed offline. Months of
+real-world follow-up cannot be replaced by visit simulations. These distinctions
+remain visible in the [beta checklist](BETA_CHECKLIST.md).
 
 On 30 October the Supabase management API reported the project **INACTIVE**;
 its public hostname did not resolve and SQL checks were unavailable. It was not

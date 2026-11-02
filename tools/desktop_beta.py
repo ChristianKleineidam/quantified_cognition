@@ -225,51 +225,13 @@ def seed_health(source):
     )
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--package", type=Path, required=True)
-    parser.add_argument("--choice", choices=("opt_in", "deferred", "declined"), default="deferred")
-    parser.add_argument("--scale", type=float, default=1)
-    parser.add_argument("--dark", action="store_true")
-    parser.add_argument("--empty", action="store_true")
-    parser.add_argument("--review-close", action="store_true")
-    parser.add_argument("--health-fixture", action="store_true")
-    parser.add_argument("--upgrade-from", type=Path)
-    args = parser.parse_args()
-    faulthandler.dump_traceback_later(30, repeat=True)
-    root, package = args.root.resolve(), args.package.resolve()
-    if root.exists() or not package.is_file():
-        parser.error("Use a new disposable root and an existing packaged add-on.")
-    os.environ["ANKI_SINGLE_INSTANCE_KEY"] = (
-        "qs-beta-" + hashlib.sha256(str(root).encode()).hexdigest()[:20]
-    )
-    os.environ.setdefault("ANKI_SOFTWAREOPENGL", "1")
-    os.environ["QT_QPA_PLATFORM"] = "windows" if sys.platform == "win32" else "offscreen"
-    base, source = prepare(root, package, args.scale, args.dark, not args.empty, args.upgrade_from)
-    blocked = []
-
-    def network_guard(event, values):
-        if event in ("socket.connect", "socket.getaddrinfo"):
-            address = values[1] if event == "socket.connect" else values[0]
-            host = address[0] if isinstance(address, tuple) else address
-            if host not in ("127.0.0.1", "::1", "localhost"):
-                blocked.append(event)
-                raise OSError("Disposable beta test blocks external network access")
-
-    sys.addaudithook(network_guard)
+def start_walkthrough(app, root, source, args, blocked):
+    """Drive only synthetic profiles; also callable by a disposable test add-on."""
     import aqt
     from aqt.qt import QApplication, QTimer
 
-    app = aqt._run(["anki", "-b", str(base), "-p", "Desktop Beta", "-l", "en_US"], exec=False)
-    assert app is not None
-    faulthandler.cancel_dump_traceback_later()
-    if args.scale != 1:
-        font = app.font()
-        font.setPointSizeF(font.pointSizeF() * args.scale)
-        app.setFont(font)
     results = {
-        "package": package.name,
+        "package": args.package.name,
         "choice": args.choice,
         "scale": args.scale,
         "dark": args.dark,
@@ -304,7 +266,7 @@ def main():
 
     def poll():
         try:
-            if time.monotonic() - state["start"] > 100:
+            if time.monotonic() - state["start"] > args.timeout:
                 raise TimeoutError("Timed out at " + state["stage"])
             widgets = QApplication.topLevelWidgets()
             stage = state["stage"]
@@ -523,10 +485,60 @@ def main():
             print(results["errors"][-1], flush=True)
             finish()
 
-    timer = QTimer()
+    timer = QTimer(app)
     timer.setInterval(100)
     timer.timeout.connect(poll)
     timer.start()
+    return results, timer, check
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--package", type=Path, required=True)
+    parser.add_argument("--choice", choices=("opt_in", "deferred", "declined"), default="deferred")
+    parser.add_argument("--scale", type=float, default=1)
+    parser.add_argument("--dark", action="store_true")
+    parser.add_argument("--empty", action="store_true")
+    parser.add_argument("--review-close", action="store_true")
+    parser.add_argument("--health-fixture", action="store_true")
+    parser.add_argument("--upgrade-from", type=Path)
+    parser.add_argument("--platform", choices=("windows", "xcb", "offscreen", "cocoa"))
+    parser.add_argument("--timeout", type=float, default=100)
+    args = parser.parse_args()
+    faulthandler.dump_traceback_later(30, repeat=True)
+    root, package = args.root.resolve(), args.package.resolve()
+    if root.exists() or not package.is_file() or args.timeout <= 0:
+        parser.error("Use a new disposable root and an existing packaged add-on.")
+    os.environ["ANKI_SINGLE_INSTANCE_KEY"] = (
+        "qs-beta-" + hashlib.sha256(str(root).encode()).hexdigest()[:20]
+    )
+    os.environ.setdefault("ANKI_SOFTWAREOPENGL", "1")
+    os.environ["QT_QPA_PLATFORM"] = args.platform or (
+        "windows" if sys.platform == "win32" else "offscreen"
+    )
+    base, source = prepare(root, package, args.scale, args.dark, not args.empty, args.upgrade_from)
+    blocked = []
+
+    def network_guard(event, values):
+        if event in ("socket.connect", "socket.getaddrinfo"):
+            address = values[1] if event == "socket.connect" else values[0]
+            host = address[0] if isinstance(address, tuple) else address
+            if host not in ("127.0.0.1", "::1", "localhost"):
+                blocked.append(event)
+                raise OSError("Disposable beta test blocks external network access")
+
+    sys.addaudithook(network_guard)
+    import aqt
+
+    app = aqt._run(["anki", "-b", str(base), "-p", "Desktop Beta", "-l", "en_US"], exec=False)
+    assert app is not None
+    faulthandler.cancel_dump_traceback_later()
+    if args.scale != 1:
+        font = app.font()
+        font.setPointSizeF(font.pointSizeF() * args.scale)
+        app.setFont(font)
+    results, timer, check = start_walkthrough(app, root, source, args, blocked)
     app.exec()
     # Anki clears its exception handler during cleanup. This standalone test
     # still needs subprocess reader threads for independent post-exit checks.

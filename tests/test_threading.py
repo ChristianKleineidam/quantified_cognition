@@ -184,6 +184,8 @@ def test_daily_checks_native_calculation_database_and_csv_use_worker(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
 
 
 def test_manual_recalculation_and_saved_report_load_use_workers(runtime, app, monkeypatch):
@@ -316,6 +318,8 @@ def test_daily_export_failure_delivers_report_and_retains_retry_backoff(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
 
 
 @pytest.mark.parametrize(
@@ -396,6 +400,8 @@ def test_reviewing_can_answer_a_card_while_automatic_analysis_or_export_runs(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
     assert delivered and destination.is_file()
     assert main.col.db.scalar("select count(*) from revlog") == before + 1
     assert not copy_paths[0].parent.exists()
@@ -436,6 +442,8 @@ def test_profile_close_cancels_independent_analysis_without_publishing(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
     assert not delivered and not destination.exists()
     assert storage.load_report(database_path(main.col.path)) is None
     assert not directory.exists() and not notices
@@ -484,6 +492,8 @@ def test_automatic_csv_retry_needs_no_collection_queue_even_during_review(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
 
 
 def test_review_started_during_preparation_defers_copy_and_cleans_temp_files(
@@ -519,6 +529,8 @@ def test_review_started_during_preparation_defers_copy_and_cleans_temp_files(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
     assert job.snapshot_path is not None
     assert not job.snapshot_path.parent.exists()
     assert not database_path(main.col.path).exists()
@@ -554,6 +566,8 @@ def test_failed_copy_cleans_partial_snapshot_and_releases_collection_queue(
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
 
 
 def test_final_card_refreshes_existing_daily_csv_without_user_action(runtime, app, tmp_path):
@@ -622,6 +636,8 @@ def test_final_card_refreshes_existing_daily_csv_without_user_action(runtime, ap
         gui_hooks.state_did_change.remove(updater.state_changed)
         gui_hooks.reviewer_did_answer_card.remove(updater.card_answered)
         gui_hooks.reviewer_will_end.remove(updater.review_ending)
+        gui_hooks.sync_will_start.remove(updater.sync_starting)
+        gui_hooks.sync_did_finish.remove(updater.sync_finished)
 
 
 def test_profile_preferences_read_and_write_use_file_workers(runtime, app, tmp_path, monkeypatch):

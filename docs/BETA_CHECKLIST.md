@@ -37,15 +37,28 @@ unchecked items remain work, not implied release approval.
   control names; fix clipped dates and insight headings.
 - [x] Provide an issue template for versions and sanitized errors, plus install,
   disable, uninstall and backup instructions.
-- [x] Inspect the v0.18.0 archive for source/config/docs only, no credentials,
+- [x] Inspect the v0.18.1 archive for source/config/docs only, no credentials,
   profiles, private benchmark files or personal health data. Its SHA-256 sidecar
   is saved alongside the archive in `dist/`.
-- [ ] Repeat the walkthrough in official installer builds, with actual AnkiWeb
-  sync on a permitted test account. Offline synced-history/lifecycle tests passed.
-- [ ] Test macOS/Linux UI, OS credential storage, background shutdown and chosen
-  export locations. Only Windows has been exercised on this development host.
-- [ ] Test a screen reader and give a few Anki users the concise instructions;
-  record confusing labels and revisit with their real accumulated follow-ups.
+- [x] Run the signed official Windows 26.09.3 MSI payload and checksum-verified
+  official Linux 26.09.3 package in disposable profiles. Fresh v0.18.0 and dark
+  v0.18.0-to-v0.18.1 upgrades each passed 14 checks on both platforms, including
+  final-answer CSV publication after the official executable exits. The Windows
+  package was extracted on M:, leaving the normal installation untouched.
+- [x] Exercise Linux UI under Xvfb, fixed CSV, background shutdown and a private
+  synthetic Secret Service keyring (save/read/delete and profile isolation).
+- [x] Fix sync-completion refresh after an earlier daily export; check unchanged
+  history reuse, cancellation of older captures, closing-sync durability and
+  saved-report-only CSV retries using native Anki collections and real Qt hooks.
+- [ ] Perform actual AnkiWeb synchronization using an empty test account. No
+  test account is available yet; the disposable Windows sync profile is prepared.
+  Hook-level synced-history tests do not establish cloud authentication/transport.
+- [ ] Test macOS UI, Keychain storage, background shutdown and export locations
+  on a Mac. No macOS test environment is available in this session.
+- [ ] Give a few Anki users the concise instructions; record confusing labels
+  and revisit with their real accumulated follow-ups. No invitations were sent.
+
+An accessibility audit is excluded from this pass at the user's request.
 
 Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 

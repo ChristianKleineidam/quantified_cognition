@@ -17,7 +17,7 @@ so existing installations retain their settings, saved results and sharing histo
 
 Requires Anki **25.09 or later** with FSRS enabled in Deck Options. No extra Python packages are required in Anki. The add-on runs on desktop; synced mobile/web reviews are analyzed on desktop.
 
-1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.18.0.ankiaddon`; generated packages are not committed to the repository.
+1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.18.1.ankiaddon`; generated packages are not committed to the repository.
 2. In Anki, select **Tools → Add-ons → Install from file**, select the file, and restart Anki.
 3. Open **Tools → Quantified Cognition…**.
 4. Choose **Daily recall** or an overall/short-term/long-term **Memory formation** metric. Inspect a day with the date selector or by clicking the chart. **Inspect daily data** switches to a detailed table.
@@ -33,6 +33,12 @@ The report shows one metric at a time, with a score, evaluated count, approximat
 Open **Tools → Quantified Cognition Daily Settings…** or **Daily settings…** in the report. Enable automatic updates, choose an absolute CSV file path, and save. Enabling starts an initial update. Preferences are separate for each profile and are off by default; choose different CSV destinations for different profiles.
 
 The add-on checks every five minutes while a profile is open. It requests a daily update using the configured **Anki day** boundary, and also requests a fresh update immediately when the current review queue is finished. Queue completion refreshes results even if the CSV was already generated earlier that day. Anki normally returns to its overview automatically after the last available card; no manual navigation is needed. A pending learning card that becomes available later can lead to another completed session. If Anki is closed at the boundary, the next profile opening catches up. New analysis waits while Anki is performing other collection operations or is on the review screen, and checks again after leaving review. A calculation already running on a copy continues independently when reviewing starts. It does not launch Anki independently; a final export worker can finish after its window closes. Catch-up checks the latest inputs once. If nothing affecting the analysis changed, saved scores are reused without replaying FSRS. Changed inputs trigger one full-history replay, rather than separate runs for missed days.
+
+Version 0.18.1 also checks for changed history after Anki sync, even when today's
+CSV is already current. It cancels older automatic captures before sync and
+refreshes in the background afterward. Closing sync preserves imported reviews
+for export even when no cards were answered locally. Unchanged history reuses
+saved calculations; failed CSV publication retries from saved results.
 
 Calculations, daily eligibility checks, results database reads/writes, CSV exports, and profile-preference file reads/writes run in **background threads**. Only reading the rollover setting and creating a consistent collection copy use Anki's serialized `QueryOp` worker. Temporary-folder creation, file/settings checks, opening the copied collection, input fingerprinting, FSRS replay, aggregation, saving results and CSV writing all use the independent worker pool. Each copied collection has its own native Anki backend; heavy work never holds Anki's collection queue or its background-operation guard. CSV retries use only saved results and can run while reviewing or syncing. Qt widgets and success/error messages are updated only on the main thread. Recalculation has an inline status message instead of a modal progress window. The copy itself still needs exclusive coordination with live collection operations and takes time proportional to collection size; automatic copying is deferred on the review screen. Finishing a review queue starts a fresh update that includes the final answer. If an older calculation is still running, one follow-up update is queued so its older copy does not omit the completed session. Leaving review early keeps the ordinary daily eligibility check. Disabled automatic updates stay disabled.
 

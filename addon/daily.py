@@ -53,6 +53,11 @@ class DailyUpdater:
         self.exported_review_serial = 0
         self.completion_serial = 0
         self.completion_pending = False
+        self.syncing = False
+        self.closing_profile = False
+        self.sync_serial = 0
+        self.checked_sync_serial = 0
+        self.exported_sync_serial = 0
         self.timer = QTimer(main_window)
         self.timer.setInterval(5 * 60 * 1000)
         self.timer.timeout.connect(self.check)
@@ -61,8 +66,13 @@ class DailyUpdater:
         gui_hooks.state_did_change.append(self.state_changed)
         gui_hooks.reviewer_did_answer_card.append(self.card_answered)
         gui_hooks.reviewer_will_end.append(self.review_ending)
+        gui_hooks.sync_will_start.append(self.sync_starting)
+        gui_hooks.sync_did_finish.append(self.sync_finished)
 
     def start(self) -> None:
+        self.syncing = False
+        self.closing_profile = False
+        self.sync_serial = self.checked_sync_serial = self.exported_sync_serial = 0
         self.retry_after = 0.0
         self.last_error = None
         self.review_answers = False
@@ -95,7 +105,11 @@ class DailyUpdater:
         # A successful earlier export (or its queued Qt callback) cannot stand
         # in for answers recorded after that job started. Capture the latest
         # collection even when the final-card preflight has not run yet.
-        dirty = self.review_serial > self.exported_review_serial or self.completion_pending
+        dirty = (
+            self.review_serial > self.exported_review_serial or self.completion_pending
+            or self.sync_serial > self.exported_sync_serial
+        )
+        self.closing_profile = True
         self.stop()
         if dirty and self.main_window.col is not None:
             arm_close_export(
@@ -103,6 +117,37 @@ class DailyUpdater:
                 lambda: self.main_window.addonManager.getConfig(self.addon_name),
                 require_choice=self.on_sharing_needed is not None,
             )
+
+    def sync_starting(self) -> None:
+        # A full download temporarily closes/reopens the same Collection object.
+        # Invalidate existing captures even when its Python identity is unchanged.
+        self.syncing = True
+        self.generation += 1
+        if self.job is not None:
+            self.job.cancel()
+        if self.preflight_cancelled is not None:
+            self.preflight_cancelled.set()
+        self.job = None
+        self.busy = False
+
+    def sync_finished(self) -> None:
+        self.syncing = False
+        if self.main_window.col is None:
+            return
+        self.sync_serial += 1
+        if self.closing_profile:
+            # Closing sync runs after profile_will_close. Capture at the actual
+            # close point, including imported reviews when there were no local answers.
+            arm_close_export(
+                self.main_window,
+                lambda: self.main_window.addonManager.getConfig(self.addon_name),
+                require_choice=self.on_sharing_needed is not None,
+            )
+            return
+        generation = self.generation
+        QTimer.singleShot(
+            0, lambda: self.check(force=True) if generation == self.generation else None
+        )
 
     def card_answered(self, reviewer, card, ease: int) -> None:
         # No database queries or extra collection operations for each answer.
@@ -130,7 +175,9 @@ class DailyUpdater:
 
     def check(self, *, force: bool = False) -> None:
         main = self.main_window
-        if self.busy or main.col is None or (not force and time.monotonic() < self.retry_after):
+        if self.busy or self.syncing or self.closing_profile or main.col is None:
+            return
+        if not force and time.monotonic() < self.retry_after:
             return
         collection = main.col
         collection_path = collection.path
@@ -138,9 +185,10 @@ class DailyUpdater:
         generation = self.generation
         completion_serial = self.completion_serial
         review_serial = self.review_serial
+        sync_serial = self.sync_serial
         analysis_started = False
         refresh_completed = self.completion_pending
-        force = force or refresh_completed
+        force = force or refresh_completed or sync_serial > self.checked_sync_serial
         self.busy = True
         cancelled = threading.Event()
         self.preflight_cancelled = cancelled
@@ -206,6 +254,12 @@ class DailyUpdater:
                     self.on_sharing_needed()
                 return
             if isinstance(result, UpdateResult):
+                if analysis_started:
+                    self.checked_sync_serial = max(self.checked_sync_serial, sync_serial)
+                if result.csv_exported:
+                    self.exported_sync_serial = max(
+                        self.exported_sync_serial, self.checked_sync_serial
+                    )
                 if analysis_started and result.csv_exported:
                     self.exported_review_serial = max(self.exported_review_serial, review_serial)
                 if self.on_report is not None:
