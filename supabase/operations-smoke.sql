@@ -16,10 +16,11 @@ begin
 
     assert public.qs_register(participant,actor);
     update qs_private.storage_budget set participant_submission_limit=1;
-    receipt := public.qs_submit(participant,actor,submission,'{"synthetic":true}'::jsonb,actor);
-    assert public.qs_submit(participant,actor,submission,'{"synthetic":true}'::jsonb,actor)=receipt;
+    -- Operator-only storage probe; public submission additionally requires enrollment.
+    receipt := qs_private.store_submission(participant,actor,submission,'{"synthetic":true}'::jsonb,actor);
+    assert qs_private.store_submission(participant,actor,submission,'{"synthetic":true}'::jsonb,actor)=receipt;
     begin
-        perform public.qs_submit(participant,actor,gen_random_uuid(),'{}'::jsonb,actor);
+        perform qs_private.store_submission(participant,actor,gen_random_uuid(),'{}'::jsonb,actor);
         raise exception 'expected storage quota';
     exception when raise_exception then assert sqlerrm='quota_exceeded';
     end;

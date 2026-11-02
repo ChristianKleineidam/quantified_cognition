@@ -55,6 +55,9 @@ class SubmissionDialog(QDialog):
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
         buttons = QHBoxLayout()
+        self.enrollment = QPushButton("Research enrollment…")
+        self.enrollment.clicked.connect(self.open_enrollment)
+        buttons.addWidget(self.enrollment)
         self.refresh = QPushButton("Prepare latest data")
         self.refresh.clicked.connect(lambda: self.prepare(reuse=False))
         buttons.addWidget(self.refresh)
@@ -73,22 +76,33 @@ class SubmissionDialog(QDialog):
         self.busy = True
         self.send.setEnabled(False)
         self.refresh.setEnabled(False)
+        self.enrollment.setEnabled(False)
 
         def finished(value):
             self.busy = False
             if self.closed:
                 return
             self.refresh.setEnabled(True)
+            self.enrollment.setEnabled(True)
             success(value)
 
         def failed(error):
             self.busy = False
             if not self.closed:
                 self.refresh.setEnabled(True)
+                self.enrollment.setEnabled(True)
                 self.send.setEnabled(self.package is not None)
                 self.status.setText(str(error))
 
         run_file_job(task, finished, failed)
+
+    def open_enrollment(self):
+        from .enrollment_ui import EnrollmentDialog
+
+        dialog = EnrollmentDialog(self, self.source, self.services, self.sharing)
+        dialog.exec()
+        if dialog.enrolled:
+            self.prepare(reuse=False)
 
     def prepare(self, *, reuse=True):
         if self.busy:
@@ -108,7 +122,9 @@ class SubmissionDialog(QDialog):
                 + html.escape(status["privacy_url"], quote=True)
                 + '">Study information and privacy policy</a>'
             )
-            self.status.setText("Review the package, then choose Send. Nothing has been uploaded.")
+            self.status.setText(
+                "Review the package, then choose Send. No measurements have been uploaded."
+            )
             self.send.setEnabled(True)
 
         self.run(
@@ -147,10 +163,20 @@ def delete_uploaded_data(parent, source, callback):
 
     def task():
         if not queue_deletion(source):
+            from .enrollment import latest_enrollment
+
+            previous = latest_enrollment(source)
+            if previous and previous["receipt"]:
+                return (
+                    "The deletion credential is unavailable. Contact "
+                    "contact@jollyjoyjourney.com with your saved research receipt "
+                    "to request deletion. Server deletion has not been confirmed."
+                )
             return "This profile has no research upload connection."
         try:
-            retry_deletion(source)
-            return "Uploaded research data deleted."
+            if retry_deletion(source):
+                return "Research data deletion confirmed, including registered copies."
+            return "Active storage deleted. Deletion of registered research copies is pending."
         except Exception:
             return "Deletion is queued and will retry while Anki is open. New uploads are blocked."
 

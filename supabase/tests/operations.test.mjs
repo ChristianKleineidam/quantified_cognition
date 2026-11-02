@@ -11,7 +11,8 @@ const env = { OURA_ENABLED: "true", GOOGLE_HEALTH_ENABLED: "true", RESEARCH_ENAB
 const id = "00000000-0000-4000-8000-000000000001", secret = "c".repeat(43);
 const request = (route, data, method="POST", extra={}) => new Request(env.SERVICE_URL+route, {
   method, headers: { "Content-Type": "application/json", authorization: `Bearer ${id}:${secret}`, ...extra },
-  ...(data === undefined ? {} : { body: JSON.stringify(data) }) });
+  ...(data === undefined && method !== "DELETE" ? {} : {
+    body: JSON.stringify(data ?? {receipt_secret:secret}) }) });
 function harness(options={}) {
   const calls=[], logs=[];
   const handler=createHandler({ env: { ...env,...options.env }, now: options.now ?? (()=>1793059200000),
@@ -21,7 +22,7 @@ function harness(options={}) {
       calls.push({ url,data,init });
       if (url.endsWith("/qs_admit")) return options.admit?.(data) ?? Response.json({ allowed:true,retry_after:0 });
       if (url.endsWith("/qs_ops_record")) return options.record?.() ?? Response.json(null);
-      if (url.endsWith("/qs_delete")) return Response.json(true);
+      if (url.endsWith("/qs_delete_request")) return Response.json({active_storage_deleted:true,complete:true});
       if (url.endsWith("/qs_register")) return options.register?.() ?? Response.json(true);
       return Response.json({ access_token:"access",refresh_token:"refresh",expires_in:3600 });
     } });
@@ -58,7 +59,7 @@ test("closed features do no quota, provider or storage work; deletion remains in
   assert.equal((await status.json()).operations_version,1);
   assert.equal(h.calls.length,0);
   assert.equal((await h.handler(request("/research/participant",undefined,"DELETE"))).status,200);
-  assert.deepEqual(h.calls.map(c=>c.url.split("/").at(-1)),["qs_admit","qs_delete","qs_ops_record"]);
+  assert.deepEqual(h.calls.map(c=>c.url.split("/").at(-1)),["qs_admit","qs_delete_request","qs_ops_record"]);
   assert.equal(h.calls[0].data.p_family,"delete");
 });
 test("actor hashes ignore spoofed IP headers and rotate by UTC day",async()=> {

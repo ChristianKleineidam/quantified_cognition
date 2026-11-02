@@ -31,6 +31,8 @@ export function routeLabel(request) {
   if (/^\/oauth\/(start|callback|exchange|refresh|revoke)$/.test(route)) return "oura_oauth";
   if (/^\/google\/oauth\/(start|callback|exchange|refresh|revoke)$/.test(route)) return "google_oauth";
   if (route === "/research/participant") return request.method === "DELETE" ? "delete" : "register";
+  if (route === "/research/deletion-status") return "delete";
+  if (["/research/enrollment", "/research/enrollment-information"].includes(route)) return "register";
   if (route === "/research/submissions") return "submit";
   return "unknown";
 }

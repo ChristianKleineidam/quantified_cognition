@@ -92,7 +92,7 @@ test("Google daily fields are allowlisted and research contract changes reject o
   const metadata = Object.fromEntries(schema.metadata.map(k => [k, ""]));
   Object.assign(metadata, { research_participant_id: crypto.randomUUID(), research_consent_active: true,
     sharing_current_choice: "opt_in", sharing_notice_version: "v3", sharing_notice_hash: "a".repeat(64) });
-  const packet = { schema_version: 4, submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
+  const packet = { schema_version: 5, enrollment_id: crypto.randomUUID(), submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
     metadata, columns: schema.columns, rows: [schema.columns.map(name => ({ date: "2026-09-07",
       google_health_sleep_status: "durations available", google_health_sleep_types: "STAGES",
       google_health_day_basis: "sleep_end_local_date_steps_civil_date", google_health_steps: "0",

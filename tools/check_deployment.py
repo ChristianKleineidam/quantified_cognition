@@ -43,6 +43,9 @@ def check(service_url, *, publishable_key=None, check_quota=False):
     assert payload.get("google_health_enabled") is False, "Google Health must remain disabled"
     assert payload.get("research_enabled") is False, "Research uploads must remain disabled"
     assert payload.get("operations_version") == 1, "Backend quotas/monitoring version is missing"
+    assert payload.get("research_controls_version") == 1, (
+        "Enrollment/lifecycle controls are missing"
+    )
     results = {"status": payload, "endpoint_checks": {}}
     # A random, nonexistent test identity; no registration or upload is allowed.
     auth = {"Authorization": "Bearer " + str(uuid.uuid4()) + ":" + "s" * 43}
@@ -57,6 +60,7 @@ def check(service_url, *, publishable_key=None, check_quota=False):
         "/google/oauth/revoke",
         "/research/participant",
         "/research/submissions",
+        "/research/enrollment",
     ):
         code, _ = request(root + route, method="POST", headers=auth, data={})
         assert code == 503, f"{route} returned {code}; expected disabled (503)"
@@ -67,17 +71,26 @@ def check(service_url, *, publishable_key=None, check_quota=False):
     code, _ = request(root + "/google/oauth/callback?code=synthetic-disabled-probe")
     assert code == 503, f"Google callback returned {code}; expected disabled (503)"
     results["endpoint_checks"]["/google/oauth/callback"] = code
+    code, _ = request(root + "/research/enrollment-information")
+    assert code == 503, "Enrollment must remain disabled"
     # Exercises the hosted function -> private RPC -> DB connection without
-    # creating data. Deleting an absent random identity is an idempotent no-op.
-    code, receipt = request(root + "/research/participant", method="DELETE", headers=auth)
-    assert code == 200 and receipt.get("deleted") is True, "Private deletion RPC is unavailable"
+    # creating measurements. This leaves a synthetic deletion tombstone/receipt,
+    # preventing a lost registration response from resurrecting that identity.
+    deletion = {"receipt_secret": "r" * 43}
+    code, receipt = request(
+        root + "/research/participant", method="DELETE", headers=auth, data=deletion
+    )
+    assert code == 200 and receipt.get("complete") is True, "Private deletion RPC is unavailable"
     results["endpoint_checks"]["delete_nonexistent_participant"] = code
     if check_quota:
         # Same absent capability identity; no registration or research data.
         # At most 21 requests also covers crossing one fixed-minute boundary.
         for _ in range(20):
             code, _, response_headers = request(
-                root + "/research/participant", method="DELETE", headers=auth,
+                root + "/research/participant",
+                method="DELETE",
+                headers=auth,
+                data=deletion,
                 return_headers=True,
             )
             if code == 429:
@@ -105,9 +118,7 @@ def check(service_url, *, publishable_key=None, check_quota=False):
             ("qs_admit", {"p_family": "delete", "p_subject": "a" * 64}),
             ("qs_ops_record", {"p_route": "delete", "p_status": 200, "p_duration_ms": 1}),
         ):
-            code, _ = request(
-                api + "/rpc/" + name, method="POST", headers=headers, data=params
-            )
+            code, _ = request(api + "/rpc/" + name, method="POST", headers=headers, data=params)
             assert code in (401, 403), f"Anonymous client reached {name} ({code})"
             results["endpoint_checks"]["anonymous_" + name + "_denied"] = code
         code, _ = request(
@@ -124,15 +135,18 @@ if __name__ == "__main__":
     parser.add_argument("service_url")
     parser.add_argument("--publishable-key", help="Optional public key for anonymous REST probes")
     parser.add_argument(
-        "--check-quota", action="store_true",
+        "--check-quota",
+        action="store_true",
         help="Also exercise the absent-identity deletion quota (up to 21 no-op requests)",
     )
     arguments = parser.parse_args()
     print(
         json.dumps(
             check(
-                arguments.service_url, publishable_key=arguments.publishable_key,
+                arguments.service_url,
+                publishable_key=arguments.publishable_key,
                 check_quota=arguments.check_quota,
-            ), indent=2
+            ),
+            indent=2,
         )
     )

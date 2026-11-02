@@ -28,7 +28,7 @@ function packet() {
   Object.assign(metadata, { research_participant_id: id, research_consent_active: true,
     sharing_current_choice: "opt_in", sharing_notice_version: env.RESEARCH_NOTICE_VERSION,
     sharing_notice_hash: env.RESEARCH_NOTICE_HASH });
-  return { schema_version: 4, submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
+  return { schema_version: 5, enrollment_id: id, submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
     metadata, columns: schema.columns,
     rows: [schema.columns.map(k => k === "date" ? "2026-10-01" : "")] };
 }
@@ -117,7 +117,7 @@ test("private research requests authenticate a separate capability; deletion wor
   assert.equal((await handler(request("/research/submissions", value))).status, 401);
   assert.equal(calls.length, 2);
   const disabled = createHandler({ env: { ...env, RESEARCH_ENABLED: "false" }, fetch: async () => response(true) });
-  assert.equal((await disabled(request("/research/participant", undefined, auth, "DELETE"))).status, 200);
+  assert.equal((await disabled(request("/research/participant", {receipt_secret:secret}, auth, "DELETE"))).status, 200);
   assert.equal((await disabled(request("/research/submissions", value, auth))).status, 503);
 });
 

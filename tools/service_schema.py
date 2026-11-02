@@ -72,7 +72,7 @@ enums.update(
     }
 )
 schema = {
-    "package_version": 4,
+    "package_version": 5,
     "columns": columns,
     "metadata": list(RESEARCH_METADATA_FIELDS),
     "numeric": [name for name in columns if name not in text and name not in enums],

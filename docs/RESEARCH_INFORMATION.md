@@ -79,9 +79,11 @@ cannot be separated back into an individual's contribution. An offline request
 must reach us before it can be acted on; contact us if the profile or its
 deletion credential is unavailable.
 
-Before joining, you must be able to save this information, the policy and your
-consent record. The approved enrollment process must obtain explicit consent
-and any required signature. Proposed statement for that process:
+Before joining, you can save this information, the policy and your consent
+record. The add-on checks eligibility before asking for explicit consent and
+a typed research signature. A chosen pseudonym is used; it is stored separately
+from daily measurements. This signature method must be accepted by the applicable
+review/provider process before enrollment opens. Consent statement:
 
 > I confirm that I am at least 18 and am contributing my own data. I have read
 > the research information and privacy policy. I explicitly consent to
@@ -91,6 +93,6 @@ and any required signature. Proposed statement for that process:
 > described. I understand the retention criteria, that each upload requires my
 > confirmation, and that I can withdraw without losing personal use.
 
-This statement specifies the intended enrollment flow; it is not a claim of
-ethics/provider approval or an implemented beta consent process. Required review
-information and signatures must be incorporated before enrollment opens.
+Enrollment remains closed. Implementing this flow does not establish
+ethics/provider approval. Any required changes to the information or signature
+process must be incorporated and versioned before enrollment opens.

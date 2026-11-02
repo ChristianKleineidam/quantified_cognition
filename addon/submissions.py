@@ -5,12 +5,12 @@ from __future__ import annotations
 import csv
 import json
 import os
-import secrets
 import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .enrollment import require_enrollment, withdraw_enrollment
 from .export import CSV_FIELDS, export_csv
 from .health import load_health
 from .research import RESEARCH_METADATA_FIELDS, sharing_state
@@ -19,7 +19,7 @@ from .storage import database_path, load_report, profile_job_lock, results_direc
 from .vault import read_secret, write_secret
 
 PACKAGE_COLUMNS = [key for key in CSV_FIELDS if key not in RESEARCH_METADATA_FIELDS]
-PACKAGE_VERSION = 4
+PACKAGE_VERSION = 5
 
 
 def _path(source):
@@ -64,6 +64,7 @@ def prepare_submission(source, config, sharing, *, reuse=True):
         raise ServiceError("The research service has not published its privacy information yet.")
     with profile_job_lock(source, "submission"), profile_job_lock(source):
         snapshot = _consent(source, sharing)
+        enrollment = require_enrollment(source, config)
         pending = _path(source)
         if reuse and pending.exists():
             saved = json.loads(pending.read_text(encoding="utf-8"))
@@ -73,19 +74,40 @@ def prepare_submission(source, config, sharing, *, reuse=True):
                 and saved["consent_event"] == snapshot.choices[-1]["id"]
                 and saved["package"].get("schema_version") == PACKAGE_VERSION
                 and saved["package"].get("columns") == PACKAGE_COLUMNS
+                and saved["package"].get("enrollment_id") == enrollment["id"]
             ):
                 return saved, status
         with tempfile.TemporaryDirectory(dir=results_directory(source)) as directory:
             path = Path(directory) / "aggregate.csv"
-            export_csv(
-                load_report(database_path(source)), path, health_snapshot=load_health(source)
-            )
+            health = load_health(source)
+            export_csv(load_report(database_path(source)), path, health_snapshot=health)
             with path.open(encoding="utf-8-sig", newline="") as handle:
                 rows = [[row[key] for key in PACKAGE_COLUMNS] for row in csv.DictReader(handle)]
+            # The personal CSV also describes missing session matches. Those
+            # algorithm-only placeholders are not provider history: leave a
+            # provider completely blank when none of its data was imported.
+            for provider in ("oura", "google_health"):
+                present = (
+                    bool(health.sleep_windows.get(provider))
+                    or any(session.provider == provider for session in health.sessions)
+                    or any(
+                        key.startswith(provider + "_") and value is not None and value != ""
+                        for day in health.days.values()
+                        for key, value in day.values.items()
+                    )
+                )
+                if not present:
+                    indices = [
+                        i for i, key in enumerate(PACKAGE_COLUMNS) if key.startswith(provider + "_")
+                    ]
+                    for row in rows:
+                        for index in indices:
+                            row[index] = ""
         if not rows:
             raise ServiceError("There are no saved daily measurements to submit yet.")
         package = {
             "schema_version": PACKAGE_VERSION,
+            "enrollment_id": enrollment["id"],
             "submission_id": str(uuid.uuid4()),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "metadata": snapshot.metadata(),
@@ -106,6 +128,7 @@ def upload_submission(source, config, sharing, submission_id):
     # file/network-only and never used by Anki's collection or ordinary CSV jobs.
     with profile_job_lock(source, "submission"):
         snapshot = _consent(source, sharing)
+        enrollment = require_enrollment(source, config)
         saved = json.loads(_path(source).read_text(encoding="utf-8"))
         package = saved["package"]
         if (
@@ -115,6 +138,7 @@ def upload_submission(source, config, sharing, submission_id):
             or package["metadata"]["sharing_notice_hash"] != sharing.notice_hash
             or package.get("schema_version") != PACKAGE_VERSION
             or package.get("columns") != PACKAGE_COLUMNS
+            or package.get("enrollment_id") != enrollment["id"]
         ):
             raise ServiceError("Your sharing choice changed. Prepare and review a new package.")
         connection = read_secret(source, "research")
@@ -123,13 +147,7 @@ def upload_submission(source, config, sharing, submission_id):
         if connection and connection["service"] != config.base_url:
             raise ServiceError("Delete data from the previous research service before changing it.")
         if not connection:
-            connection = {
-                "id": str(uuid.uuid4()),
-                "secret": secrets.token_urlsafe(32),
-                "service": config.base_url,
-                "registered": False,
-            }
-            write_secret(source, "research", connection)
+            raise ServiceError("Complete research enrollment before sending data.")
         token = connection["id"] + ":" + connection["secret"]
         if not connection.get("registered"):
             call_service(config, "/research/participant", {}, token=token)
@@ -144,12 +162,16 @@ def upload_submission(source, config, sharing, submission_id):
 
 
 def queue_deletion(source):
+    import secrets
+
     with profile_job_lock(source, "submission"):
         connection = read_secret(source, "research")
         _path(source).unlink(missing_ok=True)
         if connection:
             connection["delete_pending"] = True
+            connection.setdefault("deletion_secret", secrets.token_urlsafe(32))
             write_secret(source, "research", connection)
+        withdraw_enrollment(source)
         return connection is not None
 
 
@@ -160,14 +182,29 @@ def retry_deletion(source):
         connection = read_secret(source, "research")
         if not connection or not connection.get("delete_pending"):
             return False
-        result = call_service(
-            ServiceConfig(connection["service"]),
-            "/research/participant",
-            method="DELETE",
-            token=connection["id"] + ":" + connection["secret"],
-        )
-        if result.get("deleted") is not True:
+        if not connection.get("active_storage_deleted"):
+            result = call_service(
+                ServiceConfig(connection["service"]),
+                "/research/participant",
+                {"receipt_secret": connection["deletion_secret"]},
+                method="DELETE",
+                token=connection["id"] + ":" + connection["secret"],
+            )
+        else:
+            result = call_service(
+                ServiceConfig(connection["service"]),
+                "/research/deletion-status",
+                {},
+                token=connection["id"] + ":" + connection["deletion_secret"],
+            )
+        if result.get("active_storage_deleted") is not True:
             raise ServiceError("The deletion receipt was incomplete. Deletion remains queued.")
+        connection["active_storage_deleted"] = True
+        connection.pop("secret", None)
+        write_secret(source, "research", connection)
+        _atomic(results_directory(source) / "research-deletion-receipt.json", result)
+        if result.get("complete") is not True:
+            return False
         write_secret(source, "research", None)
         (results_directory(source) / "last-submission-receipt.json").unlink(missing_ok=True)
         return True
@@ -185,6 +222,8 @@ def withdraw_sharing(source, sharing, choice):
 def submission_summary(source):
     connection = read_secret(source, "research")
     if connection and connection.get("delete_pending"):
+        if connection.get("active_storage_deleted"):
+            return "Active research storage deleted; deletion of registered copies is pending."
         return "Deletion is pending and retries while Anki is open. New uploads are blocked."
     receipt = results_directory(source) / "last-submission-receipt.json"
     if receipt.exists():

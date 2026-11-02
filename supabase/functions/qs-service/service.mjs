@@ -48,8 +48,9 @@ function credentials(request) {
   return { id, secret };
 }
 export function validatePackage(value, env) {
-  exact(value, ["schema_version", "submission_id", "created_at", "metadata", "columns", "rows"]);
+  exact(value, ["schema_version", "enrollment_id", "submission_id", "created_at", "metadata", "columns", "rows"]);
   if (value.schema_version !== schema.package_version || !UUID.test(value.submission_id) ||
+      !UUID.test(value.enrollment_id) ||
       typeof value.created_at !== "string" || !Number.isFinite(Date.parse(value.created_at))) fail(400);
   exact(value.metadata, schema.metadata);
   if (value.metadata.sharing_current_choice !== "opt_in" || value.metadata.research_consent_active !== true ||
@@ -140,7 +141,7 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       if (error.code === "P0001" && error.message === "quota_exceeded") fail(429, 86400);
-      fail(error.code === "23505" ? 409 : error.code === "28000" ? 401 : 502);
+      fail(error.code === "23505" ? 409 : error.code === "28000" ? 401 : error.code === "42501" ? 403 : 502);
     }
     return response.json();
   }
@@ -159,6 +160,7 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
       if (request.method === "GET" && route === "/status") return json({
         oura_enabled: enabled("OURA"), google_health_enabled: enabled("GOOGLE_HEALTH"), research_enabled: enabled("RESEARCH"),
         operations_version: 1,
+        research_controls_version: 1,
         operator: env.RESEARCH_OPERATOR || "", privacy_url: env.PRIVACY_URL || "",
         notice_version: env.RESEARCH_NOTICE_VERSION || "", notice_hash: env.RESEARCH_NOTICE_HASH || ""
       });
@@ -212,18 +214,51 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
         fail(404);
       }
       if (route.startsWith("/research/")) {
+        if (route === "/research/enrollment-information" && request.method === "GET") {
+          if (!enabled("RESEARCH") || !env.PRIVACY_URL || !env.RESEARCH_OPERATOR) fail(503);
+          // No identity or measurement is sent just to read the enrollment terms.
+          // A public read has no participant identity. Charge the global budget
+          // without treating every reader as one actor limited to four/day.
+          await admit(request, "register", "enrollment-information:" + crypto.randomUUID());
+          const info = await rpc("qs_enrollment_information", {});
+          if (!info || info.notice_version !== env.RESEARCH_NOTICE_VERSION || info.notice_hash !== env.RESEARCH_NOTICE_HASH) fail(503);
+          return json(info);
+        }
         const { id, secret } = credentials(request); const hash = await sha256(secret);
+        if (route === "/research/deletion-status" && request.method === "POST") {
+          await admit(request, "delete", id + ":" + hash);
+          return json(await rpc("qs_deletion_status", { p_id: id, p_receipt_hash: hash }));
+        }
         if (route === "/research/participant" && request.method === "DELETE") {
           // Keep deletion available even when new research uploads are disabled.
           await admit(request, "delete", id + ":" + hash);
-          if (!await rpc("qs_delete", { p_id: id, p_hash: hash })) fail(401);
-          return json({ deleted: true });
+          const data = await body(request); exact(data, ["receipt_secret"]);
+          if (!SECRET.test(data.receipt_secret)) fail(400);
+          return json(await rpc("qs_delete_request", { p_id: id, p_hash: hash,
+            p_receipt_hash: await sha256(data.receipt_secret) }));
         }
         if (!enabled("RESEARCH") || !env.PRIVACY_URL || !env.RESEARCH_OPERATOR) fail(503);
         if (route === "/research/participant" && request.method === "POST") {
           await admit(request, "register", id + ":" + hash);
           if (!await rpc("qs_register", { p_id: id, p_hash: hash })) fail(410);
           return json({ registered: true });
+        }
+        if (route === "/research/enrollment" && request.method === "POST") {
+          await admit(request, "register", id + ":" + hash);
+          const data = await body(request);
+          exact(data, ["enrollment_id", "participant_id", "version", "bundle_hash", "adult", "own_data",
+            "explicit_consent", "signature_method", "signature", "signed_at_client", "before_first_results",
+            "choice_event_id", "notice_version", "notice_hash"]);
+          if (!UUID.test(data.enrollment_id) || !UUID.test(data.participant_id) || data.adult !== true ||
+              data.own_data !== true || data.explicit_consent !== true || data.signature_method !== "typed_pseudonym" ||
+              typeof data.signature !== "string" || data.signature.trim().length < 2 || data.signature.length > 80 ||
+              /[\x00-\x1f\x7f]/.test(data.signature) || !/^[0-9a-f]{64}$/.test(data.bundle_hash) ||
+              typeof data.version !== "string" || data.version.length > 80 ||
+              typeof data.signed_at_client !== "string" || !Number.isFinite(Date.parse(data.signed_at_client)) ||
+              ![true,false,null].includes(data.before_first_results) || !Number.isSafeInteger(data.choice_event_id) ||
+              data.choice_event_id < 1 || data.notice_version !== env.RESEARCH_NOTICE_VERSION ||
+              data.notice_hash !== env.RESEARCH_NOTICE_HASH) fail(400);
+          return json(await rpc("qs_enroll", { p_id: id, p_hash: hash, p_evidence: data }));
         }
         if (route === "/research/submissions" && request.method === "POST") {
           await admit(request, "submit", id + ":" + hash);

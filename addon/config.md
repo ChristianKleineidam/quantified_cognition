@@ -29,3 +29,10 @@ Use **Tools → Quantified Cognition Health Data…** and select **Oura** or **G
 Research sharing is an optional Yes / Not now / No choice asked before the first report, including cached results, or before enabling automatic CSV output. Change it later via **Tools → Quantified Cognition Research Sharing…**. No registration fields are required. `research_sharing.notice_version` identifies the question's version; an empty `notice_text` uses the built-in question. If the text or version changes, the app asks again without rewriting the original timing audit. Answering Yes does not upload anything.
 
 With Yes selected, reopen Research sharing and choose **Review and submit data…** to inspect the complete package, recipient and privacy policy before sending. Each upload requires an explicit Send. Research submission retries reuse the prepared package ID; they never happen automatically. **Prepare latest data** replaces an unsent package. Not now or No queues deletion of previous uploads, and **Delete uploaded data…** requests deletion separately. Offline deletion retries while Anki is open and blocks new uploads until acknowledged. Oura disconnect deletes local Oura data; research submissions and previously saved CSV files have their own deletion controls.
+# Research enrollment
+
+The v6 sharing choice records a preference and preserves original first-view timing.
+Research enrollment is separate and remains closed in this beta. It requires
+eligibility, saveable information and explicit consent with a pseudonymous signature;
+each measurement upload still requires its own preview and Send. See the bundled
+`docs/RESEARCH_CONTROLS.md`. No online feature is enabled by editing this notice.

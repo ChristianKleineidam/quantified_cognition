@@ -41,7 +41,7 @@ def _now() -> str:
 
 @dataclass(frozen=True)
 class SharingConfig:
-    notice_version: str = "research-sharing-v5"
+    notice_version: str = "research-sharing-v6"
     custom_notice_text: str = ""
 
     @classmethod
@@ -54,7 +54,7 @@ class SharingConfig:
         return cls(
             notice_version=version.strip()
             if isinstance(version, str) and version.strip()
-            else "research-sharing-v5",
+            else "research-sharing-v6",
             custom_notice_text=text.strip() if isinstance(text, str) else "",
         )
 
@@ -91,13 +91,17 @@ class SharingConfig:
             "credentials are excluded. "
         )
         return (
-            "Would you like to allow your daily measurements to be shared for scientific "
-            "analysis of sleep, activity and memory?\n\n" + data + "\n\n"
+            "Would you like to contribute to scientific research into learning, recall, "
+            "sleep and activity?\n\n" + data + "\n\n"
             "Sharing is optional. Your personal results are available whichever choice "
             "you make. You can opt in later or change your choice through Research sharing. "
             "The app records whether you opted in before seeing your first results. "
             "Data will only be sent after you separately choose and confirm an upload. "
-            "The upload preview names the recipient and links the study privacy policy. "
+            "JollyJoyJourney operates this research programme. Approved research collaborators "
+            "may receive controlled access as described in the research information. "
+            "Research data has no fixed expiry; continued need is reviewed periodically. "
+            "Joining requires separate eligibility and explicit study consent. This question "
+            "records your sharing preference and does not enroll you. "
             "Withdrawing sharing queues deletion of your previous uploads. "
             "No data is uploaded by answering this question."
         )
@@ -334,7 +338,7 @@ def sharing_state(
                     surface=surface,
                     related_event_id=related_event_id,
                 )
-        elif event_type == "prompt_presented":
+        elif event_type in ("prompt_presented", "enrollment_signed"):
             _event(connection, study, event_type)
         elif event_type == "sharing_choice":
             if choice is None:

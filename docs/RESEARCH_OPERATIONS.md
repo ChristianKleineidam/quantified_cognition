@@ -42,10 +42,13 @@ are evidence for their recorded date, not a current live-service verification.
 The code implements a strict daily-package allowlist, explicit preview/send,
 private storage, separate upload/deletion capabilities, idempotency, atomic live
 deletion, anti-resurrection tombstones, and local pre-view preference/exposure
-history. It does not yet implement the approved eligibility/signed-consent
-enrollment, research retention-review/deletion controls, collaborator/extract lifecycle or
-complete provider revocation/backup handling. Do not infer those controls from
-the policy text or from existing operational housekeeping.
+history. Version 0.19.0 source now implements separate eligibility/explicit-consent
+enrollment with a typed pseudonymous signature, server-side enrollment enforcement,
+retention reviews and tracked extract/collaborator deletion. See
+[RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The migrations are not deployed,
+the prepared protocol is closed/unapproved, and acceptance of that signature method
+must be confirmed. Complete provider revocation/backup handling and real hosted
+verification remain outstanding. Implementation is not approval or activation.
 
 ## Data handling and retention
 
@@ -61,7 +64,7 @@ the policy text or from existing operational housekeeping.
 | Recovery copies | Maximum 30 days, isolated from research use, with deletion replay before access. A shorter applicable provider/legal deadline overrides this cap. |
 | Public outputs | Only genuinely anonymous summaries and synthetic data; no individual-level daily-history public releases. |
 
-Implement a retention register and scheduled review process recording the
+The source retention register and scheduled review process record the
 continuing purpose, applicable consent/provider restrictions, review decision,
 next review and any mandatory deadline. Use server receipt timestamps for
 provenance and applicable deadlines, not package-generated timestamps. Neither
@@ -140,18 +143,17 @@ Use synthetic fixtures for development and agent-assisted work.
 
 The existing research-sharing-v5 audit is a local preference mechanism. Keep
 original preference/exposure times and unknown legacy status intact. The new
-scope, collaborators and retention must be reflected in a new versioned notice
-and matched server hash before any research upload is enabled. Do not edit v5's
+scope, collaborators and retention are reflected in source notice v6; deploy its
+matching server hash before any research upload is enabled. Do not edit v5's
 meaning retrospectively or interpret its research_consent_active field alone
 as proof of completed legal/provider-approved enrollment.
 
-Implement eligibility before research enrollment and data permission where
-required, a saveable participant-information/policy copy, explicit health-data
-consent and the approved signature/consent-copy flow. Store the actual consent
-version, timestamp and signature evidence separately, securely linked to the
-contribution identity. Determine whether a pseudonymous signature is accepted;
+The source flow checks eligibility before consent, provides saveable information
+and explicit health-data consent, and stores the signed version/timestamp separately
+from measurements. The server requires that enrollment. Confirm that its
+typed pseudonymous signature is accepted;
 if a name/contact is required, disclose it first and keep it out of the analysis
-package. Enforce valid enrollment server-side, not only through a desktop flag.
+package. Required changes need a new versioned protocol before activation.
 Review the personal health-connection consent separately too; a provider's
 OAuth authorization screen is not automatically proof of valid explicit consent
 for every operation described by the app.

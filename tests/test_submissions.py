@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from test_storage import report_with_followup
 
-from addon import storage, submissions
+from addon import enrollment, storage, submissions
 from addon.research import SharingConfig, sharing_state
 from addon.service import ServiceConfig, ServiceError
 
@@ -27,6 +27,8 @@ def setup(tmp_path, monkeypatch):
     monkeypatch.setattr(
         submissions, "write_secret", lambda path, slot, value: secrets.update({slot: value})
     )
+    monkeypatch.setattr(enrollment, "read_secret", lambda path, slot: secrets.get(slot))
+    monkeypatch.setattr(enrollment, "write_secret", submissions.write_secret)
     status = {
         "research_enabled": True,
         "operator": "Synthetic study",
@@ -34,6 +36,33 @@ def setup(tmp_path, monkeypatch):
         "notice_version": sharing.notice_version,
         "notice_hash": sharing.notice_hash,
     }
+    frozen = enrollment.load_bundle()
+
+    def enrollment_server(config, route, data=None, **kwargs):
+        if route == "/status":
+            return status
+        if route == "/research/enrollment-information":
+            return {
+                "version": frozen["bundle"]["version"],
+                "bundle_hash": frozen["sha256"],
+                "signature_method": "typed_pseudonym",
+                "notice_version": sharing.notice_version,
+                "notice_hash": sharing.notice_hash,
+            }
+        if route == "/research/participant":
+            return {"registered": True}
+        return {"enrollment_id": data["enrollment_id"], "received_at": "2026-11-02T00:00:00Z"}
+
+    monkeypatch.setattr(enrollment, "call_service", enrollment_server)
+    enrollment.enroll(
+        source,
+        CONFIG,
+        sharing,
+        adult=True,
+        own_data=True,
+        explicit_consent=True,
+        signature="Synthetic participant",
+    )
     monkeypatch.setattr(submissions, "call_service", lambda *a, **kw: status)
     return source, sharing, secrets, status
 
@@ -45,6 +74,12 @@ def test_package_is_immutable_reused_aggregate_only_and_does_not_mark_first_view
     packet = saved["package"]
     assert packet["metadata"]["research_consent_before_first_view"] is True
     assert packet["columns"] == submissions.PACKAGE_COLUMNS
+    assert all(
+        row[i] == ""
+        for row in packet["rows"]
+        for i, name in enumerate(packet["columns"])
+        if name.startswith(("oura_", "google_health_"))
+    )  # Anki-only enrollment needs no provider permission, even for session placeholders.
     assert not any(
         key in packet["columns"] for key in ("card_id", "deck_id", "bedtime_start", "access_token")
     )
@@ -104,7 +139,14 @@ def test_withdrawal_queues_deletion_blocks_old_upload_and_keeps_original_timing(
     monkeypatch.setattr(submissions, "call_service", lambda *a, **kw: {"deleted": False})
     with pytest.raises(ServiceError):
         submissions.retry_deletion(source)
-    monkeypatch.setattr(submissions, "call_service", lambda *a, **kw: {"deleted": True})
+    monkeypatch.setattr(
+        submissions,
+        "call_service",
+        lambda *a, **kw: {
+            "active_storage_deleted": True,
+            "complete": True,
+        },
+    )
     assert submissions.retry_deletion(source) is True and secrets["research"] is None
 
 

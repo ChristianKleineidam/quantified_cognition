@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile,readdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
+import { protocol, enroll, payload as withEnrollment } from "./research-fixtures.mjs";
 
 test("Postgres operational limits, atomic accounting, monitoring and privileges",async t=> {
   assert.ok(process.env.PGLITE_TEST_MODULE,"Set PGLITE_TEST_MODULE");
@@ -11,7 +12,7 @@ test("Postgres operational limits, atomic accounting, monitoring and privileges"
   const id="00000000-0000-4000-8000-000000000001", hash="a".repeat(64);
   const admit=subject=>one("select public.qs_admit('submit',$1) result",[subject]);
   const submit=(n,payload={test:"synthetic"})=>one("select public.qs_submit($1,$2,$3,$4,$5) receipt",
-    [id,hash,`00000000-0000-4000-8000-${String(n).padStart(12,"0")}`,payload,hash]);
+    [id,hash,`00000000-0000-4000-8000-${String(n).padStart(12,"0")}`,withEnrollment(id,payload),hash]);
   async function isolated(name,work) {
     await t.test(name,async()=>{ await db.exec("begin"); try {await work();} finally {await db.exec("rollback");} });
   }
@@ -20,6 +21,7 @@ test("Postgres operational limits, atomic accounting, monitoring and privileges"
     const directory=new URL("../migrations/",import.meta.url);
     for (const name of (await readdir(directory)).filter(n=>n.endsWith(".sql")).sort())
       await db.exec(await readFile(new URL(name,directory),"utf8"));
+    await protocol(db);
     await isolated("all private tables have RLS and ordinary clients cannot read or call operational RPCs",async()=>{
       const rows=await db.query("select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='qs_private' and c.relkind='r'");
       assert.equal(rows.rows.length,8); assert.ok(rows.rows.every(r=>r.relrowsecurity));
@@ -64,6 +66,7 @@ test("Postgres operational limits, atomic accounting, monitoring and privileges"
     });
     await isolated("storage retries are free and deletion frees storage without refunding daily work",async()=>{
       await one("select public.qs_register($1,$2)",[id,hash]);
+      await enroll(db,id,hash);
       await db.exec("update qs_private.storage_budget set participant_submission_limit=1,submission_limit=1");
       const first=await submit(10), before=await one("select * from qs_private.storage_budget");
       assert.deepEqual(await submit(10),first);
@@ -79,6 +82,7 @@ test("Postgres operational limits, atomic accounting, monitoring and privileges"
     });
     await isolated("byte, identity and daily limits roll back failed writes",async()=>{
       await one("select public.qs_register($1,$2)",[id,hash]);
+      await enroll(db,id,hash);
       for (const column of ["byte_limit","participant_byte_limit","daily_byte_limit"]) {
         await db.exec("savepoint byte_limit; update qs_private.storage_budget set "+column+"=1");
         await assert.rejects(submit(20),/quota_exceeded/);

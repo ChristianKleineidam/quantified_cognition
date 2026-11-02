@@ -64,7 +64,9 @@ from the submitted daily measurements.
 Eligibility and consent records are separate from measurements. They record the
 information agreed to, its version, date, eligibility and any signature required
 by the approved enrollment process. Required identifying details, if any, are
-explained before you join. Contact correspondence contains the sender address,
+explained before you join. Analysis exports can include enrollment version and
+consent timing; signatures and eligibility answers stay separate. Contact
+correspondence contains the sender address,
 message, attachments and delivery information. Please submit research packages
 through the add-on rather than emailing collections or health exports.
 

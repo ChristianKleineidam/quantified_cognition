@@ -188,6 +188,15 @@ from v0.18.1; this update does not open research enrollment. Research-document
 links, source/archive identity, compilation, exclusions and Ruff were checked.
 
 macOS desktop/Keychain and independent user feedback still need direct testing.
+Version **0.19.0** adds the enrollment and research lifecycle implementation.
+Offline verification on 2 November passed **388 Python tests** on Anki 26.09.3,
+**31 focused enrollment/sharing tests** on Anki 25.09.2, and **41 backend tests**,
+including actual HTTP handler-to-PostgreSQL enrollment, upload and deletion.
+The new Qt enrollment screens were exercised with synthetic eligibility and
+signatures. These checks do not establish accepted study/provider approvals or
+a live deployment; all online features remain closed. See
+[RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md).
+
 Actual AnkiWeb synchronization remains pending because there is no empty test
 account. A separate Windows profile on M: is prepared for interactive sign-in;
 it has no personal collection or copied account credentials. Native synced-history

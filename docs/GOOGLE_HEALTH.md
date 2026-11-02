@@ -139,8 +139,8 @@ research submissions have separate deletion controls.
 The prepared [research design](RESEARCH_DESIGN.md),
 [participant information](RESEARCH_INFORMATION.md) and
 [operating plan](RESEARCH_OPERATIONS.md) supply the programme scope and intended
-enrollment statement. They are application materials, not an approved study or
-an implemented signed-consent flow.
+enrollment statement. The source now includes a separate signed-consent flow;
+neither the materials nor that implementation establish study approval.
 
 Google's Health Research Policy requires review-board approval or waiver,
 research intake/attestation and an exact data-use rationale. Eligibility must be
@@ -151,13 +151,17 @@ save the information and sign/submit the required consent. Restrictions apply
 to derived/aggregated data and onward transfers too. Resolve these with the
 provider/review board before enabling the research service; the current local
 sharing preference and explicit package confirmation are not a completed
-approved study enrollment process. Implement the approved eligibility,
-information-copy and signed-consent flow once its requirements are known.
+approved study enrollment process. Confirm acceptance of the implemented
+eligibility, information-copy and pseudonymous-signature flow and incorporate
+any required changes once the requirements are known.
 
-The v5 sharing notice and package schema v4 precisely include the daily Google
+The v6 sharing notice and package schema v5 precisely include the daily Google
 fields above and derived main-sleep/nap measurements, including reported nap
 light/deep/REM durations, alongside Anki/Oura fields.
-Exact session and review times remain excluded. Updated consent is required without
+Exact session and review times remain excluded. Separate signed enrollment is
+implemented in the source but remains closed; its signature method and information
+must be accepted before activation. See [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md).
+Updated consent is required without
 rewriting original pre-view timing. No measurements upload just by connecting,
 syncing or opting in. Each upload still requires package review and Send.
 Publish the completed [privacy policy](PRIVACY.md), determine research

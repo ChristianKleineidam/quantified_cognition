@@ -20,6 +20,11 @@ unchecked items remain work, not implied release approval.
   synthetic changes; live probes confirm all three features are disabled.
 - [x] Research sends require a preview and explicit submission; choosing Yes
   alone never uploads. Consent/exposure timing is preserved locally.
+- [x] Implement separate enrollment, frozen saveable information, explicit
+  pseudonymous signature, server-side enrollment checks, retention reviews,
+  tracked extract/collaborator-copy deletion and differentiated deletion receipts.
+  Synthetic Qt/HTTP/PostgreSQL tests verify the source implementation; see
+  [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The new migrations are not deployed.
 
 ## Before distributing the desktop beta
 
@@ -87,10 +92,10 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   rows and function logs currently require inspection; no paging is configured.
 - [ ] Confirm platform log retention/redaction/access, administrator MFA, backup
   restoration and deletion replay, research retention and extract deletion.
-- [ ] Implement approved eligibility/explicit signed-consent enrollment and
-  server-side enforcement, update the sharing notice/version/hash, and preserve
-  original pre-view preference timing. Implement and verify the research-data
-  retention-review and collaborator-copy deletion controls in the operating plan.
+- [ ] Confirm acceptance of the implemented pseudonymous signature and eligibility
+  flow, incorporate any required review/provider changes, publish the documents,
+  and deploy/verify the closed enrollment/lifecycle backend and matching v6 notice.
+  Verify the actual hosted maintenance jobs and operator extract/deletion procedure.
 - [ ] Test explicit package preview/send, uncertain receipt retries, withdrawal
   and deletion with uploads disabled, including lost-credential recovery.
 - [ ] Run the closed-state verifier and operations report immediately before

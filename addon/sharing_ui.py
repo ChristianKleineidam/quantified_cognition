@@ -49,6 +49,10 @@ class SharingDialog(QDialog):
         layout.addWidget(self.status)
         if snapshot.current_choice is not None:
             actions = QHBoxLayout()
+            enrollment = QPushButton("Research enrollment…")
+            enrollment.setEnabled(snapshot.current_choice == "opt_in")
+            enrollment.clicked.connect(self.open_enrollment)
+            actions.addWidget(enrollment)
             submit = QPushButton("Review and submit data…")
             submit.setEnabled(snapshot.current_choice == "opt_in")
             submit.clicked.connect(self.open_submission)
@@ -89,6 +93,12 @@ class SharingDialog(QDialog):
 
         dialog = SubmissionDialog(self, self.collection_path, self.services, self.snapshot.study)
         dialog.prepare()
+        dialog.exec()
+
+    def open_enrollment(self):
+        from .enrollment_ui import EnrollmentDialog
+
+        dialog = EnrollmentDialog(self, self.collection_path, self.services, self.snapshot.study)
         dialog.exec()
 
     def delete_data(self):

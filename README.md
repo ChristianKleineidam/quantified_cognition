@@ -17,7 +17,7 @@ so existing installations retain their settings, saved results and sharing histo
 
 Requires Anki **25.09 or later** with FSRS enabled in Deck Options. No extra Python packages are required in Anki. The add-on runs on desktop; synced mobile/web reviews are analyzed on desktop.
 
-1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.18.2.ankiaddon`; generated packages are not committed to the repository.
+1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.19.0.ankiaddon`; generated packages are not committed to the repository.
 2. In Anki, select **Tools → Add-ons → Install from file**, select the file, and restart Anki.
 3. Open **Tools → Quantified Cognition…**.
 4. Choose **Daily recall** or an overall/short-term/long-term **Memory formation** metric. Inspect a day with the date selector or by clicking the chart. **Inspect daily data** switches to a detailed table.
@@ -90,7 +90,19 @@ Hourly background sync rechecks recent 30 days; weekly sync rechecks the full ch
 
 ## Sharing choice and consent timing
 
-Before opening the first personal report (including cached results), the add-on asks **Yes, allow sharing / Not now / No, keep it private**. It also asks before a new user enables automatic CSV output. Not now is the default; every choice allows personal use. Change the choice later through **Tools → Quantified Cognition Research Sharing…** or the report's Research sharing button. No study-registration fields are needed.
+Version 0.19.0 adds separate study enrollment and research-data lifecycle controls.
+The original sharing preference/exposure history is preserved. Enrollment checks
+eligibility, presents saveable information and obtains explicit consent with a
+typed pseudonymous signature; no measurements upload until a separate preview
+and Send. The server requires valid enrollment and a current retention review.
+Tracked research extracts and collaborator copies have deletion tasks and
+confirmation records. There is no fixed research measurement expiry.
+The new backend migrations are prepared, **not deployed**; enrollment and all
+three online features remain closed. Signature-method acceptance, publication,
+approvals and live operational checks remain necessary. See
+[research controls](docs/RESEARCH_CONTROLS.md) for the flow and operator procedures.
+
+Before opening the first personal report (including cached results), the add-on asks **Yes, allow sharing / Not now / No, keep it private**. It also asks before a new user enables automatic CSV output. Not now is the default; every choice allows personal use. Change the choice later through **Tools → Quantified Cognition Research Sharing…** or the report's Research sharing button. This first question records a preference; it does not enroll the user.
 
 Choices, prompt presentations and the first results exposure opportunity are logged in the separate, profile-local `study-sharing.sqlite3` database. The append-only event log includes UTC timestamps, event order, notice version/hash and a random participant ID. The first consent and first exposure are preserved when the user changes their mind. Current permission is separate from historical timing: withdrawing permission does not turn a previously early consent into a late consent, and a later opt-in does not retroactively become early consent. A changed notice/version requires a new choice.
 

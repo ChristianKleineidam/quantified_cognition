@@ -7,14 +7,14 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 root = Path(__file__).resolve().parents[1]
-destination = root / "dist" / "quantified-cognition-0.18.2.ankiaddon"
+destination = root / "dist" / "quantified-cognition-0.19.0.ankiaddon"
 destination.parent.mkdir(exist_ok=True)
 manifest = {
     "package": "quantified_self_memory",
     "name": "Quantified Cognition",
     "min_point_version": 250900,
     "max_point_version": 260903,
-    "human_version": "0.18.2",
+    "human_version": "0.19.0",
 }
 with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
     archive.writestr("manifest.json", json.dumps(manifest, indent=2))
@@ -29,6 +29,7 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "RESEARCH_INFORMATION.md",
         "RESEARCH_DESIGN.md",
         "RESEARCH_OPERATIONS.md",
+        "RESEARCH_CONTROLS.md",
         "OURA_APPROVAL.md",
         "GOOGLE_HEALTH.md",
         "INSIGHTS.md",
@@ -40,6 +41,7 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "BACKEND_OPERATIONS.md",
         "BETA_CHECKLIST.md",
         "DESKTOP_BETA.md",
+        "SILENTWORKER.md",
     ):
         archive.write(root / "docs" / name, "docs/" + name)
 print(destination)
