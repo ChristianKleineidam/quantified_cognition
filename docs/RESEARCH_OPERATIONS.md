@@ -24,7 +24,8 @@ withdrawal and applicable legal/provider requirements. An old contribution is
 not automatically expired, and a possible unspecified future use alone does not
 justify keeping personal data.
 
-There are no authorized external data recipients at preparation. Christian Kleineidam is the initial accountable operator/research lead. Identify
+There are no authorized external data recipients at preparation. Christian
+Kleineidam is the initial accountable operator/research lead. Identify
 new people and organizations in an access register before access. Separate
 researcher, service-administrator and collaborator roles; an administrative
 account is not routine permission to analyze every dataset.
