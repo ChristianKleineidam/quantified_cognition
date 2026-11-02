@@ -7,7 +7,7 @@ already deployed. The participant commitments are in [PRIVACY.md](PRIVACY.md)
 and [RESEARCH_INFORMATION.md](RESEARCH_INFORMATION.md). Scientific scope and
 analysis rules are in [RESEARCH_DESIGN.md](RESEARCH_DESIGN.md).
 
-## Adopted drafting choices
+## Operator decisions
 
 The programme covers variation in learning/recall, relationships with sleep,
 activity and study patterns, and measurement validation. Individual hypotheses
@@ -16,12 +16,13 @@ adults contributing their own data. Personal use is independent of research,
 submissions remain a complete package of available disclosed fields, and every
 submission requires an explicit Send.
 
-The working operator choices used in these documents are controlled access for
-approved academic/nonprofit/commercial research collaborators and a ten-year
-maximum after the last contribution. These were the recommended defaults in
-the current design discussion; change them consistently in all participant
-documents before publication if the operator chooses differently. They are
-policy choices, not periods or permissions mandated by law.
+Operator decisions confirmed on 2 November 2026 allow controlled access for
+approved academic/nonprofit/commercial research collaborators and impose no
+fixed expiry date on research measurements. Continued retention depends on the
+programme's research, validation or reproducibility needs, periodic review,
+withdrawal and applicable legal/provider requirements. An old contribution is
+not automatically expired, and a possible unspecified future use alone does not
+justify keeping personal data.
 
 There are no authorized external data recipients at preparation. Christian Kleineidam is the initial accountable operator/research lead. Identify
 new people and organizations in an access register before access. Separate
@@ -41,7 +42,7 @@ The code implements a strict daily-package allowlist, explicit preview/send,
 private storage, separate upload/deletion capabilities, idempotency, atomic live
 deletion, anti-resurrection tombstones, and local pre-view preference/exposure
 history. It does not yet implement the approved eligibility/signed-consent
-enrollment, research-data retention purge, collaborator/extract lifecycle or
+enrollment, research retention-review/deletion controls, collaborator/extract lifecycle or
 complete provider revocation/backup handling. Do not infer those controls from
 the policy text or from existing operational housekeeping.
 
@@ -49,7 +50,7 @@ the policy text or from existing operational housekeeping.
 
 | Records | Operating limit and action |
 | --- | --- |
-| Research measurements and identifiable/pseudonymous derived datasets | Needed programme use only; expire at the latest ten years after the last server-received contribution for that profile, or earlier on withdrawal/no further need. Review necessity at least annually. |
+| Research measurements and identifiable/pseudonymous derived datasets | No fixed expiry. Document the continuing programme research, validation or reproducibility need and review it at least annually. Delete on withdrawal, loss of need or an applicable legal/provider deadline; irreversible anonymization requires permission and a genuine anonymity assessment. |
 | Consent, withdrawal and rights evidence | Keep the minimal record needed while measurements remain and normally three years after their deletion; record any specific legal reason for an exception. No retained measurement values. |
 | Anti-resurrection deletion markers | Minimal random UUID/timestamp only; retain as needed to reject old client/restored-copy requests. Do not use as a research record or retain the former capability hash. |
 | Routine correspondence | Delete normally within two years of resolution; preserve only records required for a specific legal obligation or claim. |
@@ -59,10 +60,13 @@ the policy text or from existing operational housekeeping.
 | Recovery copies | Maximum 30 days, isolated from research use, with deletion replay before access. A shorter applicable provider/legal deadline overrides this cap. |
 | Public outputs | Only genuinely anonymous summaries and synthetic data; no individual-level daily-history public releases. |
 
-Implement a server-scheduled research retention job using receipt timestamps,
-not package-generated timestamps. Technical retries and unchanged duplicate
-snapshots must not extend retention; track the last substantive contribution.
-Apply deletion to original submissions,
+Implement a retention register and scheduled review process recording the
+continuing purpose, applicable consent/provider restrictions, review decision,
+next review and any mandatory deadline. Use server receipt timestamps for
+provenance and applicable deadlines, not package-generated timestamps. Neither
+technical retries nor a fresh duplicate snapshot establish continuing research
+need. Do not impose an automatic age-based expiry on contributions. Apply
+required deletion to original submissions,
 analysis extracts, researcher workspaces and controlled collaborator copies.
 Test retries and expired identities without allowing stale requests to restore
 removed records. Keep a separate minimal deletion ledger sufficient to suppress
@@ -186,7 +190,8 @@ pass; source publication alone is not activation.
 New hypotheses, suitable analysis methods and quality thresholds within the
 existing purpose normally belong in a versioned analysis plan. Keep new data
 types, unrelated purposes, broader recipients, new identity collection or a
-longer retention period out of that shortcut: update participant information,
+broader retention purposes or weaker deletion/review safeguards out of that
+shortcut: update participant information,
 permissions and consent as required before proceeding. A move to an intervention
 also requires an appropriate protocol and participant information. Shorter
 retention or reduced collection can be implemented and communicated without
@@ -195,6 +200,7 @@ using a policy update to expand existing permission.
 ## Sources checked on 2 November 2026
 
 [European Commission: consent and research scope](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/legal-grounds-processing-data_en),
+[European Commission: storage limitation](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en),
 [EDPB consent guidance](https://www.edpb.europa.eu/system/files/documents/files/file1/edpb_guidelines_202005_consent_en.pdf),
 [Google research policy](https://developers.google.com/health/policies/health-api-user-data-and-research-policy),
 [Oura agreement](https://cloud.ouraring.com/legal/api-agreement),

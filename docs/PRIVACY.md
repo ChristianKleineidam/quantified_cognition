@@ -137,11 +137,13 @@ and proportionate compliance evidence rely on legitimate interests under Article
 6(1)(f), or a legal obligation where applicable. These interests do not authorize
 continued research after withdrawal.
 
-We keep research measurements only while needed for this programme, for a
-maximum of **ten years after your last contribution**, unless you withdraw
-earlier. This supports longitudinal research, validation and checking findings.
-We review continued need and remove data earlier when it is no longer needed.
-Shorter legal or provider limits take precedence.
+Research measurements have **no fixed expiry date**. We retain them for the
+programme's continuing research, method validation and verification of findings,
+for as long as those purposes require. We periodically review the continuing
+need and safeguards. When identifiable or pseudonymous records are no longer
+needed, we delete them or, where permitted, irreversibly anonymize them. You
+can withdraw and request deletion throughout this period. Any applicable legal
+or provider retention/deletion limits take precedence.
 
 Routine application security and service records are kept for no more than
 30 days, often less. They can include IP addresses, request times, route/status

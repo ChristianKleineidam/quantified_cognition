@@ -144,7 +144,7 @@ Use the Supabase SQL editor with an authorized operator role to inspect/export
 `qs_private` data. `supabase/research-export.sql` produces one daily JSON record
 with metadata and submission timestamps, selecting the latest submitted snapshot
 for each public research participant/day. Preserve raw immutable submissions
-for reproducibility under the published retention period. A formation score can
+for reproducibility under the published retention criteria. A formation score can
 change as outcomes arrive; repeated uploads are not independent samples.
 
 Research extraction should remain outside the public Edge endpoint. Do not add

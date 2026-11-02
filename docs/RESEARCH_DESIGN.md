@@ -166,7 +166,9 @@ the latest received before the analysis freeze. Deduplicate retries and repeated
 overlapping histories. Record source versions, receipt cutoff and code revision;
 never count successive snapshots as extra participants or merge incompatible
 scoring methods without justification. Receipt time, not a client-supplied clock,
-governs retention and analysis inclusion cutoffs.
+governs version provenance and analysis inclusion cutoffs, and any applicable
+provider/legal deadlines. There is no fixed programme retention expiry;
+continuing need, review and deletion rules are specified in the operating plan.
 
 Publish methods, limitations, relevant funding and conflicts, and suitably
 anonymous results. Share source code and synthetic reproductions openly.

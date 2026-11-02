@@ -90,7 +90,7 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 - [ ] Implement approved eligibility/explicit signed-consent enrollment and
   server-side enforcement, update the sharing notice/version/hash, and preserve
   original pre-view preference timing. Implement and verify the research-data
-  retention and collaborator-copy deletion controls in the operating plan.
+  retention-review and collaborator-copy deletion controls in the operating plan.
 - [ ] Test explicit package preview/send, uncertain receipt retries, withdrawal
   and deletion with uploads disabled, including lost-credential recovery.
 - [ ] Run the closed-state verifier and operations report immediately before

@@ -65,9 +65,12 @@ participant data at preparation of this document. Public results use anonymous
 summaries or synthetic examples. Open-source software does not make individual
 daily histories an open dataset.
 
-Research measurements are retained only while needed, for up to ten years after
-your last contribution unless you withdraw earlier or a shorter rule applies.
-The policy explains recovery copies, consent records and your rights.
+Research measurements have no fixed expiry date. They can support continuing
+research, method validation and verification of findings for as long as needed
+for those purposes, with periodic review. You can withdraw and request deletion;
+applicable legal or provider limits still apply. Records no longer needed are
+deleted or, where permitted, irreversibly anonymized. The policy explains
+recovery copies, consent records and your rights.
 
 You can decline, join later or withdraw without losing personal use. Withdrawal
 stops research use of identifiable/pseudonymous records we can locate and queues
@@ -85,7 +88,7 @@ and any required signature. Proposed statement for that process:
 > JollyJoyJourney processing my submitted daily learning, recall, sleep and
 > activity measurements, including health-related data, for this research
 > programme, with controlled access by approved research collaborators as
-> described. I understand the retention period, that each upload requires my
+> described. I understand the retention criteria, that each upload requires my
 > confirmation, and that I can withdraw without losing personal use.
 
 This statement specifies the intended enrollment flow; it is not a claim of
