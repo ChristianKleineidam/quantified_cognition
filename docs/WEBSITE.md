@@ -44,7 +44,8 @@ the website's source documents change.
 
 The first deployment used the authorized `cf` CLI session and Cloudflare's
 Pages asset API because browser uploads were unavailable. The Pages upload
-manifest includes only verified build assets, with `_headers` supplied separately.
+manifest includes only verified build assets, with `_headers` and `_redirects`
+supplied separately.
 Cloudflare's `@cloudflare/deploy-helpers` computes the Pages content hashes;
 the upload does not include a Worker or Functions bundle. CLI credentials are
 kept by Cloudflare's CLI and are never copied into the project or website.
