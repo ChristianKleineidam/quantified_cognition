@@ -32,12 +32,12 @@ account is not routine permission to analyze every dataset.
 
 ## Verified state and remaining work
 
-Read-only management checks on 2 November report the Supabase project
-wfjlzecckihsgcvauqwt as **INACTIVE**, in Frankfurt, on the **Free** plan in the
-Tempo organization. It was not restored. The last deployed configuration and
-checked-in examples keep Oura, Google Health and research uploads false. No real
-participant records were used for this preparation. Earlier live security tests
-are evidence for their recorded date, not a current live-service verification.
+On 4 November the Frankfurt Supabase project wfjlzecckihsgcvauqwt was restored
+and the prepared backend updates were deployed. It reports **ACTIVE_HEALTHY**.
+The live configuration and checked-in examples keep Oura, Google Health and
+research uploads false. Verification used synthetic identities only; no real
+participant measurements were uploaded. See [DEPLOYED.md](DEPLOYED.md) for the
+current live checks and their limits.
 
 The code implements a strict daily-package allowlist, explicit preview/send,
 private storage, separate upload/deletion capabilities, idempotency, atomic live
@@ -45,10 +45,11 @@ deletion, anti-resurrection tombstones, and local pre-view preference/exposure
 history. Version 0.19.1 source implements separate eligibility/explicit-consent
 enrollment linked to the existing participant ID, server-side enrollment enforcement,
 retention reviews and tracked extract/collaborator deletion. See
-[RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The migrations are not deployed,
-the prepared protocol is closed/unapproved, and acceptance of that consent process
-must be confirmed. Complete provider revocation/backup handling and real hosted
-verification remain outstanding. Implementation is not approval or activation.
+[RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The migrations are deployed, all
+prepared protocols remain closed/unapproved, and acceptance of the consent
+process must be confirmed. Provider revocation/backup handling and the permitted
+live-account pilot remain outstanding. Implementation is not study/provider
+approval or feature activation.
 
 ## Data handling and retention
 
@@ -143,8 +144,8 @@ Use synthetic fixtures for development and agent-assisted work.
 
 The existing research-sharing-v5 audit is a local preference mechanism. Keep
 original preference/exposure times and unknown legacy status intact. The new
-scope, collaborators and retention are reflected in source notice v7; deploy its
-matching server hash before any research upload is enabled. Do not edit v5's
+scope, collaborators and retention are reflected in notice v7, whose matching
+server hash is deployed. Do not edit v5's
 meaning retrospectively or interpret its research_consent_active field alone
 as proof of completed legal/provider-approved enrollment.
 

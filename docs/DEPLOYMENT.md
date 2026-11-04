@@ -14,8 +14,8 @@ The project contact address is
 forwarded through Cloudflare Email Routing to the operator's verified Gmail inbox.
 The published policy URL is
 `https://quantifiedcognition.jollyjoyjourney.com/privacy/`; see [WEBSITE.md](WEBSITE.md).
-The local environment example uses that URL. Hosted operator/policy fields have
-not been changed by website publication; the three enable flags remain false.
+The local environment example and hosted operator/policy settings use that URL.
+The three enable flags remain false.
 
 ## Components
 
@@ -176,14 +176,14 @@ project pausing, logs and pricing change—check the current Supabase dashboard.
 [changelog](https://supabase.com/changelog).
 The October 2026 TLS notice affects old CBC-only clients; the add-on uses modern
 Python/OpenSSL HTTPS defaults and does not weaken certificate/TLS validation.
-# Pending enrollment/lifecycle deployment (0.19.4)
+# Verified closed enrollment/lifecycle deployment (0.19.4)
 
-The source now requires package schema v5, separate enrollment and sharing notice
-v7. Apply the research migrations through protocol v7 (including the
-participant-ID consent migration) and deploy the matching handler while
-keeping all three feature flags false. The prepared protocol remains unapproved
-and enrollment closed. `supabase/deployment.json` continues to describe the older
-hosted deployment until a live deployment is performed and verified. See
-[RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md) for operator procedures and remaining
-signature-method/approval checks. The new closed-state verifier requires
-`research_controls_version=1`; the old deployment will not satisfy that check.
+The backend now uses package schema v5, separate enrollment and sharing notice
+v7. All migrations through protocol v7, including participant-ID consent, were
+applied on 4 November 2026. Function version 11 matches the five prepared source
+files. All three feature flags remain false and every protocol is unapproved
+and closed. The live verifier passed, including `research_controls_version=1`,
+disabled routes, private deletion, anonymous-access denial and the HTTP quota.
+Both maintenance jobs ran successfully. `supabase/deployment.json` records this
+deployment. See [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md) for operator
+procedures and remaining provider/research acceptance requirements.

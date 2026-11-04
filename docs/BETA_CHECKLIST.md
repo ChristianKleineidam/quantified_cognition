@@ -24,7 +24,8 @@ unchecked items remain work, not implied release approval.
   consent linked to the participant ID, server-side enrollment checks, retention reviews,
   tracked extract/collaborator-copy deletion and differentiated deletion receipts.
   Synthetic Qt/HTTP/PostgreSQL tests verify the source implementation; see
-  [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The new migrations are not deployed.
+  [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The closed backend is deployed and
+  verified; provider and study approvals remain outstanding.
 
 ## Before distributing the desktop beta
 
@@ -76,8 +77,11 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 - [x] Include the prepared research documents in the documentation-only v0.18.2
   package. Inspect its 52 entries, internal research-document links, unchanged
   application code and unchanged beta sharing notice/disabled deployment state.
-- [ ] Publish the final [policy](PRIVACY.md), recipient/contact and study
+- [x] Publish the current [policy](PRIVACY.md), recipient/contact and study
   information for JollyJoyJourney; configure the displayed notice and matching version/hash.
+- [x] Deploy/verify the closed enrollment/lifecycle backend and notice v7.
+  Function 11, all 13 migrations, disabled HTTP routes, anonymous denial,
+  quota responses and both scheduled maintenance jobs were verified on 4 November.
 - [ ] Complete [Oura approval](OURA_APPROVAL.md) and
   [Google Health requirements](GOOGLE_HEALTH.md), separately. Install only the
   relevant server credentials after approval. No real-account import was tested
@@ -93,9 +97,8 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 - [ ] Confirm platform log retention/redaction/access, administrator MFA, backup
   restoration and deletion replay, research retention and extract deletion.
 - [ ] Confirm acceptance of the implemented participant-ID consent and eligibility
-  flow, incorporate any required review/provider changes, publish the documents,
-  and deploy/verify the closed enrollment/lifecycle backend and matching v7 notice.
-  Verify the actual hosted maintenance jobs and operator extract/deletion procedure.
+  flow, incorporate any required review/provider changes, and verify the operator
+  extract/deletion procedure before research opens.
 - [ ] Test explicit package preview/send, uncertain receipt retries, withdrawal
   and deletion with uploads disabled, including lost-credential recovery.
 - [ ] Run the closed-state verifier and operations report immediately before

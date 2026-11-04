@@ -100,9 +100,10 @@ eligibility, presents saveable information and obtains explicit consent through
 and Send. The server requires valid enrollment and a current retention review.
 Tracked research extracts and collaborator copies have deletion tasks and
 confirmation records. There is no fixed research measurement expiry.
-The new backend migrations are prepared, **not deployed**; enrollment and all
-three online features remain closed. Signature-method acceptance, publication,
-approvals and live operational checks remain necessary. See
+The backend migrations are deployed and their closed-state checks passed;
+enrollment and all three online features remain closed. Consent-process
+acceptance, provider/research approvals and a permitted live-account pilot
+remain necessary. See
 [research controls](docs/RESEARCH_CONTROLS.md) for the flow and operator procedures.
 
 Before opening the first personal report (including cached results), the add-on asks **Yes, I’m interested / Not now / No, keep it private**. It also asks before a new user enables automatic CSV output. Not now is the default; every choice allows personal use. Change the choice later through **Tools → Quantified Cognition Research Sharing…** or the report's Research sharing button. This first question records a preference; it does not enroll the user.

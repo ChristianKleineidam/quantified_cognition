@@ -1,15 +1,22 @@
 # Backend deployment state
 
-Code deployment verified **26 October 2026, 23:15 UTC**. This is a deployed prelaunch backend;
+Code deployment verified **4 November 2026, 20:21 UTC**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
 
 **4 November project restoration:** the project was restored at the operator's
 request and now reports `ACTIVE_HEALTHY`. A read-only database query succeeded,
 and the live `/status` endpoint confirmed all three online features remain
-disabled. The restored service is still version 9 with sharing notice v5.
-Pending enrollment/lifecycle migrations and notice v7 have not been deployed;
-the `qs_governance` schema is not present. This restoration changed no function
-code, schema, provider credentials or feature flags.
+disabled. At restoration, the service was version 9 with sharing notice v5 and
+the `qs_governance` schema was absent. The restoration itself changed no function
+code, schema, provider credentials or feature flags. The separately authorized
+deployment below subsequently applied the prepared updates.
+
+**4 November closed backend deployment:** all nine pending migrations were
+applied in order, through `20261104191205_research_protocol_v7.sql`. Function
+version 11 matches all five prepared source files. Hosted notice v7, its hash,
+JollyJoyJourney and the published policy URL match the add-on. All three enable
+flags remain false, and all seven protocol versions remain unapproved, closed
+and without provider permissions.
 
 **4 November website publication:** the public information site, privacy policy
 and research information are now hosted on Cloudflare Pages at
@@ -30,7 +37,9 @@ the current closed-state checks before any separately authorized online pilot.
 | Project ref | `wfjlzecckihsgcvauqwt` |
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
-| Function | `qs-service`, deployed version 9 |
+| Function | `qs-service`, deployed version 11 |
+| Latest migration | `20261104191205_research_protocol_v7.sql` |
+| Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |
 | Monitor | Active, every five minutes; private alerts |
 | Oura access | **Disabled** (`OURA_ENABLED=false`) |
@@ -40,6 +49,34 @@ the current closed-state checks before any separately authorized online pilot.
 
 [Project dashboard](https://supabase.com/dashboard/project/wfjlzecckihsgcvauqwt),
 [deployed status](https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service/status).
+
+## Closed deployment checks on 4 November
+
+All **42 backend tests** passed before deployment. The live closed-state verifier
+passed with an enabled public client key: all OAuth, enrollment and upload
+routes returned 503; a synthetic deletion returned a completed receipt; repeated
+requests reached 429 with `Retry-After`; anonymous register/admission/telemetry
+RPCs were denied; and the private schema was unavailable through the Data API.
+No real provider account was connected and no research measurements were uploaded.
+The deletion probe can leave a synthetic tombstone and operational counters.
+
+All 16 private tables have RLS enabled and deny direct access to anonymous and
+authenticated client roles. Governance functions use `SECURITY INVOKER`; the
+Edge role cannot approve a protocol or release research extracts. Both
+`qs-operations-monitor` and `qs-research-maintenance` ran successfully at 20:10
+UTC on their five-minute schedules. The operator report showed fresh successful
+probes and no active alerts. External alert delivery remains unconfigured.
+
+The security advisor reported only informational `rls_enabled_no_policy`
+reminders for the intentionally private tables. These tables grant no direct
+client access; server RPCs enforce authorization. See
+[Supabase's explanation](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+The optional administrative transaction stress script was not executed: its
+client confirmation was cancelled before any SQL ran. Its historical 26 October
+results below are not a new execution. The direct HTTP, quota, permission and
+scheduled-maintenance checks above passed on the deployed backend.
+
 The public service root is
 `https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service`.
 It has been configured in the add-on since v0.13.0. Existing installations can set that URL
@@ -182,8 +219,8 @@ disable values; no credential values were printed during verification.
 
 ## Before enabling online features
 
-Complete and publish the [JollyJoyJourney privacy draft](PRIVACY.md), supply its
-study/contact and policy details, finish the [Oura approval checklist](OURA_APPROVAL.md)
+Review the published [JollyJoyJourney privacy policy](PRIVACY.md) and study
+information for any required approval changes, finish the [Oura approval checklist](OURA_APPROVAL.md)
 and its storage/revocation/deletion requirements, install Oura client credentials,
 and complete [Google setup/research requirements](GOOGLE_HEALTH.md) with its own
 credentials and permitted live-account pilot. Review retention, logs, backup

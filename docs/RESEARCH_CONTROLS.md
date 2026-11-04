@@ -1,8 +1,8 @@
 # Enrollment and research-data controls
 
-Implemented in the **0.19.4 source**, tested with synthetic data. These migrations
-have **not been deployed** to the hosted project. Oura, Google Health and
-research uploads remain disabled. The prepared protocol is inserted with
+Implemented in the **0.19.4 source** and deployed on **4 November 2026** with
+synthetic-data and live closed-state verification. Oura, Google Health and
+research uploads remain disabled. Every prepared protocol remains
 `approved=false`, `enrollment_open=false` and both provider permissions false.
 An environment flag alone cannot approve enrollment.
 
@@ -190,10 +190,10 @@ names, original choices and exposure timing remain intact.
 Saved settings for older built-in notices advance to the current built-in
 version when their text override is empty. Explicit custom notices retain their
 configured versions. Neither operation rewrites the audit history.
-Apply them in order only as part of the planned closed-backend deployment.
-Existing rows are **not** backfilled as enrolled.
-Configure v7 notice/hash from `python tools/service_schema.py`; the source default
-and the last hosted v5 deployment are intentionally different until deployment.
+All migrations through protocol v7 were applied in order on 4 November. Existing
+rows are **not** backfilled as enrolled. Hosted notice v7 and its hash match
+`python tools/service_schema.py`. The live Edge role cannot approve a protocol
+or release research extracts; both scheduled maintenance jobs ran successfully.
 
 When participant documents change, choose a new enrollment protocol version,
 regenerate the frozen bundle with `tools/build_research_bundle.py`, and generate
