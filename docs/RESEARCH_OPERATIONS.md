@@ -42,11 +42,11 @@ are evidence for their recorded date, not a current live-service verification.
 The code implements a strict daily-package allowlist, explicit preview/send,
 private storage, separate upload/deletion capabilities, idempotency, atomic live
 deletion, anti-resurrection tombstones, and local pre-view preference/exposure
-history. Version 0.19.0 source now implements separate eligibility/explicit-consent
-enrollment with a typed pseudonymous signature, server-side enrollment enforcement,
+history. Version 0.19.1 source implements separate eligibility/explicit-consent
+enrollment linked to the existing participant ID, server-side enrollment enforcement,
 retention reviews and tracked extract/collaborator deletion. See
 [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The migrations are not deployed,
-the prepared protocol is closed/unapproved, and acceptance of that signature method
+the prepared protocol is closed/unapproved, and acceptance of that consent process
 must be confirmed. Complete provider revocation/backup handling and real hosted
 verification remain outstanding. Implementation is not approval or activation.
 
@@ -151,7 +151,7 @@ as proof of completed legal/provider-approved enrollment.
 The source flow checks eligibility before consent, provides saveable information
 and explicit health-data consent, and stores the signed version/timestamp separately
 from measurements. The server requires that enrollment. Confirm that its
-typed pseudonymous signature is accepted;
+explicit consent action linked to the participant ID is accepted;
 if a name/contact is required, disclose it first and keep it out of the analysis
 package. Required changes need a new versioned protocol before activation.
 Review the personal health-connection consent separately too; a provider's

@@ -50,7 +50,7 @@ provider permission. Collaborators and their roles are identified before
 access. Public findings contain anonymous summaries or synthetic examples;
 individual daily histories are not published.
 
-Measurements are linked using a pseudonym. Access is restricted, although
+Measurements are linked using a random participant ID. Access is restricted, although
 unauthorized access or identification from patterns in daily histories remains
 a privacy risk.
 
@@ -69,9 +69,10 @@ findings remain available. Use the add-on's deletion controls or contact us if
 you can no longer access them.
 
 Before joining, you can read and save this information and the policy. The
-add-on checks eligibility and asks for explicit consent, signed using a
-pseudonym you choose. Consent records are kept separately from daily
-measurements, and you can save a copy. The consent statement is:
+add-on checks eligibility, then asks you to confirm the consent statement and
+select **Agree and join research**. Your consent is linked to your existing
+participant ID. Consent records are kept separately from daily measurements,
+and you can save a copy. The consent statement is:
 
 > I confirm that I am at least 18 and am contributing my own data. I have read
 > the research information and privacy policy. I explicitly consent to

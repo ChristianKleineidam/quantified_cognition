@@ -62,10 +62,10 @@ provider account or device IDs; passwords and tokens. Personal insight charts,
 cached correlations and return-visit comparisons are also excluded.
 
 Eligibility and consent records are kept separately from measurements. They
-record the information agreed to, its version, the date, eligibility and a
-typed signature using a pseudonym you choose. Analysis exports can include
-enrollment version and consent timing; signatures and eligibility answers
-stay separate. Contact correspondence contains the sender address, message,
+link your explicit consent to your participant ID and record the information
+agreed to, its version, the date and eligibility. Analysis exports can include
+enrollment version and consent timing; eligibility answers and full consent
+records stay separate. Contact correspondence contains the sender address, message,
 attachments and delivery information.
 
 ## Research and publication

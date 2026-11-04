@@ -17,7 +17,7 @@ app = thread_app
 runtime = thread_runtime
 
 
-def test_eligibility_then_explicit_signature_enrollment_does_not_send_measurements(
+def test_eligibility_then_explicit_consent_does_not_send_measurements(
     runtime, app, monkeypatch
 ):
     main, _ = runtime
@@ -36,7 +36,6 @@ def test_eligibility_then_explicit_signature_enrollment_does_not_send_measuremen
             "adult": True,
             "own_data": True,
             "explicit_consent": True,
-            "signature": "Test signature",
         }
         calls.append(True)
         return {"receipt": {"enrollment_id": "synthetic"}}
@@ -58,11 +57,11 @@ def test_eligibility_then_explicit_signature_enrollment_does_not_send_measuremen
     assert dialog.consent.isVisible()
     assert dialog.statement.text() == dialog.frozen["bundle"]["statement"]
     assert not dialog.join.isEnabled()
-    dialog.signature.setText("Test signature")
-    assert not dialog.join.isEnabled()
+    assert not hasattr(dialog, "signature")
+    assert dialog.join.text() == "Agree and join research"
     dialog.explicit.setChecked(True)
     assert dialog.join.isEnabled() and not dialog.join.isDefault()
-    dialog.sign()
+    dialog.agree()
     pump_until(app, lambda: dialog.enrolled)
     assert calls == [True]
     assert "No measurements were uploaded" in dialog.status.text()

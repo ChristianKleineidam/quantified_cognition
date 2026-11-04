@@ -23,9 +23,9 @@ STATEMENT = (
 
 def bundle():
     return {
-        "version": "research-enrollment-v4",
+        "version": "research-enrollment-v5",
         "operator": "JollyJoyJourney",
-        "signature_method": "typed_pseudonym",
+        "signature_method": "explicit_consent",
         "statement": STATEMENT,
         "documents": {
             name: (ROOT / "docs" / name).read_text(encoding="utf-8")

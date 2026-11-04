@@ -175,10 +175,11 @@ project pausing, logs and pricing change—check the current Supabase dashboard.
 [changelog](https://supabase.com/changelog).
 The October 2026 TLS notice affects old CBC-only clients; the add-on uses modern
 Python/OpenSSL HTTPS defaults and does not weaken certificate/TLS validation.
-# Pending enrollment/lifecycle deployment (0.19.0)
+# Pending enrollment/lifecycle deployment (0.19.1)
 
 The source now requires package schema v5, separate enrollment and sharing notice
-v6. Apply both 20261102 research migrations and deploy the matching handler while
+v6. Apply the research migrations through protocol v5 (including the
+participant-ID consent migration) and deploy the matching handler while
 keeping all three feature flags false. The prepared protocol remains unapproved
 and enrollment closed. `supabase/deployment.json` continues to describe the older
 hosted deployment until a live deployment is performed and verified. See

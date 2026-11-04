@@ -52,7 +52,7 @@ class _NoRedirect(HTTPRedirectHandler):
 def request_json(url, data=None, *, token=None, method=None, limit=8 * 1024 * 1024):
     if urlsplit(url).scheme != "https":
         raise ServiceError("This service requires HTTPS.")
-    headers = {"Accept": "application/json", "User-Agent": "QuantifiedCognition/0.19"}
+    headers = {"Accept": "application/json", "User-Agent": "QuantifiedCognition/0.19.1"}
     if token:
         headers["Authorization"] = "Bearer " + token
     body = None

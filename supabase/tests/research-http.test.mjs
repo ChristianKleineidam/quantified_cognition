@@ -53,9 +53,14 @@ test("real HTTP enrollment gate, explicit upload, and deletion status with all f
     assert.equal((await handler(request("/research/submissions",packet))).status,403);
     const signed=evidence(id,{participant_id:publicId});
     assert.equal((await handler(request("/research/enrollment",{...signed,explicit_consent:false}))).status,400);
+    const missing={...signed};delete missing.explicit_consent;
+    assert.equal((await handler(request("/research/enrollment",missing))).status,400);
+    assert.equal((await handler(request("/research/enrollment",{...signed,signature:"extra pseudonym"}))).status,400);
+    assert.equal((await handler(request("/research/enrollment",{...signed,signature_method:"typed_pseudonym"}))).status,400);
     const joined=await handler(request("/research/enrollment",signed));assert.equal(joined.status,200);
     const first=await joined.json();assert.equal(first.enrollment_id,id);
     assert.deepEqual(await (await handler(request("/research/enrollment",signed))).json(),first);
+    assert.equal((await handler(request("/research/enrollment",{...signed,participant_id:crypto.randomUUID()}))).status,409);
     const sent=await handler(request("/research/submissions",packet));assert.equal(sent.status,200);
     assert.deepEqual(await (await handler(request("/research/submissions",packet))).json(),await sent.json());
     const closed=createHandler({env:{...env,RESEARCH_ENABLED:"false"},fetch,log:value=>logs.push(value)});
@@ -67,6 +72,6 @@ test("real HTTP enrollment gate, explicit upload, and deletion status with all f
     assert.equal((await closed(request("/research/deletion-status",{},"POST","x".repeat(43)))).status,401);
     assert.equal((await db.query("select capability_hash from qs_private.participants where id=$1",[id])).rows[0].capability_hash,null);
     assert.equal((await handler(request("/research/submissions",packet))).status,401);
-    for(const value of [signed.signature,publicId,id,secret,receiptSecret])assert.ok(!JSON.stringify(logs).includes(value));
+    for(const value of ["extra pseudonym",publicId,id,secret,receiptSecret])assert.ok(!JSON.stringify(logs).includes(value));
   } finally {await db.close();}
 });

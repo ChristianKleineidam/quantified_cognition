@@ -33,6 +33,6 @@ With Yes selected, reopen Research sharing and choose **Review and submit dataâ€
 
 The v6 sharing choice records a preference and preserves original first-view timing.
 Research enrollment is separate and remains closed in this beta. It requires
-eligibility, saveable information and explicit consent with a pseudonymous signature;
+eligibility, saveable information and explicit consent linked to the participant ID;
 each measurement upload still requires its own preview and Send. See the bundled
 `docs/RESEARCH_CONTROLS.md`. No online feature is enabled by editing this notice.

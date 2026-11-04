@@ -84,12 +84,9 @@ def _connection(source, config):
     return connection
 
 
-def enroll(source, config, sharing, *, adult, own_data, explicit_consent, signature):
+def enroll(source, config, sharing, *, adult, own_data, explicit_consent):
     if adult is not True or own_data is not True or explicit_consent is not True:
         raise ServiceError("Confirm eligibility and explicit consent before joining.")
-    signature = signature.strip()
-    if not 2 <= len(signature) <= 80 or any(ord(char) < 32 for char in signature):
-        raise ServiceError("Type a research signature of 2–80 characters.")
     with profile_job_lock(source, "submission"):
         enrollment_information(source, config, sharing)
         snapshot = sharing_state(source, sharing)
@@ -98,15 +95,16 @@ def enroll(source, config, sharing, *, adult, own_data, explicit_consent, signat
         frozen = load_bundle()
         previous = latest_enrollment(source)
         connection = _connection(source, config)
-        # Persist a stable signed record before network I/O. Retrying after a lost
-        # receipt uses the same evidence, signature and identity, not a new consent.
+        # Persist consent linked to the existing profile ID before network I/O.
+        # A lost receipt is retried with the same evidence and identity.
         reusable = (
             previous
             and not previous["withdrawn_at"]
             and (
                 previous["service"] == config.base_url
                 and previous["record"]["bundle_hash"] == frozen["sha256"]
-                and previous["record"]["signature"] == signature
+                and previous["record"]["participant_id"] == snapshot.participant_id
+                and previous["record"]["signature_method"] == "explicit_consent"
                 and previous["record"]["choice_event_id"] == snapshot.choices[-1]["id"]
             )
         )
@@ -123,8 +121,7 @@ def enroll(source, config, sharing, *, adult, own_data, explicit_consent, signat
                 "adult": True,
                 "own_data": True,
                 "explicit_consent": True,
-                "signature_method": "typed_pseudonym",
-                "signature": signature,
+                "signature_method": "explicit_consent",
                 "signed_at_client": event["occurred_at"],
                 "before_first_results": snapshot.before_first_view(event),
                 "choice_event_id": snapshot.choices[-1]["id"],

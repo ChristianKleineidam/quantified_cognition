@@ -20,7 +20,7 @@ so existing installations retain their settings, saved results and sharing histo
 
 Requires Anki **25.09 or later** with FSRS enabled in Deck Options. No extra Python packages are required in Anki. The add-on runs on desktop; synced mobile/web reviews are analyzed on desktop.
 
-1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.19.0.ankiaddon`; generated packages are not committed to the repository.
+1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.19.1.ankiaddon`; generated packages are not committed to the repository.
 2. In Anki, select **Tools → Add-ons → Install from file**, select the file, and restart Anki.
 3. Open **Tools → Quantified Cognition…**.
 4. Choose **Daily recall** or an overall/short-term/long-term **Memory formation** metric. Inspect a day with the date selector or by clicking the chart. **Inspect daily data** switches to a detailed table.
@@ -93,10 +93,10 @@ Hourly background sync rechecks recent 30 days; weekly sync rechecks the full ch
 
 ## Sharing choice and consent timing
 
-Version 0.19.0 adds separate study enrollment and research-data lifecycle controls.
+Version 0.19.1 uses the existing participant ID for explicit research consent.
 The original sharing preference/exposure history is preserved. Enrollment checks
-eligibility, presents saveable information and obtains explicit consent with a
-typed pseudonymous signature; no measurements upload until a separate preview
+eligibility, presents saveable information and obtains explicit consent through
+**Agree and join research**; no measurements upload until a separate preview
 and Send. The server requires valid enrollment and a current retention review.
 Tracked research extracts and collaborator copies have deletion tasks and
 confirmation records. There is no fixed research measurement expiry.

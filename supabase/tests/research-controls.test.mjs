@@ -38,7 +38,8 @@ test("enrollment, retention review and the lifecycle of every registered researc
       await db.exec(await readFile(new URL(name,directory),"utf8"));
     await isolated("prepared protocol stays closed; ordinary clients and Edge key cannot approve or export",async()=>{
       assert.equal((await one("select public.qs_enrollment_information() result")).result,null);
-      assert.equal((await one("select approved from qs_governance.protocols")).approved,false);
+      assert.ok((await db.query("select approved,enrollment_open,oura_permitted,google_permitted from qs_governance.protocols")).rows
+        .every(p=>!p.approved&&!p.enrollment_open&&!p.oura_permitted&&!p.google_permitted));
       assert.ok((await db.query("select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='qs_governance' and c.relkind='r'")).rows.every(r=>r.relrowsecurity));
       assert.ok((await db.query("select not prosecdef as invoker from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='qs_governance'")).rows.every(r=>r.invoker));
       for(const role of ["anon","authenticated","service_role"]) {
@@ -53,25 +54,48 @@ test("enrollment, retention review and the lifecycle of every registered researc
     await isolated("sharing metadata and registered capability alone cannot upload",async()=>{
       await db.query("select public.qs_register($1,$2)",[id,hash]);
       await rejects("select public.qs_submit($1,$2,$3,$4,$5)",[id,hash,crypto.randomUUID(),payload(id),hash],/enrollment_required/);
-      for(const change of [{adult:false},{own_data:false},{explicit_consent:false},{bundle_hash:"c".repeat(64)},{signature:""}])
+      for(const change of [{adult:false},{own_data:false},{explicit_consent:false},{explicit_consent:null},
+        {bundle_hash:"c".repeat(64)},{signature:"extra pseudonym"},{signature_method:"typed_pseudonym"},
+        {participant_id:null},{signed_at_client:null},{signed_at_client:"infinity"},
+        {choice_event_id:0},{before_first_results:"true"}])
         await rejects("select public.qs_enroll($1,$2,$3)",[id,hash,evidence(id,change)],/invalid consent|enrollment_required/);
+      const missing=evidence(id);delete missing.explicit_consent;
+      await rejects("select public.qs_enroll($1,$2,$3)",[id,hash,missing],/invalid consent/);
     });
-    await isolated("enrollment retries are immutable; evidence and signatures stay outside measurements",async()=>{
+    await isolated("enrollment retries are immutable; consent evidence stays outside measurements",async()=>{
       await db.query("select public.qs_register($1,$2)",[id,hash]);
       const signed=evidence(id);
       const first=await one("select public.qs_enroll($1,$2,$3) result",[id,hash,signed]);
       await rejects("update qs_governance.enrollments set evidence='{}'",[],/immutable/);
       await rejects("update qs_governance.protocols set bundle='{}',bundle_hash=$1",["c".repeat(64)],/immutable/);
       assert.deepEqual(await one("select public.qs_enroll($1,$2,$3) result",[id,hash,signed]),first);
-      await rejects("select public.qs_enroll($1,$2,$3)",[id,hash,{...signed,signature:"different"}],/conflict/);
+      await rejects("select public.qs_enroll($1,$2,$3)",[id,hash,{...signed,before_first_results:false}],/conflict/);
+      await rejects("select public.qs_enroll($1,$2,$3)",[id,hash,evidence(crypto.randomUUID(),{participant_id:other})],/conflict/);
       await submit();
-      assert.ok(!JSON.stringify((await one("select payload from qs_private.submissions")).payload).includes(signed.signature));
+      const stored=(await one("select payload from qs_private.submissions")).payload;
+      assert.equal(stored.metadata.research_participant_id,signed.participant_id);
+      assert.ok(!("explicit_consent" in stored.metadata));
+      assert.ok(!("signature" in (await one("select evidence from qs_governance.enrollments")).evidence));
       const renewed=evidence(crypto.randomUUID(),{participant_id:id});
       await db.query("select public.qs_enroll($1,$2,$3)",[id,hash,renewed]);
       const old=await one("select withdrawn_at,superseded_at from qs_governance.enrollments where id=$1",[id]);
       assert.equal(old.withdrawn_at,null);assert.ok(old.superseded_at);
       await db.exec("update qs_governance.enrollments set purge_after=now()-interval '1 day';select qs_governance.maintain_research()");
       assert.equal((await one("select count(*)::int n from qs_governance.enrollments where id=$1",[id])).n,1);
+    });
+    await isolated("legacy consent evidence stays immutable and a renewal uses the same participant ID",async()=>{
+      await db.query("select public.qs_register($1,$2)",[id,hash]);
+      await db.exec(`insert into qs_governance.protocols
+        (version,bundle_hash,bundle,notice_version,notice_hash,signature_method)
+        values ('legacy-typed','${"d".repeat(64)}','{}','test-v1','${"a".repeat(64)}','typed_pseudonym')`);
+      const legacy=evidence(other,{participant_id:id,version:"legacy-typed",bundle_hash:"d".repeat(64),
+        signature_method:"typed_pseudonym",signature:"Original synthetic signature"});
+      await db.query("insert into qs_governance.enrollments(id,participant_id,public_participant_id,protocol_version,evidence) values($1,$2,$2,'legacy-typed',$3)",[other,id,legacy]);
+      await enroll(db,id,hash);
+      const saved=await one("select evidence,superseded_at from qs_governance.enrollments where id=$1",[other]);
+      assert.deepEqual(saved.evidence,legacy);assert.ok(saved.superseded_at);
+      await rejects("update qs_governance.enrollments set evidence=evidence-'signature' where id=$1",[other],/immutable/);
+      await rejects("select public.qs_enroll($1,$2,$3)",[id,hash,legacy],/invalid consent/);
     });
     await isolated("upload binding rejects another enrollment, different public identity and revoked protocol",async()=>{
       await participant();await participant(other);

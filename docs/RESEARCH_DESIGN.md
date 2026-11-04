@@ -149,8 +149,9 @@ Keep three concepts separate: the first sharing preference, first opportunity
 to see results, and completed approved study consent. Existing CSV fields named
 research_consent refer to the app's versioned sharing-choice audit. They are
 not independent proof that the new enrollment requirements have been completed.
-Record the actual study-information/consent version, time and required signature
-in the separate enrollment record before permitting research access.
+Record the actual study-information/consent version, explicit consent action,
+participant ID and time in the separate enrollment record before permitting
+research access. Keep this evidence separate from the measurements.
 
 Analyze early preference, later preference and unknown exposure separately.
 For any analysis of consent before viewing, use the actual approved consent

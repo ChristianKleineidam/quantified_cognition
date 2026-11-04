@@ -247,12 +247,11 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
           await admit(request, "register", id + ":" + hash);
           const data = await body(request);
           exact(data, ["enrollment_id", "participant_id", "version", "bundle_hash", "adult", "own_data",
-            "explicit_consent", "signature_method", "signature", "signed_at_client", "before_first_results",
+            "explicit_consent", "signature_method", "signed_at_client", "before_first_results",
             "choice_event_id", "notice_version", "notice_hash"]);
           if (!UUID.test(data.enrollment_id) || !UUID.test(data.participant_id) || data.adult !== true ||
-              data.own_data !== true || data.explicit_consent !== true || data.signature_method !== "typed_pseudonym" ||
-              typeof data.signature !== "string" || data.signature.trim().length < 2 || data.signature.length > 80 ||
-              /[\x00-\x1f\x7f]/.test(data.signature) || !/^[0-9a-f]{64}$/.test(data.bundle_hash) ||
+              data.own_data !== true || data.explicit_consent !== true || data.signature_method !== "explicit_consent" ||
+              !/^[0-9a-f]{64}$/.test(data.bundle_hash) ||
               typeof data.version !== "string" || data.version.length > 80 ||
               typeof data.signed_at_client !== "string" || !Number.isFinite(Date.parse(data.signed_at_client)) ||
               ![true,false,null].includes(data.before_first_results) || !Number.isSafeInteger(data.choice_event_id) ||

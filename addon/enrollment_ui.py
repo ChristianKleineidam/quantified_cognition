@@ -1,4 +1,4 @@
-"""Eligibility first, then the exact saveable information and explicit signature."""
+"""Eligibility first, then saveable information and explicit participant-ID consent."""
 
 from aqt.qt import (
     QCheckBox,
@@ -6,7 +6,6 @@ from aqt.qt import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QPushButton,
     Qt,
     QTextBrowser,
@@ -60,13 +59,7 @@ class EnrollmentDialog(QDialog):
             "I explicitly consent to the statement above, including health data."
         )
         consent_layout.addWidget(self.explicit)
-        consent_layout.addWidget(
-            QLabel("Research signature — choose a pseudonym; a legal name is not required.")
-        )
-        self.signature = QLineEdit()
-        self.signature.setMaxLength(80)
-        self.signature.setPlaceholderText("Type your chosen research signature")
-        consent_layout.addWidget(self.signature)
+        consent_layout.addWidget(QLabel("Your consent is linked to your existing participant ID."))
         layout.addWidget(self.consent)
         self.consent.hide()
         buttons = QHBoxLayout()
@@ -83,10 +76,10 @@ class EnrollmentDialog(QDialog):
         self.next.setAutoDefault(False)
         self.next.clicked.connect(self.show_consent)
         buttons.addWidget(self.next)
-        self.join = QPushButton("Sign and join research")
+        self.join = QPushButton("Agree and join research")
         self.join.setAutoDefault(False)
         self.join.setEnabled(False)
-        self.join.clicked.connect(self.sign)
+        self.join.clicked.connect(self.agree)
         self.join.hide()
         buttons.addWidget(self.join)
         self.close_button = QPushButton("Close")
@@ -95,7 +88,6 @@ class EnrollmentDialog(QDialog):
         layout.addLayout(buttons)
         for widget in (self.adult, self.own, self.explicit):
             widget.toggled.connect(self.update_actions)
-        self.signature.textChanged.connect(self.update_actions)
         self.run(self.prepare, self.prepared)
 
     def run(self, task, success):
@@ -149,13 +141,11 @@ class EnrollmentDialog(QDialog):
             self.available
             and eligible
             and self.explicit.isChecked()
-            and 2 <= len(self.signature.text().strip()) <= 80
             and not self.busy
         )
         self.adult.setEnabled(not self.busy)
         self.own.setEnabled(not self.busy)
         self.explicit.setEnabled(not self.busy)
-        self.signature.setEnabled(not self.busy)
 
     def show_consent(self):
         if not self.next.isEnabled():
@@ -165,16 +155,16 @@ class EnrollmentDialog(QDialog):
         self.consent.show()
         self.join.show()
         self.status.setText(
-            "Read the information and statement. Signing is voluntary; "
+            "Read the information and statement. Joining is voluntary; "
             "personal use stays available."
         )
 
-    def sign(self):
+    def agree(self):
         if self.busy or not self.join.isEnabled():
             return
         adult, own = self.adult.isChecked(), self.own.isChecked()
-        explicit, signature = self.explicit.isChecked(), self.signature.text()
-        self.status.setText("Saving your signed consent and requesting an enrollment receipt…")
+        explicit = self.explicit.isChecked()
+        self.status.setText("Saving your consent and requesting an enrollment receipt…")
 
         def signed(_record):
             self.enrolled = True
@@ -193,7 +183,6 @@ class EnrollmentDialog(QDialog):
                 adult=adult,
                 own_data=own,
                 explicit_consent=explicit,
-                signature=signature,
             ),
             signed,
         )

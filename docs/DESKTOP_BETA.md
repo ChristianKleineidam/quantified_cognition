@@ -204,6 +204,13 @@ edits and shutdown/export lifecycle regressions passed offline. Months of
 real-world follow-up cannot be replaced by visit simulations. These distinctions
 remain visible in the [beta checklist](BETA_CHECKLIST.md).
 
+On 4 November, version **0.19.1** removed the separate pseudonym field. Explicit
+consent is linked to the existing participant ID. All **38 focused Python/Qt
+tests** and **42 backend tests** passed, including lost-receipt retries, original
+pre-view preference timing, preserved legacy consent copies, rejected extra
+signature fields and participant-ID binding. These are synthetic offline checks;
+the hosted project remains inactive and the new migrations are not deployed.
+
 On 30 October the Supabase management API reported the project **INACTIVE**;
 its public hostname did not resolve and SQL checks were unavailable. It was not
 resumed. The last successful live checks on 26 October confirmed all three

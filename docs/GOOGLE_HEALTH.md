@@ -152,7 +152,7 @@ to derived/aggregated data and onward transfers too. Resolve these with the
 provider/review board before enabling the research service; the current local
 sharing preference and explicit package confirmation are not a completed
 approved study enrollment process. Confirm acceptance of the implemented
-eligibility, information-copy and pseudonymous-signature flow and incorporate
+eligibility, information-copy and participant-ID consent flow and incorporate
 any required changes once the requirements are known.
 
 The v6 sharing notice and package schema v5 precisely include the daily Google

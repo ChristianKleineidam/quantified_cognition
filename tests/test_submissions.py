@@ -45,7 +45,7 @@ def setup(tmp_path, monkeypatch):
             return {
                 "version": frozen["bundle"]["version"],
                 "bundle_hash": frozen["sha256"],
-                "signature_method": "typed_pseudonym",
+                "signature_method": "explicit_consent",
                 "notice_version": sharing.notice_version,
                 "notice_hash": sharing.notice_hash,
             }
@@ -61,7 +61,6 @@ def setup(tmp_path, monkeypatch):
         adult=True,
         own_data=True,
         explicit_consent=True,
-        signature="Synthetic participant",
     )
     monkeypatch.setattr(submissions, "call_service", lambda *a, **kw: status)
     return source, sharing, secrets, status

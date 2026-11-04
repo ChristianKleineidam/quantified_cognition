@@ -1,6 +1,6 @@
 # Enrollment and research-data controls
 
-Implemented in the **0.19.0 source**, tested with synthetic data. These migrations
+Implemented in the **0.19.1 source**, tested with synthetic data. These migrations
 have **not been deployed** to the inactive hosted project. Oura, Google Health and
 research uploads remain disabled. The prepared protocol is inserted with
 `approved=false`, `enrollment_open=false` and both provider permissions false.
@@ -16,19 +16,21 @@ preference audit for compatibility; they are not proof of signed enrollment.
 
 Research sharing → **Research enrollment…** opens eligibility first (18 or over,
 own data), followed by the complete, saveable participant information, policy,
-explicit health-data consent and typed pseudonymous signature. Signing runs in
+explicit health-data consent and **Agree and join research**. This action runs in
 the background and records enrollment only. **Review and submit data…** still
 requires a package preview and a separate Send for every contribution. No
-measurements are sent merely by signing. Personal use is independent of enrollment.
+measurements are sent merely by enrolling. Personal use is independent of enrollment.
 
 The exact documents and statement are frozen in `addon/research_enrollment.json`.
-Their version/hash must match the approved server protocol. A typed pseudonym
-is the implemented signature method; its acceptance must be confirmed in the
-review/provider process. No legal name or email is requested. A different
-required signature process needs an updated implementation and protocol before
-activation. A signature field is not a claim of verified identity.
+Their version/hash must match the approved server protocol. Protocol v5 records
+an explicit consent action linked to the existing random profile participant ID
+(`signature_method=explicit_consent`), without a separate signature-name field.
+No legal name or email is requested. Confirm acceptance of this consent process
+in the review/provider process; any required change needs an updated protocol
+before activation. It does not verify a person's civil identity.
 
-The append-only local sharing audit also records the actual signature event,
+The append-only local sharing audit also records the actual consent event
+(`enrollment_signed`, retained for audit compatibility),
 separately from the first preference. Enrollment records contain their own
 before-first-results classification, including unknown. Server receipt time
 is separate from the client's claimed signing time. Neither is proof that a
@@ -36,11 +38,11 @@ person read the documents. Signed records and original document copies are saved
 in the separate profile audit database; **Save consent copy…** exports them with
 the receipt. They do not change FSRS scores or the ordinary daily CSV workflow.
 
-Package schema v5 includes an enrollment ID. Signatures, eligibility answers and
+Package schema v5 includes an enrollment ID. Eligibility answers and
 full consent documents are excluded from the measurement package and ordinary
 research exports. Tracked analysis exports include the enrollment ID, protocol
 version and actual consent timing separately from the original sharing-preference
-timing, without including the signature or eligibility answers. Server-side
+timing, without including full consent evidence or eligibility answers. Server-side
 enrollment evidence is in `qs_governance`, separate
 from `qs_private.submissions`. Anonymous/authenticated clients cannot access
 either. Operator-only governance functions are unavailable to the Edge role.
@@ -165,10 +167,18 @@ backend work. A paused project cannot run maintenance or accept deletion request
 The migrations are `20261102141401_research_enrollment_lifecycle.sql`,
 `20261102142008_research_protocol_v1.sql`,
 `20261104151505_research_protocol_v2.sql`,
-`20261104155542_research_protocol_v3.sql` and
-`20261104164851_research_protocol_v4.sql`. Versions 2 through 4 revise public
+`20261104155542_research_protocol_v3.sql`,
+`20261104164851_research_protocol_v4.sql`,
+`20261104180329_participant_id_consent.sql` and
+`20261104180330_research_protocol_v5.sql`. Versions 2 through 4 revise public
 wording without expanding the data scope. Version 4 also states Google's
-Limited Use commitment explicitly. Earlier copies remain in migration history.
+Limited Use commitment explicitly. Version 5 removes the extra pseudonym field
+and links the explicit consent action to the existing participant ID. New
+enrollments reject extra fields and retired consent methods. Renewals cannot
+change the public participant ID bound to their authenticated connection.
+Existing evidence and frozen document copies remain unchanged and saveable;
+upgrading does not convert old consent to the new protocol. Earlier copies
+remain in migration history.
 Apply them in order only as part of the planned closed-backend deployment.
 Existing rows are **not** backfilled as enrolled.
 Configure v6 notice/hash from `python tools/service_schema.py`; the source default

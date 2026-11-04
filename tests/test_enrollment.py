@@ -1,5 +1,6 @@
 """Study consent is distinct from the original sharing-choice/exposure audit."""
 
+import hashlib
 import json
 import sqlite3
 from dataclasses import replace
@@ -43,27 +44,32 @@ def test_eligibility_and_explicit_consent_are_mandatory_before_network(enrolled,
         "adult": True,
         "own_data": True,
         "explicit_consent": True,
-        "signature": "Test signature",
     }
     answers[flag] = False
     with pytest.raises(ServiceError, match="Confirm eligibility"):
         enrollment.enroll(source, CONFIG, sharing, **answers)
 
 
-def test_signature_is_separate_from_package_and_copy_contains_exact_signed_documents(
+def test_consent_uses_profile_id_and_copy_contains_exact_documents(
     enrolled, tmp_path
 ):
     source, sharing, _, _ = enrolled
     record = enrollment.latest_enrollment(source)
     packet = submissions.prepare_submission(source, CONFIG, sharing)[0]["package"]
     assert packet["enrollment_id"] == record["id"]
-    assert "Synthetic participant" not in json.dumps(packet)
+    assert "signature" not in record["record"]
+    assert record["record"]["participant_id"] == sharing_state(source, sharing).participant_id
     assert "signature" not in packet["metadata"]
     copy = tmp_path / "consent.json"
     enrollment.save_consent_copy(source, copy)
     saved = json.loads(copy.read_text("utf-8"))
     assert saved["information"] == enrollment.load_bundle()
-    assert saved["enrollment"]["record"]["signature"] == "Synthetic participant"
+    assert saved["enrollment"]["record"]["explicit_consent"] is True
+    assert saved["enrollment"]["record"]["signature_method"] == "explicit_consent"
+    assert (
+        saved["enrollment"]["record"]["participant_id"]
+        == packet["metadata"]["research_participant_id"]
+    )
     assert saved["enrollment"]["receipt"]["enrollment_id"] == record["id"]
 
 
@@ -83,7 +89,8 @@ def test_receipt_loss_retries_exact_signed_evidence_and_does_not_change_first_ch
         return original(config, route, data, **kwargs)
 
     monkeypatch.setattr(enrollment, "call_service", server)
-    args = dict(adult=True, own_data=True, explicit_consent=True, signature="Another pseudonym")
+    enrollment.withdraw_enrollment(source)
+    args = dict(adult=True, own_data=True, explicit_consent=True)
     with pytest.raises(ServiceError):
         enrollment.enroll(source, CONFIG, sharing, **args)
     enrollment.enroll(source, CONFIG, sharing, **args)
@@ -92,9 +99,10 @@ def test_receipt_loss_retries_exact_signed_evidence_and_does_not_change_first_ch
     assert before == after
 
 
-def test_actual_signature_timing_is_late_while_original_preference_stays_early(enrolled):
+def test_actual_consent_timing_is_late_while_original_preference_stays_early(enrolled):
     source, sharing, _, _ = enrolled
     sharing_state(source, sharing, event_type="results_exposed", surface="report")
+    enrollment.withdraw_enrollment(source)
     record = enrollment.enroll(
         source,
         CONFIG,
@@ -102,7 +110,6 @@ def test_actual_signature_timing_is_late_while_original_preference_stays_early(e
         adult=True,
         own_data=True,
         explicit_consent=True,
-        signature="New late signature",
     )
     assert record["record"]["before_first_results"] is False
     assert sharing_state(source, sharing).metadata()["sharing_opt_in_before_first_view"] is True
@@ -166,7 +173,6 @@ def test_closed_enrollment_and_changed_information_cannot_be_signed(enrolled, mo
             adult=True,
             own_data=True,
             explicit_consent=True,
-            signature="No new enrollment",
         )
     assert enrollment.latest_enrollment(source) == before
     status["research_enabled"] = True
@@ -184,10 +190,53 @@ def test_new_software_can_save_original_document_copy(enrolled, monkeypatch, tmp
     assert json.loads(destination.read_text())["information"] == original
 
 
+def test_legacy_signature_copy_is_preserved_and_new_consent_keeps_profile_id(enrolled, tmp_path):
+    source, sharing, _, _ = enrolled
+    current = enrollment.load_bundle()
+    old_bundle = {
+        **current["bundle"], "version": "legacy-test", "signature_method": "typed_pseudonym"
+    }
+    canonical = json.dumps(old_bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    old = {"bundle": old_bundle, "sha256": hashlib.sha256(canonical.encode()).hexdigest()}
+    previous = enrollment.latest_enrollment(source)
+    legacy = {
+        **previous["record"],
+        "version": "legacy-test",
+        "bundle_hash": old["sha256"],
+        "signature_method": "typed_pseudonym",
+        "signature": "Original synthetic signature",
+    }
+    with sqlite3.connect(audit_path(source)) as database:
+        database.execute(
+            "insert into metadata values (?, ?)",
+            ("enrollment_bundle:" + old["sha256"], json.dumps(old)),
+        )
+        database.execute(
+            "update enrollments set record=? where id=?", (json.dumps(legacy), previous["id"])
+        )
+    destination = tmp_path / "legacy-consent.json"
+    enrollment.save_consent_copy(source, destination)
+    saved = json.loads(destination.read_text())
+    assert saved["information"] == old
+    assert saved["enrollment"]["record"] == legacy
+    renewed = enrollment.enroll(
+        source, CONFIG, sharing, adult=True, own_data=True, explicit_consent=True
+    )
+    assert renewed["id"] != previous["id"]
+    assert renewed["record"]["participant_id"] == legacy["participant_id"]
+    assert "signature" not in renewed["record"]
+    with sqlite3.connect(audit_path(source)) as database:
+        preserved = database.execute(
+            "select record from enrollments where id=?", (previous["id"],)
+        ).fetchone()
+    assert json.loads(preserved[0]) == legacy
+
+
 def test_unknown_exposure_is_not_made_known_by_signing(enrolled):
     source, sharing, _, _ = enrolled
     with sqlite3.connect(audit_path(source)) as database:
         database.execute("update metadata set value='unknown_legacy' where key='exposure_history'")
+    enrollment.withdraw_enrollment(source)
     record = enrollment.enroll(
         source,
         CONFIG,
@@ -195,7 +244,6 @@ def test_unknown_exposure_is_not_made_known_by_signing(enrolled):
         adult=True,
         own_data=True,
         explicit_consent=True,
-        signature="Unknown exposure",
     )
     assert record["record"]["before_first_results"] is None
 
@@ -205,5 +253,5 @@ def test_frozen_documents_match_source_and_seed():
     root = Path(__file__).resolve().parents[1]
     for name, content in frozen["bundle"]["documents"].items():
         assert content == (root / "docs" / name).read_text("utf-8")
-    seed = (root / "supabase/migrations/20261104164851_research_protocol_v4.sql").read_text("utf-8")
+    seed = (root / "supabase/migrations/20261104180330_research_protocol_v5.sql").read_text("utf-8")
     assert frozen["sha256"] in seed

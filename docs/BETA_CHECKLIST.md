@@ -21,7 +21,7 @@ unchecked items remain work, not implied release approval.
 - [x] Research sends require a preview and explicit submission; choosing Yes
   alone never uploads. Consent/exposure timing is preserved locally.
 - [x] Implement separate enrollment, frozen saveable information, explicit
-  pseudonymous signature, server-side enrollment checks, retention reviews,
+  consent linked to the participant ID, server-side enrollment checks, retention reviews,
   tracked extract/collaborator-copy deletion and differentiated deletion receipts.
   Synthetic Qt/HTTP/PostgreSQL tests verify the source implementation; see
   [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The new migrations are not deployed.
@@ -92,7 +92,7 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   rows and function logs currently require inspection; no paging is configured.
 - [ ] Confirm platform log retention/redaction/access, administrator MFA, backup
   restoration and deletion replay, research retention and extract deletion.
-- [ ] Confirm acceptance of the implemented pseudonymous signature and eligibility
+- [ ] Confirm acceptance of the implemented participant-ID consent and eligibility
   flow, incorporate any required review/provider changes, publish the documents,
   and deploy/verify the closed enrollment/lifecycle backend and matching v6 notice.
   Verify the actual hosted maintenance jobs and operator extract/deletion procedure.
