@@ -12,9 +12,11 @@ The custom domain and certificate are active. The
 are public. `site/deployment.json` records the verified deployment without credentials.
 
 The website source lives in `site/`. `tools/build_website.py` renders the canonical
-privacy policy, participant information, research design and linked operating
-documents directly from `docs/`. It also publishes exact downloadable Markdown
-copies. Website hosting privacy is described separately in
+privacy policy and participant information directly from `docs/`, and the
+reader-facing Methods page from `site/methods.md`. It also publishes exact
+downloadable Markdown copies of those three pages. The research design,
+operating plan and implementation controls stay in the repository and are not
+website build inputs. Website hosting privacy is described separately in
 `site/website-privacy.md`; the frozen study-consent documents are not rewritten
 by the website build.
 
@@ -66,11 +68,18 @@ introduced. Keep all three online feature flags false. Publishing these pages
 does not establish provider approval, accepted study enrollment or a verified
 research backend deployment.
 
-The 4 November live check verified all 19 public files against the build over
+The 4 November live check verified all 15 public files against the build over
 HTTPS, including exact downloadable source documents, security headers and the
-custom 404 response. `_headers` is deployment configuration, the twentieth
+custom 404 response. `_headers` is deployment configuration, the sixteenth
 build file. The contact page was also checked in the browser after preventing
 email rewriting.
+
+The former `/operations/` and `/research-controls/` pages and the downloads
+`RESEARCH_OPERATIONS.md`, `RESEARCH_CONTROLS.md` and `RESEARCH_DESIGN.md` are
+excluded from the current site. They should return the custom 404 page. When
+upgrading an older local website build, use a fresh output directory or remove
+only those retired generated files before rebuilding; the build continues to
+refuse unexpected leftovers.
 
 The repository remains private until the separately requested public release.
 The site's footer therefore links to its software license and operator contact

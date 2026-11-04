@@ -15,17 +15,15 @@ import markdown
 ROOT = Path(__file__).resolve().parents[1]
 BASE_URL = "https://quantifiedcognition.jollyjoyjourney.com"
 DOCUMENTS = {
-    "privacy": ("PRIVACY.md", "Privacy policy"),
-    "research": ("RESEARCH_INFORMATION.md", "Research information"),
-    "methods": ("RESEARCH_DESIGN.md", "Research design"),
-    "operations": ("RESEARCH_OPERATIONS.md", "Research operations"),
-    "research-controls": ("RESEARCH_CONTROLS.md", "Research controls"),
+    "privacy": ("docs/PRIVACY.md", "Privacy policy"),
+    "research": ("docs/RESEARCH_INFORMATION.md", "Research information"),
+    "methods": ("site/methods.md", "Methods"),
 }
 
 
 def render_markdown(source: str) -> str:
-    for route, (name, _) in DOCUMENTS.items():
-        source = source.replace(f"]({name})", f"](/{route}/)")
+    for route, (path, _) in DOCUMENTS.items():
+        source = source.replace(f"]({Path(path).name})", f"](/{route}/)")
     return markdown.markdown(source, extensions=["tables", "fenced_code", "sane_lists"])
 
 
@@ -59,8 +57,10 @@ def build(output: Path) -> dict:
         "Explore changes in learning, personal experiments, sleep and activity.",
         (ROOT / "site/home.html").read_text("utf-8"),
     )
-    for route, (filename, title) in DOCUMENTS.items():
-        source = (ROOT / "docs" / filename).read_text("utf-8")
+    for route, (relative_path, title) in DOCUMENTS.items():
+        source_path = ROOT / relative_path
+        filename = source_path.name
+        source = source_path.read_text("utf-8")
         links = "".join(
             f'<a href="/{item}/"'
             + (' aria-current="page"' if route == item else "")
@@ -73,12 +73,12 @@ def build(output: Path) -> dict:
             )
         )
         body = (
-            '<div class="wrap doc-layout"><aside class="doc-aside"><p>PROJECT DOCUMENTS</p>'
+            '<div class="wrap doc-layout"><aside class="doc-aside"><p>ABOUT THE PROJECT</p>'
             + links
             + '</aside><article class="document">'
             + render_markdown(source)
             + f'<p class="doc-note"><a href="/documents/{filename}">Download this document</a>'
-            + " · Enrollment and research uploads are closed.</p></article></div>"
+            + "</p></article></div>"
         )
         page(
             route,
@@ -86,7 +86,7 @@ def build(output: Path) -> dict:
             f"Quantified Cognition {title.lower()}, operated by JollyJoyJourney.",
             body,
         )
-        write("documents/" + filename, (ROOT / "docs" / filename).read_bytes())
+        write("documents/" + filename, source_path.read_bytes())
     page(
         "contact",
         "Contact",
