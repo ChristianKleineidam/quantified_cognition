@@ -162,9 +162,12 @@ backend work. A paused project cannot run maintenance or accept deletion request
 
 ## Updating and deploying
 
-The two new migrations are `20261102141401_research_enrollment_lifecycle.sql` and
-`20261102142008_research_protocol_v1.sql`. Apply them in order only as part of the
-planned closed-backend deployment. Existing rows are **not** backfilled as enrolled.
+The migrations are `20261102141401_research_enrollment_lifecycle.sql`,
+`20261102142008_research_protocol_v1.sql` and
+`20261104151505_research_protocol_v2.sql`. Version 2 revises the participant-facing
+wording; version 1 remains preserved in migration history. Apply them in order
+only as part of the planned closed-backend deployment. Existing rows are **not**
+backfilled as enrolled.
 Configure v6 notice/hash from `python tools/service_schema.py`; the source default
 and the last hosted v5 deployment are intentionally different until deployment.
 

@@ -1,9 +1,7 @@
 # Quantified Cognition privacy policy
 
-Prepared for publication on **2 November 2026**. Online health connections and
-research uploads remain disabled. These are the commitments for the online
-release; publication, provider approval and the checks in
-[Research operations](RESEARCH_OPERATIONS.md) must precede activation.
+Updated **4 November 2026**. Online health connections, research enrollment and
+research uploads are currently closed.
 
 ## Who we are and your choice
 
@@ -15,11 +13,10 @@ Schweidnitzer Straße 6, 10709 Berlin, Germany. Contact
 benefits and risks.
 
 You can use the add-on and export your results without joining research.
-Connecting a health account, agreeing to participate and sending a package are
-separate actions. Research participation is for adults aged 18 or over
-contributing their own data. Yes in the initial sharing prompt uploads nothing.
-Each submission requires a package preview and an explicit Send.
-Research uploads are never automatic.
+Participation is for adults aged 18 or over contributing their own data.
+Connecting a health account, joining research and sending a package are separate
+choices. Saying Yes in the initial sharing prompt sends nothing. Every upload
+requires a package preview and an explicit Send; uploads are never automatic.
 
 ## What stays local and what is shared
 
@@ -29,13 +26,13 @@ sleep sessions and review times support matching main sleep and naps to studying
 Temporary Anki snapshots can contain card text. These local files are not
 uploaded as research data. Personal CSVs are saved to locations you choose.
 
-Oura and Google Health connections import sleep durations/stages and daily steps
-directly from the provider. Google's activity permission covers more than the
+Oura and Google Health connections import sleep durations, sleep stages and
+daily steps directly from the provider. Google's activity permission covers more than the
 steps we fetch. Available history and missing measurements depend on the
-provider. Passwords are entered on the provider's website. Our OAuth service
-exchanges codes and renews tokens; tokens pass through it but are not deliberately
-logged or stored in the research database. Credentials are saved in your
-OS-protected local store.
+provider. You sign in on the provider's website. Our connection service exchanges
+authorization codes and renews access tokens; tokens pass through it but are not
+deliberately logged or stored in the research database. Credentials are saved in
+your operating system's protected local store.
 
 **The research package contains daily measurements:** recall and overall,
 short-term and long-term memory formation scores; predicted and observed recall;
@@ -50,25 +47,23 @@ It also contains dates, sources and method versions, Anki version, an FSRS
 settings fingerprint, timezone, Anki day boundary, calculation settings,
 generation/sync times, provider date conventions and relevant sleep
 types/algorithm versions. A random profile participant ID links contributions.
-Sharing choices, notice versions and prompt/consent-preference/results-exposure
-timing let us examine selection effects. Unknown earlier exposure stays unknown.
-The full local event log is excluded.
+Sharing choices, notice versions and the timing of sharing preferences, consent
+and first results let us examine whether seeing results affects participation.
+We record when earlier exposure is unknown; the full local event log is excluded.
 
 **Excluded from the package:** card questions and answers; card/deck names and
 IDs; individual reviews and review pairs; exact sleep or review times; raw health
 records and record IDs; heart rate; location; name and email; provider account or
 device IDs; passwords and tokens. Personal insight charts, cached correlations
-and return-visit snapshots are also excluded. Research analyses can be calculated
-from the submitted daily measurements.
+and return-visit comparisons are also excluded.
 
-Eligibility and consent records are separate from measurements. They record the
-information agreed to, its version, date, eligibility and any signature required
-by the approved enrollment process. Required identifying details, if any, are
-explained before you join. Analysis exports can include enrollment version and
-consent timing; signatures and eligibility answers stay separate. Contact
-correspondence contains the sender address,
-message, attachments and delivery information. Please submit research packages
-through the add-on rather than emailing collections or health exports.
+Eligibility and consent records are kept separately from measurements. They
+record the information agreed to, its version, the date, eligibility and a typed
+signature using a pseudonym you choose. Analysis exports can include enrollment
+version and consent timing; signatures and eligibility answers stay separate.
+Contact correspondence contains the sender address, message, attachments and
+delivery information. Please send research packages through the add-on rather
+than emailing collections or health exports.
 
 These are **pseudonymous data, not guaranteed anonymous data**. Dates, timezone
 and patterns of behavior can still reveal information about a person.
@@ -81,11 +76,9 @@ reliably**. This includes validating learning and recall measures, comparing
 sleep stages and naps, examining changes within and between participants, and
 evaluating the reliability and limitations of the findings.
 
-Questions and analytical methods can evolve within this area. The programme is
-not limited to one hypothesis, device, model or publication. This does not
-authorize unrelated research or undisclosed new data collection. Material
-changes to purposes, data or access require updated information and any necessary
-fresh consent before the changed use.
+We may develop new questions and methods within this area. Material changes to
+the purposes, data collected or access require updated information and any
+necessary fresh consent before the changed use.
 
 Results may appear in scientific publications, reports, presentations and public
 summaries. Public material uses anonymous summaries or synthetic examples,
@@ -106,11 +99,10 @@ any required additional consent obtained first.
 We do not sell pseudonymous participant data or supply it for advertising,
 marketing or individual employment, insurance or credit decisions. Research
 funding does not give partners broader data rights. The add-on does not send
-research measurements to AI services. Further tools and transfers remain subject
-to the disclosed purpose, provider restrictions and data-protection safeguards.
+research measurements to AI services.
 
 The research database is hosted by **Supabase in Frankfurt, Germany**. Hosting,
-OAuth Edge services, support and subprocessors can involve processing outside
+connection services, support and subprocessors can involve processing outside
 that database region. Supabase's
 [Data Processing Addendum](https://supabase.com/legal/dpa) describes its role
 and transfer safeguards, including Standard Contractual Clauses where applicable.
@@ -139,13 +131,12 @@ and proportionate compliance evidence rely on legitimate interests under Article
 6(1)(f), or a legal obligation where applicable. These interests do not authorize
 continued research after withdrawal.
 
-Research measurements have **no fixed expiry date**. We retain them for the
-programme's continuing research, method validation and verification of findings,
-for as long as those purposes require. We periodically review the continuing
-need and safeguards. When identifiable or pseudonymous records are no longer
-needed, we delete them or, where permitted, irreversibly anonymize them. You
-can withdraw and request deletion throughout this period. Any applicable legal
-or provider retention/deletion limits take precedence.
+We keep research measurements while needed for the programme's research,
+method validation or verification of findings. We review the continuing need
+and safeguards regularly. Records that are no longer needed are deleted or,
+where permitted, irreversibly anonymized. You can withdraw and request deletion
+throughout this period. Applicable legal or provider retention and deletion
+limits take precedence.
 
 Routine application security and service records are kept for no more than
 30 days, often less. They can include IP addresses, request times, route/status
@@ -160,9 +151,9 @@ research data is deleted. It does not preserve the deleted measurements. A
 specific legal obligation or claim can require a different period, limited to
 the necessary records.
 
-A random, measurement-free deletion marker can be retained longer where needed
-to reject stale requests from old clients or restored copies. It is not used
-for research or to reconstruct deleted measurements.
+A random deletion marker containing no measurements can be retained longer
+where needed to prevent old clients or restored copies from reintroducing
+deleted data. It is not used for research.
 
 Recovery copies are isolated from ordinary research use and retained for no more
 than 30 days. Deletions are reapplied before restored data can be used. A shorter
@@ -171,16 +162,15 @@ Anonymous published summaries and synthetic data can remain available.
 
 ## Withdrawal, deletion and your rights
 
-You can withdraw through Research sharing, or request deletion through
-**Delete uploaded data**. Changing
-sharing to Not now or No blocks new uploads, removes unsent packages and queues
-deletion of earlier submissions from that profile. Once we receive withdrawal,
+You can withdraw through Research sharing or request deletion through
+**Delete uploaded data**. Changing sharing to Not now or No blocks new uploads,
+removes unsent packages and queues deletion of earlier submissions from that
+profile. Once we receive withdrawal,
 we stop using the affected data for research and remove it from active storage
 and research extracts, including controlled collaborator copies. Withdrawal does
-not change the lawfulness of earlier processing. A small, measurement-free
-deletion marker prevents stale uploads from restoring deleted data.
+not change the lawfulness of earlier processing.
 
-An offline request cannot reach us until Anki can send it. Keep the profile
+An offline request needs to reach us before we can act on it. Keep the profile
 until deletion is acknowledged, or contact us. Your participant ID or submission
 receipt helps locate the data. We request only information necessary to verify
 your request. Without enough information to identify a pseudonymous record, we
@@ -188,9 +178,9 @@ may be unable to locate it; an email address alone is not a dataset identifier.
 
 Disconnecting a health provider removes its local measurements and attempts
 revocation. It is separate from deleting research submissions or your exported
-files. If offline, you can also revoke access in the provider's account settings.
-We apply relevant revocation/deletion requirements to data we hold; we cannot
-remotely erase files on an offline computer.
+files. You can also revoke access in the provider's account settings. We apply
+relevant revocation and deletion requirements to data we hold. Files you have
+exported remain under your control.
 
 Subject to the GDPR's conditions, you can request access, correction, erasure,
 restriction and a portable copy of your data, and object to legitimate-interest
