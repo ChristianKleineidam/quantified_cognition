@@ -101,7 +101,7 @@ deletion within 72 hours of a request. Confirm its treatment of backups and
 offline personal copies in writing before activation. A normal 30-day recovery
 window cannot simply override that obligation.
 
-Contact requests go to contact@jollyjoyjourney.com. First try the existing local
+Contact requests go to quantifiedcognition@jollyjoyjourney.com. First try the existing local
 capability or secure in-app recovery. A public participant ID locates data but
 does not authorize disclosure or deletion. If the credential is lost, request
 only proportionate additional evidence, such as a private receipt and an

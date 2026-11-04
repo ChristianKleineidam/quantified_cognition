@@ -46,8 +46,17 @@ by Cloudflare. A test sent from that same Gmail account may be hidden as a
 duplicate in Gmail; the sent copy alone is not evidence of inbox delivery.
 The main-site, www and Somatic Signals Substack DNS mappings were copied and
 verified as DNS-only records before changing the nameservers at Hostinger.
-Only the contact address routes; catch-all remains disabled. No paid plan,
+At that check, only the contact address routed; catch-all remained disabled. No paid plan,
 outbound sending service or custom Worker was enabled.
+
+## Project contact configured on 4 November
+
+quantifiedcognition@jollyjoyjourney.com is now an enabled Cloudflare forwarding
+rule to the same verified operator Gmail inbox. The original company contact
+rule remains enabled, and catch-all remains disabled. The routing configuration
+and destination verification were checked through the Cloudflare API; no new
+delivery test email was sent. The website and current document bundle use the
+project address. Email Sending, a paid plan and a custom Worker were not enabled.
 
 The privacy policy uses this contact address and discloses the
 Cloudflare-to-Gmail email flow. It was published on 4 November; provider and

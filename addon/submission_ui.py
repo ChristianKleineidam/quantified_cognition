@@ -169,7 +169,7 @@ def delete_uploaded_data(parent, source, callback):
             if previous and previous["receipt"]:
                 return (
                     "The deletion credential is unavailable. Contact "
-                    "contact@jollyjoyjourney.com with your saved research receipt "
+                    "quantifiedcognition@jollyjoyjourney.com with your saved research receipt "
                     "to request deletion. Server deletion has not been confirmed."
                 )
             return "This profile has no research upload connection."

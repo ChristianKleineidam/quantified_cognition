@@ -1,6 +1,6 @@
 [project]
 name = "quantified-cognition"
-version = "0.19.2"
+version = "0.19.3"
 description = "Daily recall and memory formation relative to Anki's FSRS predictions"
 requires-python = ">=3.10"
 

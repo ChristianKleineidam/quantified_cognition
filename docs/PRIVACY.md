@@ -12,7 +12,7 @@ uploads are not yet available.
 **JollyJoyJourney**, operated by **Christian Kleineidam**, is responsible for
 the research service and its processing of personal data. Our address is
 Schweidnitzer Straße 6, 10709 Berlin, Germany. Contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).
+[quantifiedcognition@jollyjoyjourney.com](mailto:quantifiedcognition@jollyjoyjourney.com).
 
 You can use the add-on and export your results without participating in
 research. Participation is for adults aged 18 or over contributing their own
@@ -187,4 +187,4 @@ extension. You can complain to a data-protection authority, including the
 
 Policy and research-information updates carry version dates. They do not
 retrospectively expand consent. For questions or help with your data, contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).
+[quantifiedcognition@jollyjoyjourney.com](mailto:quantifiedcognition@jollyjoyjourney.com).

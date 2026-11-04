@@ -84,4 +84,4 @@ and you can save a copy. The consent statement is:
 
 The programme is operated by JollyJoyJourney, with Christian Kleineidam
 responsible for the research. For questions, contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).
+[quantifiedcognition@jollyjoyjourney.com](mailto:quantifiedcognition@jollyjoyjourney.com).

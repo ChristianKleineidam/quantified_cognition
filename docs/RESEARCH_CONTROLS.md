@@ -1,6 +1,6 @@
 # Enrollment and research-data controls
 
-Implemented in the **0.19.1 source**, tested with synthetic data. These migrations
+Implemented in the **0.19.3 source**, tested with synthetic data. These migrations
 have **not been deployed** to the inactive hosted project. Oura, Google Health and
 research uploads remain disabled. The prepared protocol is inserted with
 `approved=false`, `enrollment_open=false` and both provider permissions false.
@@ -170,7 +170,8 @@ The migrations are `20261102141401_research_enrollment_lifecycle.sql`,
 `20261104155542_research_protocol_v3.sql`,
 `20261104164851_research_protocol_v4.sql`,
 `20261104180329_participant_id_consent.sql` and
-`20261104180330_research_protocol_v5.sql`. Versions 2 through 4 revise public
+`20261104180330_research_protocol_v5.sql` and
+`20261104184538_research_protocol_v6.sql`. Versions 2 through 4 revise public
 wording without expanding the data scope. Version 4 also states Google's
 Limited Use commitment explicitly. Version 5 removes the extra pseudonym field
 and links the explicit consent action to the existing participant ID. New
@@ -178,7 +179,10 @@ enrollments reject extra fields and retired consent methods. Renewals cannot
 change the public participant ID bound to their authenticated connection.
 Existing evidence and frozen document copies remain unchanged and saveable;
 upgrading does not convert old consent to the new protocol. Earlier copies
-remain in migration history.
+remain in migration history. Version 6 updates the project contact address to
+quantifiedcognition@jollyjoyjourney.com without changing research purposes, data
+scope or the consent action. The previous company contact continues to forward
+to the same operator inbox.
 Apply them in order only as part of the planned closed-backend deployment.
 Existing rows are **not** backfilled as enrolled.
 Configure v6 notice/hash from `python tools/service_schema.py`; the source default

@@ -8,7 +8,7 @@ its separate online services.
 
 JollyJoyJourney, operated by Christian Kleineidam, is responsible for this
 website. The business address is Schweidnitzer Straße 6, 10709 Berlin, Germany.
-Contact [contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).
+Contact [quantifiedcognition@jollyjoyjourney.com](mailto:quantifiedcognition@jollyjoyjourney.com).
 
 We use Cloudflare Pages to deliver and protect this website. Cloudflare
 processes IP addresses, browser and request details, and security information

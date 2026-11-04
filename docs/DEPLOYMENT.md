@@ -9,7 +9,8 @@ required from Anki users. Supabase Auth is not used as a health provider.
 
 JollyJoyJourney is the company named in the privacy policy. Its registered
 business address has been verified against the trade-registration certificate.
-The contact address is [contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com),
+The project contact address is
+[quantifiedcognition@jollyjoyjourney.com](mailto:quantifiedcognition@jollyjoyjourney.com),
 forwarded through Cloudflare Email Routing to the operator's verified Gmail inbox.
 The published policy URL is
 `https://quantifiedcognition.jollyjoyjourney.com/privacy/`; see [WEBSITE.md](WEBSITE.md).
@@ -175,10 +176,10 @@ project pausing, logs and pricing change—check the current Supabase dashboard.
 [changelog](https://supabase.com/changelog).
 The October 2026 TLS notice affects old CBC-only clients; the add-on uses modern
 Python/OpenSSL HTTPS defaults and does not weaken certificate/TLS validation.
-# Pending enrollment/lifecycle deployment (0.19.1)
+# Pending enrollment/lifecycle deployment (0.19.3)
 
 The source now requires package schema v5, separate enrollment and sharing notice
-v6. Apply the research migrations through protocol v5 (including the
+v6. Apply the research migrations through protocol v6 (including the
 participant-ID consent migration) and deploy the matching handler while
 keeping all three feature flags false. The prepared protocol remains unapproved
 and enrollment closed. `supabase/deployment.json` continues to describe the older
