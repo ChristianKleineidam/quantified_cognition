@@ -30,10 +30,10 @@ helps estimate Monday's memory formation. The daily score averages the
 available follow-ups. It is shown overall and separately for follow-ups within
 30 days and beyond 30 days.
 
-Cards awaiting another review are marked pending and do not count as failures.
-Follow-up coverage shows how much of a study day's result is available. A
-recent day can change substantially as more cards are reviewed again; longer
-follow-ups take more time to accumulate.
+Cards awaiting another review are shown as pending, outside the score until
+a follow-up is available. Coverage shows how much of a study day's result is
+available. Scores become more complete as cards are reviewed again, with
+longer follow-ups taking more time to accumulate.
 
 ## Sleep stages, naps and activity
 
@@ -47,16 +47,15 @@ for recall and the study day for formation.
 Comparisons between light, deep and REM sleep use the same eligible days and
 account for total sleep duration. For example, an estimate for ten more minutes
 of deep sleep replacing light sleep compares a change in sleep composition
-while holding total sleep and REM sleep constant. It does not simply compare
-longer nights with shorter ones. Oura and Google Health measurements are
-analyzed separately.
+while holding total sleep and REM sleep constant. Oura and Google Health
+measurements are analyzed separately.
 
 ## Uncertainty and interpreting changes
 
 Scores include review counts, follow-up coverage and uncertainty intervals.
 Personal insights also show uncertainty and identify when there is
-insufficient data. Many reviews on a small number of days do not provide the
-same evidence as observations spread over time.
+insufficient data. Estimates depend on both the number of usable reviews and
+the number of days they represent.
 
 Existing history is recalculated with your current FSRS settings. This allows
 older reviews to be analyzed, including eligible reviews from before FSRS and
@@ -66,9 +65,9 @@ scores. Dates use your configured Anki day boundary.
 
 These scores estimate learning and recall relative to FSRS predictions. Card
 content, study routines, scheduling and conditions at the later review can also
-affect them. Associations with sleep, activity or a personal experiment can
-help you investigate patterns, but do not by themselves establish cause and
-effect or measure general intelligence.
+affect them. The comparisons can help identify patterns worth exploring in
+personal experiments. Establishing cause and effect also requires an
+appropriate experimental design.
 
 The [research information](RESEARCH_INFORMATION.md) explains voluntary
 participation, and the [privacy policy](PRIVACY.md) describes the data used and

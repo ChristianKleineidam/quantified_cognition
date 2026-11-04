@@ -163,12 +163,14 @@ backend work. A paused project cannot run maintenance or accept deletion request
 ## Updating and deploying
 
 The migrations are `20261102141401_research_enrollment_lifecycle.sql`,
-`20261102142008_research_protocol_v1.sql` and
-`20261104151505_research_protocol_v2.sql` and
-`20261104155542_research_protocol_v3.sql`. Versions 2 and 3 revise participant-facing
-wording without changing the data scope; earlier copies remain in migration history. Apply them in order
-only as part of the planned closed-backend deployment. Existing rows are **not**
-backfilled as enrolled.
+`20261102142008_research_protocol_v1.sql`,
+`20261104151505_research_protocol_v2.sql`,
+`20261104155542_research_protocol_v3.sql` and
+`20261104164851_research_protocol_v4.sql`. Versions 2 through 4 revise public
+wording without expanding the data scope. Version 4 also states Google's
+Limited Use commitment explicitly. Earlier copies remain in migration history.
+Apply them in order only as part of the planned closed-backend deployment.
+Existing rows are **not** backfilled as enrolled.
 Configure v6 notice/hash from `python tools/service_schema.py`; the source default
 and the last hosted v5 deployment are intentionally different until deployment.
 

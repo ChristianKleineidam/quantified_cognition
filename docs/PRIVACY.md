@@ -1,105 +1,106 @@
 # Quantified Cognition privacy policy
 
-Updated **4 November 2026**. Online health connections, research enrollment and
-research uploads are currently closed.
+Quantified Cognition analyzes your Anki history on your computer. Connecting a
+health account and contributing to research are choices you make separately.
+Research packages are sent only after you review and explicitly submit them.
 
-## Who we are and your choice
+Updated **4 November 2026**. Health connections, research enrollment and research
+uploads are not yet available.
 
-**JollyJoyJourney**, operated by **Christian Kleineidam**, is responsible
-for the research service and its processing of personal data. Our address is
+## Your data and choices
+
+**JollyJoyJourney**, operated by **Christian Kleineidam**, is responsible for
+the research service and its processing of personal data. Our address is
 Schweidnitzer Straße 6, 10709 Berlin, Germany. Contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com). The
-[research information](RESEARCH_INFORMATION.md) explains participation,
+[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).
+
+You can use the add-on and export your results without participating in
+research. Participation is for adults aged 18 or over contributing their own
+data. Connecting a provider, joining research and sending a package are
+separate steps. Saying Yes in the initial sharing prompt sends nothing. Each
+upload requires a preview and an explicit Send; uploads are never automatic.
+The [research information](RESEARCH_INFORMATION.md) explains participation,
 benefits and risks.
 
-You can use the add-on and export your results without joining research.
-Participation is for adults aged 18 or over contributing their own data.
-Connecting a health account, joining research and sending a package are separate
-choices. Saying Yes in the initial sharing prompt sends nothing. Every upload
-requires a package preview and an explicit Send; uploads are never automatic.
+## Information used by the add-on
 
-## What stays local and what is shared
-
-Anki analysis runs on your computer. Separate profile files hold calculated
-scores, health measurements, personal insights and sharing history. Local
-sleep sessions and review times support matching main sleep and naps to studying.
-Temporary Anki snapshots can contain card text. These local files are not
-uploaded as research data. Personal CSVs are saved to locations you choose.
+Local profile files hold calculated scores, health measurements, personal
+insights and sharing history. Sleep sessions and review times help match main
+sleep and naps to studying. Analysis can use temporary local Anki snapshots
+that contain card text. These files stay outside research uploads. Personal
+CSVs are saved to locations you choose.
 
 Oura and Google Health connections import sleep durations, sleep stages and
-daily steps directly from the provider. Google's activity permission covers more than the
-steps we fetch. Available history and missing measurements depend on the
-provider. You sign in on the provider's website. Our connection service exchanges
-authorization codes and renews access tokens; tokens pass through it but are not
-deliberately logged or stored in the research database. Credentials are saved in
-your operating system's protected local store.
+daily steps directly from the provider. Google's activity permission also
+covers other activity data; we fetch daily steps. Available history and missing
+measurements depend on the provider. You sign in on the provider's website.
+Our connection service exchanges and renews access tokens without storing
+them in the research database. The add-on saves credentials in your operating
+system's protected local store.
 
-**The research package contains daily measurements:** recall and overall,
-short-term and long-term memory formation scores; predicted and observed recall;
-evaluated, cohort, pending and excluded counts; follow-up coverage, uncertainty and
-quality indicators. Available health data include total, light, deep, REM and
-awake sleep durations, Google's restless time, sleep-period counts and daily
-steps. Main sleep before/after studying, nap counts and phase/duration summaries,
-gaps to studying, between-review nap counts and matching status are included
-when available.
+**Research packages contain daily measurements:** recall and overall,
+short-term and long-term memory formation scores; predicted and observed
+recall; evaluated, cohort, pending and excluded counts; follow-up coverage,
+uncertainty and quality indicators. Available health data include total,
+light, deep, REM and awake sleep durations, Google's restless time,
+sleep-period counts and daily steps. Main sleep before and after studying,
+nap counts, sleep-stage and duration summaries, gaps to studying, between-review
+nap counts and matching status are included when available.
 
-It also contains dates, sources and method versions, Anki version, an FSRS
-settings fingerprint, timezone, Anki day boundary, calculation settings,
-generation/sync times, provider date conventions and relevant sleep
-types/algorithm versions. A random profile participant ID links contributions.
-Sharing choices, notice versions and the timing of sharing preferences, consent
-and first results let us examine whether seeing results affects participation.
-We record when earlier exposure is unknown; the full local event log is excluded.
+Packages also contain dates, sources, method and Anki versions, an FSRS settings
+fingerprint, timezone, Anki day boundary, calculation settings, generation and
+sync times, provider date conventions, and relevant sleep types and algorithm
+versions. A random profile participant ID links contributions. Sharing choices,
+notice versions and the timing of sharing preferences, consent and first
+results help us understand participation patterns. Unknown earlier exposure is
+recorded as unknown; the full local event log is excluded.
 
-**Excluded from the package:** card questions and answers; card/deck names and
-IDs; individual reviews and review pairs; exact sleep or review times; raw health
-records and record IDs; heart rate; location; name and email; provider account or
-device IDs; passwords and tokens. Personal insight charts, cached correlations
-and return-visit comparisons are also excluded.
+**Excluded from research packages:** card questions and answers; card and deck
+names and IDs; individual reviews and review pairs; exact sleep or review
+times; raw health records and record IDs; heart rate; location; name and email;
+provider account or device IDs; passwords and tokens. Personal insight charts,
+cached correlations and return-visit comparisons are also excluded.
 
 Eligibility and consent records are kept separately from measurements. They
-record the information agreed to, its version, the date, eligibility and a typed
-signature using a pseudonym you choose. Analysis exports can include enrollment
-version and consent timing; signatures and eligibility answers stay separate.
-Contact correspondence contains the sender address, message, attachments and
-delivery information. Please send research packages through the add-on rather
-than emailing collections or health exports.
+record the information agreed to, its version, the date, eligibility and a
+typed signature using a pseudonym you choose. Analysis exports can include
+enrollment version and consent timing; signatures and eligibility answers
+stay separate. Contact correspondence contains the sender address, message,
+attachments and delivery information.
 
-These are **pseudonymous data, not guaranteed anonymous data**. Dates, timezone
-and patterns of behavior can still reveal information about a person.
-
-## What the research covers
+## Research and publication
 
 We study **how learning and recall vary over time, how they relate to sleep,
 physical activity and study patterns, and how to measure these relationships
-reliably**. This includes validating learning and recall measures, comparing
-sleep stages and naps, examining changes within and between participants, and
-evaluating the reliability and limitations of the findings.
+reliably**. This includes validating the measurements, comparing sleep stages
+and naps, examining changes within and between participants, and assessing the
+reliability of findings.
 
-We may develop new questions and methods within this area. Material changes to
-the purposes, data collected or access require updated information and any
-necessary fresh consent before the changed use.
+New questions and methods can develop within this research area. Material
+changes to the purposes, data collected or access require updated information
+and any necessary fresh consent before the changed use.
 
-Results may appear in scientific publications, reports, presentations and public
-summaries. Public material uses anonymous summaries or synthetic examples,
-reviewed for identification risk. Individual daily histories are not an open
-dataset. Open-source licensing of the software does not make participants' data
-public.
+Findings may appear in scientific publications, reports, presentations and
+public summaries. Public material uses anonymous summaries or synthetic
+examples. Individual daily histories remain
+under controlled access.
 
-## Access, service providers and international processing
+We follow Google's
+[User Data and Health Research Policy](https://developers.google.com/health/policies/health-api-user-data-and-research-policy),
+including its Limited Use requirements, when processing Google Health API data.
 
-Access is limited to authorized JollyJoyJourney researchers and approved
-academic, nonprofit or commercial research collaborators who need it for this
-programme. Pseudonymous daily data may be provided only under agreements limiting
-purpose, access, security, retention and deletion, and where provider permissions
-allow it. Current partners and roles are identified in the research information
-before access. A partner acting as a separate controller must be identified and
-any required additional consent obtained first.
+## Access and safeguards
 
-We do not sell pseudonymous participant data or supply it for advertising,
-marketing or individual employment, insurance or credit decisions. Research
-funding does not give partners broader data rights. The add-on does not send
-research measurements to AI services.
+Authorized JollyJoyJourney researchers and approved academic, nonprofit or
+commercial collaborators can access data needed for this programme.
+Collaborator agreements limit purpose, access, security, retention and deletion,
+subject to provider permission. Partners and roles are identified in the
+research information before access. A partner responsible for its own
+processing must be identified separately, with additional consent where required.
+
+We do not sell pseudonymous participant data or provide it for advertising,
+marketing or individual employment, insurance or credit decisions. The add-on
+does not send research measurements to AI services.
 
 The research database is hosted by **Supabase in Frankfurt, Germany**. Hosting,
 connection services, support and subprocessors can involve processing outside
@@ -108,88 +109,82 @@ that database region. Supabase's
 and transfer safeguards, including Standard Contractual Clauses where applicable.
 
 Our contact address forwards through **Cloudflare Email Routing to Gmail**.
-Cloudflare delivers messages; Google stores them. Their
+Cloudflare delivers messages; Google stores them. The
 [Cloudflare](https://www.cloudflare.com/privacypolicy/) and
-[Google](https://policies.google.com/privacy) policies describe that processing,
+[Google](https://policies.google.com/privacy) policies describe this processing,
 which can involve countries outside the European Economic Area. Correspondence
-is separate from research measurements. Research access outside the EEA requires
-an applicable adequacy decision or appropriate transfer safeguards; contact us
-for details or a copy of the applicable safeguards.
+is kept separately from research measurements. Research access outside the EEA
+requires an applicable adequacy decision or appropriate transfer safeguards;
+contact us for details or a copy of those safeguards.
 
-We use private access controls, encrypted connections, protected credentials and
-restricted research workspaces. Authorized hosting personnel can also process
-data to provide and secure the service. No security measure removes every risk
-of unauthorized access or identification.
+We protect data with restricted access, encrypted connections, protected
+credentials and controlled research workspaces. Authorized hosting personnel
+can also process data to provide and secure the service. Research records are
+pseudonymous: dates, timezone and patterns in daily histories can still identify
+someone. These safeguards reduce, but cannot eliminate, the risks of
+identification or unauthorized access.
 
-## Legal basis and retention
+## Data handling
 
-Research relies on your consent under **Article 6(1)(a) GDPR** and your **explicit
+Research relies on consent under **Article 6(1)(a) GDPR**, with **explicit
 consent under Article 9(2)(a)** for health-related data. Connecting a personal
-health account is a separate consent-based operation; provider authorization
-does not enroll you in research. Necessary service security, handling enquiries
-and proportionate compliance evidence rely on legitimate interests under Article
-6(1)(f), or a legal obligation where applicable. These interests do not authorize
-continued research after withdrawal.
+health account is a separate consent-based operation. Service security,
+handling enquiries and proportionate compliance evidence rely on legitimate
+interests under Article 6(1)(f), or a legal obligation where applicable.
 
 We keep research measurements while needed for the programme's research,
-method validation or verification of findings. We review the continuing need
-and safeguards regularly. Records that are no longer needed are deleted or,
-where permitted, irreversibly anonymized. You can withdraw and request deletion
-throughout this period. Applicable legal or provider retention and deletion
-limits take precedence.
+method validation or verification of findings. We regularly review the
+continuing need and safeguards, and delete or, where permitted, irreversibly
+anonymize records that are no longer needed. You can withdraw and request
+deletion. Applicable legal or provider retention and deletion limits take
+precedence.
 
-Routine application security and service records are kept for no more than
-30 days, often less. They can include IP addresses, request times, route/status
-information and abuse-control counters. Application logging is designed to
-exclude measurements, package bodies and credentials. Relevant incident records
-can be kept longer when necessary for an investigation or legal obligation.
+Routine application security and service records are retained for up to
+30 days. They can include IP addresses, request times, requested service,
+response status and abuse-control counters. Application logging is designed
+to exclude measurements, package bodies and credentials. Incident records
+may be kept longer for an investigation or legal obligation.
 
 Routine correspondence is normally deleted within two years after resolution.
-Minimal consent, withdrawal and rights-request evidence is kept while needed to
-demonstrate lawful processing and normally for three years after the associated
-research data is deleted. It does not preserve the deleted measurements. A
-specific legal obligation or claim can require a different period, limited to
-the necessary records.
+Minimal consent, withdrawal and rights-request evidence is kept while needed
+to demonstrate lawful processing and normally for three years after the
+associated research data is deleted. This evidence contains no deleted
+measurements. A legal obligation or claim may require a different period,
+limited to the necessary records.
 
-A random deletion marker containing no measurements can be retained longer
+A random deletion marker containing no measurements may be retained longer
 where needed to prevent old clients or restored copies from reintroducing
-deleted data. It is not used for research.
+deleted data. Recovery copies are isolated from research use and retained for
+no more than 30 days. Deletions are reapplied before restored data can be used;
+shorter provider or legal deadlines also apply. Anonymous published summaries
+and synthetic data can remain available.
 
-Recovery copies are isolated from ordinary research use and retained for no more
-than 30 days. Deletions are reapplied before restored data can be used. A shorter
-applicable provider or legal deletion deadline also applies to recovery copies.
-Anonymous published summaries and synthetic data can remain available.
-
-## Withdrawal, deletion and your rights
+## Your rights and contact
 
 You can withdraw through Research sharing or request deletion through
 **Delete uploaded data**. Changing sharing to Not now or No blocks new uploads,
 removes unsent packages and queues deletion of earlier submissions from that
-profile. Once we receive withdrawal,
-we stop using the affected data for research and remove it from active storage
-and research extracts, including controlled collaborator copies. Withdrawal does
-not change the lawfulness of earlier processing.
+profile. Once we receive withdrawal, we stop research use of the affected data
+and remove it from active storage and research extracts, including controlled
+collaborator copies. Withdrawal does not change the lawfulness of earlier
+processing.
 
-An offline request needs to reach us before we can act on it. Keep the profile
-until deletion is acknowledged, or contact us. Your participant ID or submission
-receipt helps locate the data. We request only information necessary to verify
-your request. Without enough information to identify a pseudonymous record, we
-may be unable to locate it; an email address alone is not a dataset identifier.
+Keep your profile until deletion is acknowledged, or contact us for help.
+Offline requests need to reach us before we can act on them. A participant ID
+or submission reference helps us locate records. We ask only for information
+needed to locate the data and verify your request.
 
-Disconnecting a health provider removes its local measurements and attempts
-revocation. It is separate from deleting research submissions or your exported
-files. You can also revoke access in the provider's account settings. We apply
-relevant revocation and deletion requirements to data we hold. Files you have
-exported remain under your control.
+Disconnecting a provider removes its local measurements and requests revocation
+of access. You can also revoke access in the provider's account settings.
+Research submissions and files you have exported have separate deletion
+controls; exported files remain under your control.
 
 Subject to the GDPR's conditions, you can request access, correction, erasure,
 restriction and a portable copy of your data, and object to legitimate-interest
 processing. We normally respond within one month and explain any lawful
-extension. These data are not used for solely automated decisions with legal or
-similarly significant effects. You can complain to a data-protection authority,
-including the
+extension. You can complain to a data-protection authority, including the
 [Berlin Commissioner for Data Protection and Freedom of Information](https://www.datenschutz-berlin.de/ueber-uns/kontakt).
 
-Policy and research-information updates carry version dates. Updates do not
-retrospectively expand consent. Contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com) with questions.
+Policy and research-information updates carry version dates. They do not
+retrospectively expand consent. For questions or help with your data, contact
+[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).
