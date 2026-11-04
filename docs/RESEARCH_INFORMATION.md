@@ -1,87 +1,76 @@
-# Quantified Cognition research information
+# Research with Quantified Cognition
+
+Your everyday studying can contribute to research on how learning varies.
+Quantified Cognition turns Anki review history into daily estimates of memory
+formation and recall. Sharing those measurements can help us investigate how
+learning relates to sleep, activity and study patterns, and improve the methods
+used to measure it.
 
 Updated **4 November 2026**. Research enrollment and uploads are currently closed.
 
-JollyJoyJourney operates this research programme. Christian Kleineidam is
-responsible for it. Contact
-[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com) with questions.
+## What your contribution helps us learn
 
-## What we want to learn
+Later Anki reviews provide information about how effectively you learned on an
+earlier day. Combined with sleep and activity measurements, they let us explore
+relationships with total sleep, deep and REM sleep, naps and everyday activity.
+The programme also examines how reliable these learning measures are and can
+develop new questions and methods within this research area.
 
-We want to understand how learning and recall vary over time, how they relate
-to sleep, physical activity and study patterns, and how to measure these
-relationships reliably. Your existing Anki history supplies repeated
-observations from studying you already do. Later reviews help estimate how
-effectively you learned on an earlier day.
+We aim to share findings through scientific publications, reports and public
+summaries. The research uses observations from everyday life; associations alone
+do not establish cause and effect. Missing measurements, device errors and
+changes in study habits can affect the findings.
 
-The programme includes developing and checking these measurements and
-investigating new questions within this research area. Findings may appear in
-scientific publications, reports and public summaries.
+## Taking part
 
-## What participation involves
+When enrollment opens, adults aged 18 or over can contribute their own data.
+You can share existing history and contribute again when you have more data.
+There are no extra tests, scheduled visits or required changes to your routine.
+Participation is voluntary and unpaid. Your personal results and insights
+remain available whether you participate or not.
 
-When enrollment opens, adults aged 18 or over can choose to contribute their
-own data. You can contribute existing history and return later with more data.
-There is no daily check-in or fixed schedule. You review each package before
-sending it; uploads are never automatic.
+Each submission is a package of available daily Anki scores, review counts,
+uncertainty, follow-up information, sleep stages, nap and step summaries, and
+calculation and sharing metadata. You can contribute Anki data alone. The
+[privacy policy](PRIVACY.md) describes the included fields in detail.
 
-Each submission contains the available daily Anki scores, counts, uncertainty,
-follow-up information, sleep stages, nap and step summaries, and the calculation
-and sharing metadata described in the [privacy policy](PRIVACY.md). You can
-participate with Anki data alone. Card content, individual reviews and review
-pairs, exact sleep or review times, provider account IDs and credentials are
-excluded. Your name and email are not included in the package.
+Card content, individual reviews and review pairs, exact sleep or review times,
+provider account IDs, credentials, your name and email are excluded from the
+package. You review each package and explicitly send it. Uploads are never
+automatic, and saying Yes in the initial sharing prompt sends nothing. We
+record the timing of sharing choices to understand whether seeing results
+affects participation.
 
-The add-on asks about willingness to share before showing your first results
-where possible. We record when you make that choice to study whether seeing
-results affects willingness to contribute. Saying Yes sends nothing. Joining
-requires a separate consent step, and personal use remains available whichever
-you choose.
+## How your contribution is used
 
-## Benefits and risks
+JollyJoyJourney researchers use the data for this research programme. Approved
+academic, nonprofit or commercial collaborators may also receive controlled
+access under agreements governing use and protection of the data, subject to
+provider permission. Collaborators and their roles are identified before
+access. Public findings contain anonymous summaries or synthetic examples;
+individual daily histories are not published.
 
-Contributions can help improve learning measures and our understanding of
-sleep, activity and learning. There is no payment or guaranteed personal
-benefit. Your personal insights remain available without participating.
+Measurements are linked using a pseudonym. Access is restricted, although
+unauthorized access or identification from patterns in daily histories remains
+a privacy risk.
 
-We study existing activity and do not ask you to change medication,
-supplements, sleep or exercise. The results are not diagnostic, and patterns in
-these data do not by themselves show cause and effect. Estimates can be
-affected by device errors, missing data and differences in reviewing.
+Submitted measurements support ongoing research, method validation and checking
+findings. We regularly review the continuing need and delete or, where
+permitted, irreversibly anonymize records that are no longer needed. You can
+request deletion, and applicable legal or provider limits take precedence. The
+privacy policy explains how recovery copies and consent records are handled.
 
-The main privacy risk is unauthorized access or identification from dated
-measurements. A pseudonym reduces this risk but does not make a daily history
-anonymous.
-
-## Who can use the data, and for how long
-
-JollyJoyJourney researchers and approved academic, nonprofit or commercial
-collaborators may analyze pseudonymous daily data for this programme.
-Collaborators receive controlled access under agreements covering how they can
-use and protect the data, subject to provider permission. We identify partners
-and their roles before giving them access; there are currently no external
-collaborators with access. Public results contain anonymous summaries or
-synthetic examples. Individual daily histories are not published.
-
-We keep submitted measurements while needed for this research, to validate the
-methods or to check findings. We review that need regularly and delete or,
-where permitted, irreversibly anonymize records that are no longer needed.
-You can withdraw and request deletion. Applicable legal or provider limits also
-apply. The privacy policy explains retention of recovery copies and consent
-records.
-
-## Your choice and consent
+## Your choice
 
 You can decline, join later or withdraw without losing personal use. Once we
 receive a withdrawal, we stop research use of the affected records and arrange
 deletion, including controlled collaborator copies. Already published anonymous
-results cannot be traced back to remove one person's contribution. An offline
-request needs to reach us before we can act on it; contact us if you can no
-longer use the add-on's deletion controls.
+findings remain available. Use the add-on's deletion controls or contact us if
+you can no longer access them.
 
-Before joining, you can save this information and the policy. The add-on checks
-that you are eligible, asks for explicit consent and records a typed signature
-using a pseudonym you choose. Consent records are kept separately from daily
+Before joining, you can read and save this information and the policy. The
+add-on checks eligibility and asks for explicit consent, signed using a
+pseudonym you choose. Consent records are kept separately from daily
 measurements, and you can save a copy. The consent statement is:
 
 > I confirm that I am at least 18 and am contributing my own data. I have read
@@ -91,3 +80,7 @@ measurements, and you can save a copy. The consent statement is:
 > programme, with controlled access by approved research collaborators as
 > described. I understand the retention criteria, that each upload requires my
 > confirmation, and that I can withdraw without losing personal use.
+
+The programme is operated by JollyJoyJourney, with Christian Kleineidam
+responsible for the research. For questions, contact
+[contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com).

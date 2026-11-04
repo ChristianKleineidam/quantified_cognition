@@ -23,7 +23,7 @@ STATEMENT = (
 
 def bundle():
     return {
-        "version": "research-enrollment-v2",
+        "version": "research-enrollment-v3",
         "operator": "JollyJoyJourney",
         "signature_method": "typed_pseudonym",
         "statement": STATEMENT,
