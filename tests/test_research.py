@@ -92,7 +92,10 @@ def test_new_notice_requires_new_choice_and_preserves_original_early_consent(tmp
     old_notice = SharingConfig(notice_version="research-sharing-v6")
     original = choose(path, config=old_notice)
     expose(path, config=old_notice)
-    new_notice = SharingConfig()
+    new_notice = SharingConfig.from_config(
+        {"research_sharing": {"notice_version": "research-sharing-v6", "notice_text": ""}}
+    )
+    assert new_notice.notice_version == SharingConfig().notice_version
     state = sharing_state(path, new_notice)
     assert state.current_choice is None
     assert state.metadata()["research_consent_active"] is False
@@ -108,6 +111,18 @@ def test_new_notice_requires_new_choice_and_preserves_original_early_consent(tmp
     )
     with closing(sqlite3.connect(audit_path(path))) as connection:
         assert connection.execute("select count(*) from notices").fetchone()[0] == 2
+
+
+@pytest.mark.parametrize(
+    ("version", "text"),
+    [("research-sharing-v6", "A custom study notice"), ("custom-study-v1", "")],
+)
+def test_custom_notice_configuration_keeps_its_explicit_version(version, text):
+    config = SharingConfig.from_config(
+        {"research_sharing": {"notice_version": version, "notice_text": text}}
+    )
+    assert config.notice_version == version
+    assert config.custom_notice_text == text
 
 
 def test_first_exposure_surface_is_not_overwritten_by_later_reports(tmp_path):

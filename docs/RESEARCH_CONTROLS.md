@@ -187,6 +187,9 @@ to the same operator inbox. Version 7 binds the revised sharing notice: the
 initial Yes expresses interest, and retention uses purpose-and-review wording.
 It changes no research scope or enrollment consent. Legacy audit modes, field
 names, original choices and exposure timing remain intact.
+Saved settings for older built-in notices advance to the current built-in
+version when their text override is empty. Explicit custom notices retain their
+configured versions. Neither operation rewrites the audit history.
 Apply them in order only as part of the planned closed-backend deployment.
 Existing rows are **not** backfilled as enrolled.
 Configure v7 notice/hash from `python tools/service_schema.py`; the source default

@@ -51,11 +51,20 @@ class SharingConfig:
             return cls()
         version = data.get("notice_version", "")
         text = data.get("notice_text", "")
-        return cls(
-            notice_version=version.strip()
+        version = (
+            version.strip()
             if isinstance(version, str) and version.strip()
-            else "research-sharing-v7",
-            custom_notice_text=text.strip() if isinstance(text, str) else "",
+            else cls().notice_version
+        )
+        text = text.strip() if isinstance(text, str) else ""
+        # Anki merges saved configuration over new defaults. A saved version of
+        # our built-in notice must advance with its text; custom notices keep
+        # their explicit version. Historical choices remain in the audit.
+        if not text and version in {f"research-sharing-v{number}" for number in range(1, 7)}:
+            version = cls().notice_version
+        return cls(
+            notice_version=version,
+            custom_notice_text=text,
         )
 
     @property
