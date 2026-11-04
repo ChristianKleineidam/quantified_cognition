@@ -32,7 +32,7 @@ the current closed-state checks before any separately authorized online pilot.
 
 | Setting | Value |
 | --- | --- |
-| Project | `anki-quantified-self` |
+| Project | Quantified Cognition |
 | Organization | Tempo |
 | Project ref | `wfjlzecckihsgcvauqwt` |
 | Region | Frankfurt, `eu-central-1` |

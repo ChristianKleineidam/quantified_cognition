@@ -1,6 +1,6 @@
 # Deploy health OAuth services and research storage
 
-The dedicated **anki-quantified-self** project is deployed in Tempo's Frankfurt
+The dedicated **Quantified Cognition** project is deployed in Tempo's Frankfurt
 region (`eu-central-1`), with **Oura access, Google Health access and research uploads explicitly
 disabled**. See [DEPLOYED.md](DEPLOYED.md) for the verified endpoints and state.
 The information website and policy are published; provider and research approvals
