@@ -4,11 +4,12 @@ The public information website uses **Cloudflare Pages**, with the custom domain
 `quantifiedcognition.jollyjoyjourney.com`. It is a static information site;
 publishing it does not enable Oura, Google Health or research uploads.
 
-Status on **4 November 2026**: the empty `quantified-cognition` Pages project was
-created in the existing Cloudflare account. Assets are built and checked but
-**not yet uploaded or published**; the custom hostname is not connected. The
-browser extension's file-upload permission blocked the upload. Use the existing
-project when resuming. `site/deployment.json` records this state without credentials.
+Published on **4 November 2026** at
+[quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/).
+The custom domain and certificate are active. The
+[privacy policy](https://quantifiedcognition.jollyjoyjourney.com/privacy/) and
+[research information](https://quantifiedcognition.jollyjoyjourney.com/research/)
+are public. `site/deployment.json` records the verified deployment without credentials.
 
 The website source lives in `site/`. `tools/build_website.py` renders the canonical
 privacy policy, participant information, research design and linked operating
@@ -39,10 +40,22 @@ GitHub Actions workflow, GitHub repository access grant, Worker function, websit
 data store or automatic deployment trigger. Build and publish explicitly whenever
 the website's source documents change.
 
+The first deployment used the authorized `cf` CLI session and Cloudflare's
+Pages asset API because browser uploads were unavailable. The Pages upload
+manifest includes only verified build assets, with `_headers` supplied separately.
+Cloudflare's `@cloudflare/deploy-helpers` computes the Pages content hashes;
+the upload does not include a Worker or Functions bundle. CLI credentials are
+kept by Cloudflare's CLI and are never copied into the project or website.
+
 The Cloudflare Free plan serves the static site. Keep optional analytics and paid
 features off. The existing company domain and email routing use independent DNS
 records; the site needs only its own subdomain CNAME. The project must list the
 custom domain before its DNS record is activated. HTTPS provisioning can take time.
+
+The `no-transform` cache directive preserves the script-free pages and contact
+emails. Cloudflare's automatic email obfuscation otherwise rewrites those emails
+and injects a decoding script that the site's Content Security Policy blocks.
+Keep this directive when changing the response headers.
 
 ## Checks
 

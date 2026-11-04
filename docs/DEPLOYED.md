@@ -3,6 +3,12 @@
 Verified **26 October 2026, 23:15 UTC**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
 
+**4 November website publication:** the public information site, privacy policy
+and research information are now hosted on Cloudflare Pages at
+[quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/).
+See [WEBSITE.md](WEBSITE.md). Publication did not resume Supabase, change hosted
+settings or enable provider access, enrollment or uploads.
+
 **30 October desktop-beta recheck:** the management API reports this project
 `INACTIVE`. Public DNS and database checks are unavailable. It was not resumed
 and no server settings were changed. The successful live verification below is
@@ -43,9 +49,9 @@ verified as DNS-only records before changing the nameservers at Hostinger.
 Only the contact address routes; catch-all remains disabled. No paid plan,
 outbound sending service or custom Worker was enabled.
 
-The privacy-policy draft now uses this contact address and discloses the
-Cloudflare-to-Gmail email flow. It has not been published; remaining study,
-retention and provider arrangements still require completion. This change did
+The privacy policy uses this contact address and discloses the
+Cloudflare-to-Gmail email flow. It was published on 4 November; provider and
+study approvals remain outstanding. The email-routing change did
 not resume Supabase, alter backend settings, or enable Oura, Google Health
 or research uploads.
 

@@ -3,16 +3,18 @@
 The dedicated **anki-quantified-self** project is deployed in Tempo's Frankfurt
 region (`eu-central-1`), with **Oura access, Google Health access and research uploads explicitly
 disabled**. See [DEPLOYED.md](DEPLOYED.md) for the verified endpoints and state.
-The policy and provider approvals are still pending. No email/password accounts are
+The information website and policy are published; provider and research approvals
+are still pending. No email/password accounts are
 required from Anki users. Supabase Auth is not used as a health provider.
 
-JollyJoyJourney is the company named in the privacy-policy draft. Its registered
+JollyJoyJourney is the company named in the privacy policy. Its registered
 business address has been verified against the trade-registration certificate.
 The contact address is [contact@jollyjoyjourney.com](mailto:contact@jollyjoyjourney.com),
 forwarded through Cloudflare Email Routing to the operator's verified Gmail inbox.
-The published policy URL and remaining study details still need to be completed.
-The hosted operator/policy fields remain unset until that configuration is ready;
-the three enable flags remain false.
+The published policy URL is
+`https://quantifiedcognition.jollyjoyjourney.com/privacy/`; see [WEBSITE.md](WEBSITE.md).
+The local environment example uses that URL. Hosted operator/policy fields have
+not been changed by website publication; the three enable flags remain false.
 
 ## Components
 

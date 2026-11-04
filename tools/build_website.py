@@ -132,7 +132,8 @@ def build(output: Path) -> dict:
     )
     write(
         "_headers",
-        "/*\n  X-Content-Type-Options: nosniff\n"
+        "/*\n  Cache-Control: public, max-age=0, must-revalidate, no-transform\n"
+        "  X-Content-Type-Options: nosniff\n"
         "  Referrer-Policy: strict-origin-when-cross-origin\n"
         "  Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; "
         "base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n"

@@ -5,8 +5,9 @@ Source repository: [ChristianKleineidam/quantified_cognition](https://github.com
 A desktop add-on that compares recall with Anki's own FSRS predictions. It reconstructs past reviews with **today's FSRS parameters**, including pre-FSRS (SM-2) reviews and reviews synced from AnkiDroid, AnkiMobile, and AnkiWeb.
 
 The release listing text is saved in [ANKIWEB_DESCRIPTION.txt](docs/ANKIWEB_DESCRIPTION.txt).
-The public information website is prepared for Cloudflare Pages at
-`quantifiedcognition.jollyjoyjourney.com`; see [website publishing](docs/WEBSITE.md).
+The public information website is hosted on Cloudflare Pages at
+[quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/);
+see [website publishing](docs/WEBSITE.md).
 It describes the intended public release and has not been uploaded to AnkiWeb.
 **Oura, Google Health and research uploads remain disabled in this beta.**
 
