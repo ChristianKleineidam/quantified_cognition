@@ -1,0 +1,18 @@
+{
+  "provider": "Cloudflare Pages",
+  "project_name": "quantified-cognition",
+  "account_id": "82e6997cfec1f379f0fcb59c167c6108",
+  "upload_method": "direct_upload",
+  "pages_hostname": "quantified-cognition.pages.dev",
+  "custom_hostname": "quantifiedcognition.jollyjoyjourney.com",
+  "status": "project_created_awaiting_asset_upload",
+  "published": false,
+  "custom_domain_configured": false,
+  "checked_date": "2026-11-04",
+  "build_command": "python tools/build_website.py --zip dist/quantified-cognition-website.zip",
+  "asset_directory": "dist/website",
+  "asset_archive": "dist/quantified-cognition-website.zip",
+  "asset_files": 20,
+  "functions": false,
+  "github_actions": false
+}

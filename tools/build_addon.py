@@ -42,6 +42,7 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "BETA_CHECKLIST.md",
         "DESKTOP_BETA.md",
         "SILENTWORKER.md",
+        "WEBSITE.md",
     ):
         archive.write(root / "docs" / name, "docs/" + name)
 print(destination)

@@ -1,0 +1,71 @@
+<section class="hero wrap">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="status-dot"></span> An open-source project for Anki users</p>
+    <h1>Discover how your<br>ability to learn<br><em>varies day to day.</em></h1>
+    <p class="lead">Your Anki history contains more than a record of how much you studied.
+      Quantified Cognition turns it into daily estimates of how effectively you learned.</p>
+    <div class="hero-actions"><a class="button" href="#learning">How it works <span aria-hidden="true">↗</span></a>
+      <a class="text-link" href="/research/">About the research <span aria-hidden="true">→</span></a></div>
+    <p class="release-note">Desktop beta · Oura, Google Health and research uploads are currently closed.</p>
+  </div>
+  <figure class="learning-figure" aria-labelledby="figure-title">
+    <div class="figure-top"><span class="small-label">FROM STUDY TO FOLLOW-UP</span><span class="figure-index">01 / 02</span></div>
+    <svg class="learning-lines" viewBox="0 0 460 250" role="img" aria-labelledby="lines-title lines-desc">
+      <title id="lines-title">A later review tells us about an earlier study day</title>
+      <desc id="lines-desc">An illustrative line connects studying on Monday to a follow-up review on Friday, then returns the outcome to Monday.</desc>
+      <path class="grid" d="M30 50H430M30 110H430M30 170H430M30 230H430"/>
+      <path class="trajectory" d="M45 75C155 70 215 115 310 145S390 155 415 155"/>
+      <circle class="point" cx="45" cy="75" r="7"/><circle class="point" cx="415" cy="155" r="7"/>
+      <path class="return-line" d="M411 179C322 260 130 244 51 111"/>
+      <path class="return-tip" d="m48 125 3-14 13 6"/>
+      <text x="45" y="43">STUDY</text><text x="330" y="128">REVIEW</text>
+    </svg>
+    <div class="day-labels"><div><span class="small-label">MONDAY</span><strong>You study a card.</strong></div>
+      <div><span class="small-label">FRIDAY</span><strong>You answer it again.</strong></div></div>
+    <figcaption id="figure-title">Friday’s answer helps estimate<br><em>Monday’s memory formation.</em></figcaption>
+    <p class="figure-note">Illustration of the method, not measured results.</p>
+  </figure>
+</section>
+
+<section id="learning" class="editorial-section wrap">
+  <div class="section-number">01 <span>THE MEASUREMENT</span></div>
+  <div class="section-heading"><h2>How effectively did<br>today’s learning last?</h2>
+    <p>Anki can tell you how many cards you reviewed and how often you answered correctly.
+      Quantified Cognition adds an estimate of <strong>memory formation on the day you studied</strong>,
+      using what happened when those cards were reviewed later.</p></div>
+  <div class="prose-columns"><p>Later answers are compared with Anki’s FSRS predictions, accounting
+    for differences between cards and the time until their next review. The result is assigned back
+    to the earlier study day. Daily recall scores describe how you performed when answering.</p>
+    <p>Formation is shown overall and separately for follow-ups within 30 days and beyond 30 days.
+    Scores include review counts, uncertainty and follow-up coverage. They mature as more cards are
+    reviewed again; missing follow-ups are not treated as failures.</p></div>
+  <div class="method-footnote"><span>Uses your existing history</span><span>No separate cognitive tests</span>
+    <span>Export your results as CSV</span></div>
+</section>
+
+<section class="questions-section">
+  <div class="wrap question-grid"><div><p class="eyebrow">FOR YOUR OWN QUESTIONS</p>
+    <h2>Make your learning<br>useful data.</h2>
+    <p>Compare periods in your life, study routines or personal experiments—including whether
+      a supplement coincides with a change in learning performance. Start with the history you
+      already have, then return after more outcomes have accumulated.</p>
+    <p class="muted">The scores help you investigate patterns. They do not establish that a change caused an effect.</p></div>
+    <div class="sleep-note"><p class="small-label">SLEEP &amp; ACTIVITY</p>
+      <h3>More than total sleep.</h3>
+      <p>The Oura and Google Health integrations bring sleep stages and daily steps alongside your
+        Anki measurements. Explore deep, REM and light sleep, the nights before and after studying,
+        and naps separately. Phase comparisons account for total sleep duration.</p>
+      <p class="feature-status">Health connections are implemented but remain disabled while provider reviews are pending.</p>
+    </div></div>
+</section>
+
+<section class="research-invitation wrap">
+  <p class="eyebrow">LEARNING ABOUT LEARNING</p>
+  <h2>Your observations.<br>A wider scientific question.</h2>
+  <p>The research programme studies how learning and recall vary over time and relate to sleep,
+    activity and study patterns. Contributing will be voluntary: review a package of daily
+    measurements and explicitly send it. Card content, individual reviews and account credentials
+    are excluded.</p>
+  <p class="muted">Enrollment and uploads are currently closed. Personal use does not require participation.</p>
+  <a class="text-link" href="/research/">Read the research information <span aria-hidden="true">→</span></a>
+</section>

@@ -1,0 +1,58 @@
+# Public project website
+
+The public information website uses **Cloudflare Pages**, with the custom domain
+`quantifiedcognition.jollyjoyjourney.com`. It is a static information site;
+publishing it does not enable Oura, Google Health or research uploads.
+
+Status on **4 November 2026**: the empty `quantified-cognition` Pages project was
+created in the existing Cloudflare account. Assets are built and checked but
+**not yet uploaded or published**; the custom hostname is not connected. The
+browser extension's file-upload permission blocked the upload. Use the existing
+project when resuming. `site/deployment.json` records this state without credentials.
+
+The website source lives in `site/`. `tools/build_website.py` renders the canonical
+privacy policy, participant information, research design and linked operating
+documents directly from `docs/`. It also publishes exact downloadable Markdown
+copies. Website hosting privacy is described separately in
+`site/website-privacy.md`; the frozen study-consent documents are not rewritten
+by the website build.
+
+## Build and publish
+
+Use Python 3.10 or later and `site/requirements.txt`. The Anki development
+environment already contains Python-Markdown through aqt.
+
+```powershell
+python -m pip install -r site/requirements.txt
+python tools/build_website.py --zip dist/quantified-cognition-website.zip
+```
+
+The output is `dist/website/`. The ZIP contains only the named public pages,
+stylesheet, icon, license, canonical documents, sitemap and static headers.
+The build refuses unexpected files in its output directory. It does not include
+the add-on, database, credentials, profiles, private benchmarks or CSV exports.
+
+In Cloudflare, open the **quantified-cognition** Pages project, create a production
+deployment and upload `dist/quantified-cognition-website.zip`. Deploy the contents
+of the ZIP, not a parent folder. This project uses **Direct Upload**; there is no
+GitHub Actions workflow, GitHub repository access grant, Worker function, website
+data store or automatic deployment trigger. Build and publish explicitly whenever
+the website's source documents change.
+
+The Cloudflare Free plan serves the static site. Keep optional analytics and paid
+features off. The existing company domain and email routing use independent DNS
+records; the site needs only its own subdomain CNAME. The project must list the
+custom domain before its DNS record is activated. HTTPS provisioning can take time.
+
+## Checks
+
+Check the homepage and policy/research/contact pages at desktop and phone widths,
+local links, downloadable source-document equality, the 404 page and the public
+HTTPS response headers. Confirm no analytics script or upload/enrollment form was
+introduced. Keep all three online feature flags false. Publishing these pages
+does not establish provider approval, accepted study enrollment or a verified
+research backend deployment.
+
+The repository remains private until the separately requested public release.
+The site's footer therefore links to its software license and operator contact
+rather than offering an inaccessible source-repository or AnkiWeb download link.
