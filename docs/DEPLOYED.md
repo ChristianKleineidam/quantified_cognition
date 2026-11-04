@@ -18,6 +18,15 @@ JollyJoyJourney and the published policy URL match the add-on. All three enable
 flags remain false, and all seven protocol versions remain unapproved, closed
 and without provider permissions.
 
+**4 November maintenance fix:** migration `20261104203715_maintenance_lock_order.sql`
+was subsequently applied, bringing the total to 14 migrations. It fixes a
+reproduced deadlock between batch deadline deletion and participant withdrawal.
+All 11 native PostgreSQL race tests and 42 existing backend tests pass. The
+hosted function remains version 11; this database-only fix changes no feature
+flag, protocol approval or provider permission. The installed maintenance
+function retains `SECURITY INVOKER`. See [backend operations](BACKEND_OPERATIONS.md)
+for reproduction, local timings and the remaining hosted-load checks.
+
 **4 November website publication:** the public information site, privacy policy
 and research information are now hosted on Cloudflare Pages at
 [quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/).
@@ -38,7 +47,7 @@ the current closed-state checks before any separately authorized online pilot.
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
 | Function | `qs-service`, deployed version 11 |
-| Latest migration | `20261104191205_research_protocol_v7.sql` |
+| Latest migration | `20261104203715_maintenance_lock_order.sql` |
 | Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |
 | Monitor | Active, every five minutes; private alerts |

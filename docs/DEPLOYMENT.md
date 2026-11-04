@@ -187,3 +187,9 @@ disabled routes, private deletion, anonymous-access denial and the HTTP quota.
 Both maintenance jobs ran successfully. `supabase/deployment.json` records this
 deployment. See [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md) for operator
 procedures and remaining provider/research acceptance requirements.
+
+The follow-up `20261104203715_maintenance_lock_order.sql` migration is also
+deployed (14 migrations total). It fixes the native-test-reproduced deadline
+maintenance/withdrawal deadlock without changing the Edge handler, protocol
+approvals or feature flags. See [BACKEND_OPERATIONS.md](BACKEND_OPERATIONS.md)
+for the separate 11-test native concurrency suite and its local-only limits.

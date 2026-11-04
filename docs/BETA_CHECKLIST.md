@@ -15,6 +15,9 @@ unchecked items remain work, not implied release approval.
   closing immediately after the final review.
 - [x] Hosted request/storage quotas, private monitoring and five-minute closed
   feature checks. See [backend operations](BACKEND_OPERATIONS.md).
+- [x] Exercise independent native PostgreSQL connections with synthetic data:
+  11 deterministic race tests passed on 4 November. Fix and deploy the batch
+  deadline-maintenance/withdrawal deadlock; 42 existing backend tests also pass.
 - [x] Backend tests for quotas, failure behaviour, RLS, ownership, duplicate
   receipts, deletion and stale writes. Hosted quota/alert tests roll back all
   synthetic changes; live probes confirm all three features are disabled.
@@ -88,8 +91,9 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   during this task.
 - [ ] Verify approved-account authorization, refresh/revocation, corrections,
   pagination, naps/stages and steps without logging credentials or raw responses.
-- [ ] Test quotas from separate database connections/function instances under
-  representative load. Review ceilings for the intended pilot size, 429 retry
+- [ ] Test deployed function instances under representative pilot load. The local
+  connection races above do not establish cloud throughput. Review ceilings for
+  the intended pilot size, 429 retry
   UX, provider limits, request ingress controls and infrastructure usage alerts.
 - [ ] Arrange operator alert delivery and independent uptime checks; prove an
   operator notices a stale cron heartbeat and a simulated outage. Private alert

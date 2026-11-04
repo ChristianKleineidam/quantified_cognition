@@ -1,0 +1,2 @@
+# Optional native PostgreSQL concurrency suite; not installed by the add-on.
+psycopg[binary]==3.3.8

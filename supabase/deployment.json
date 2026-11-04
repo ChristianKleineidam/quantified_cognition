@@ -22,7 +22,7 @@
   "production_access_enabled": false,
   "verified_at_utc": "2026-11-04T20:21:20.144825+00:00",
   "function_version": 11,
-  "migration_version": "20261104191205",
+  "migration_version": "20261104203715",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
   "monitor_interval_minutes": 5,
@@ -39,7 +39,7 @@
     "research_controls_schema_exists": false,
     "pending_research_updates_deployed": false
   },
-  "applied_migration_count": 13,
+  "applied_migration_count": 14,
   "research_controls_version": 1,
   "research_protocol_version": "research-enrollment-v7",
   "research_protocol_bundle_hash": "94ea5579b053255f34082cb3a42ca83f295aea5660a602a53286fad542302485",
@@ -61,5 +61,16 @@
     "maintenance_jobs_succeeded": true,
     "active_alerts": 0,
     "hosted_transaction_smoke": "not_run_client_confirmation_cancelled"
+  },
+  "maintenance_lock_order_update": {
+    "applied_at_utc": "2026-11-04T20:41:41.016688+00:00",
+    "migration": "20261104203715_maintenance_lock_order.sql",
+    "migration_sha256": "67d9a7347245902e511ff10f05a445b9c71c5b13d8d67715286e95a2a8c03c59",
+    "native_postgres_version": "17.11",
+    "native_concurrency_tests_passed": 11,
+    "existing_backend_tests_passed": 42,
+    "hosted_function_is_security_invoker": true,
+    "feature_settings_modified": false,
+    "security_warnings_or_errors": 0
   }
 }

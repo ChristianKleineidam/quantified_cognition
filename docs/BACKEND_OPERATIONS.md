@@ -142,10 +142,49 @@ Local verification:
 node --test supabase/tests/*.test.mjs
 ```
 
-PGlite runs actual PostgreSQL quota/permission/accounting tests. Its concurrent
-client test shares one database runtime; cross-connection load and realistic
-pilot traffic remain beta checks. It lacks pg_cron/pg_net, so the scheduler
-adapter is verified on the deployed project with rollback-only synthetic probes.
+PGlite runs PostgreSQL quota/permission/accounting tests. Its concurrent client
+test shares one database runtime. The separate native suite below tests actual
+lock contention across independent PostgreSQL connections. Neither establishes
+hosted Edge Function throughput under representative pilot traffic. PGlite lacks
+pg_cron/pg_net, so scheduler checks still require the deployed project.
+
+### Native connection races
+
+On 4 November, **11 native PostgreSQL 17.11 tests passed**, alongside the existing
+42 backend tests. The suite waits for actual server lock waits before releasing
+competing connections. It covers actor/global quotas, shared storage caps,
+identical/conflicting upload retries, deletion retries, upload versus deletion,
+extract release versus withdrawal, and deadline maintenance versus withdrawal.
+
+The last case reproduced a deadlock in a batch of 64 deadline deletions. Migration
+`20261104203715_maintenance_lock_order.sql` fixes it by acquiring participant locks
+in UUID order before changing shared accounting or copy state. The complete lock
+pass includes tombstones because copy confirmations also lock their participant.
+This briefly serializes participant writes during maintenance. In a disposable
+PostgreSQL 17.11 instance with 10,000 synthetic identities and no due deletions,
+five passes took 6.2–9.5 ms (median 6.7 ms). That is a local idle measurement,
+not a hosted-load or mass-deletion timing guarantee.
+
+Run the native suite explicitly against a **disposable local cluster**, never a
+linked Supabase project. For example, with Docker (Podman accepts equivalent
+arguments):
+
+```powershell
+docker run --rm -d --name qc-postgres-tests --publish 127.0.0.1:55439:5432 --tmpfs /var/lib/postgresql/data -e POSTGRES_PASSWORD=qc-disposable-test-only postgres:17.11-bookworm -c quantified_cognition.test_cluster=on
+python -m pip install -r requirements-backend-tests.txt
+$env:QC_PG_TEST_DSN='host=127.0.0.1 port=55439 user=postgres password=qc-disposable-test-only dbname=postgres sslmode=disable'
+python -m pytest supabase/tests/test_concurrency.py -q --junitxml=.reference/backend-concurrency.xml
+docker stop qc-postgres-tests
+```
+
+Wait for the server to accept connections before running pytest. The password is
+only for this synthetic local example. Tests require an explicit loopback host
+and the server-side `quantified_cognition.test_cluster=on` marker. They create
+randomly named databases, apply the real migrations, approve only an isolated
+synthetic protocol and remove their databases afterward. Missing configuration
+or dependencies fail the explicit run. They do not read cloud credentials or
+change hosted feature flags. This optional native suite is separate from the
+ordinary PGlite/Silentworker pass; its result is not implied by that pass.
 
 ## Recovery
 
