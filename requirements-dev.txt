@@ -3,3 +3,4 @@ aqt==26.9.3
 pytest>=8,<10
 ruff>=0.14,<1
 tzdata>=2025
+-r requirements-backend-tests.txt

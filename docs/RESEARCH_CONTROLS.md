@@ -152,15 +152,18 @@ On a restore, keep the database isolated, import the **current external deletion
 ledger**, then run `select qs_governance.replay_deletions()` before any research
 access. It removes resurrected measurements, suppresses their use and reconciles
 active storage counters. A restored backup's own old ledger is insufficient.
-This function does not configure encrypted backups, arrange an external ledger
-or prove platform deletion deadlines; those remain activation checks.
+The independent encrypted recovery service and external minimal ledger are now
+implemented on Silentworker; see [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md).
+Provider-specific deletion/revocation acceptance and real-account checks remain
+activation requirements.
 
 After deployment on Supabase, `qs-research-maintenance` is registered every five
 minutes. It processes mandatory deadlines, overdue reviews, expired access,
 evidence housekeeping and private overdue alerts. Local PostgreSQL tests execute
-the maintenance function directly; the actual hosted scheduler still needs a live
-verification. Operator alert delivery and independent uptime checks remain separate
-backend work. A paused project cannot run maintenance or accept deletion requests.
+the maintenance function directly; both hosted schedulers have also run
+successfully. Independent uptime/heartbeat checks and the existing Home Assistant
+notification integration are installed. A paused project cannot run maintenance
+or accept deletion requests, so the external monitor reports it.
 
 ## Updating and deploying
 

@@ -12,6 +12,13 @@ than silently omitting those suites. Windows-specific file-lock tests are
 expected to skip on Debian; this service does not replace Windows testing,
 official-installer/AnkiWeb-sync walkthroughs, or macOS testing.
 
+The controller now also requires native PostgreSQL 17 and the pinned Psycopg
+driver. `tools/native_postgres.py` starts a fresh loopback-only cluster inside
+the executor's private network, runs the concurrency and recovery rehearsals,
+then stops and removes it. Missing executables or test files fail the run.
+This replaces the earlier manual-only native gate; no provider/cloud credentials
+or real research data enter this executor. Results include `native-backend.xml`.
+
 An unchanged commit reuses its result. A failed result remains a failure on
 subsequent polls; another commit or an explicit forced run is required to retry.
 Fetch errors fail the service without replacing the last completed test result.
@@ -88,6 +95,14 @@ recorded SHA-512 integrity, records the runtime versions/hash and full Python
 dependency snapshot, and installs the systemd units. Keep root ownership of
 the installed controller, runtimes and configuration. Native Qt shared libraries
 must also be available on the host.
+
+Provision root-owned PostgreSQL 17 binaries at
+`/opt/quantified-cognition-tests/pgsql/usr/lib/postgresql/17/bin` before running
+the updated installer. The deployed runtime uses Debian's PostgreSQL 17.11
+packages extracted into that directory; it does not start a permanent database
+service. Install age for the encrypted-recovery tests. Native libraries and the
+pinned Python dependencies are administrator-provisioned, never downloaded by
+a fetched repository revision. The installed runtime metadata records versions.
 
 Run and inspect the first verification, then rerun installation with `--enable`
 to register health checks and enable the timer. Existing health-inventory edits

@@ -18,6 +18,9 @@ unchecked items remain work, not implied release approval.
 - [x] Exercise independent native PostgreSQL connections with synthetic data:
   11 deterministic race tests passed on 4 November. Fix and deploy the batch
   deadline-maintenance/withdrawal deadlock; 42 existing backend tests also pass.
+- [x] Require native concurrency and encrypted-recovery/operator rehearsals in
+  Silentworker's isolated executor. The staged native run passed 15 tests;
+  missing native tools fail rather than silently omitting coverage.
 - [x] Backend tests for quotas, failure behaviour, RLS, ownership, duplicate
   receipts, deletion and stale writes. Hosted quota/alert tests roll back all
   synthetic changes; live probes confirm all three features are disabled.
@@ -95,14 +98,18 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   connection races above do not establish cloud throughput. Review ceilings for
   the intended pilot size, 429 retry
   UX, provider limits, request ingress controls and infrastructure usage alerts.
-- [ ] Arrange operator alert delivery and independent uptime checks; prove an
-  operator notices a stale cron heartbeat and a simulated outage. Private alert
-  rows and function logs currently require inspection; no paging is configured.
-- [ ] Confirm platform log retention/redaction/access, administrator MFA, backup
-  restoration and deletion replay, research retention and extract deletion.
+- [x] Install independent status, heartbeat, backup and deletion-ledger checks
+  through the existing Silentworker/Home Assistant health channel. Preserve the
+  notification target and suppress repeated unchanged failures.
+- [x] Trigger named public-status outage drills and confirm the existing health
+  notification automation ran. Keep unrelated host failures visible and restore
+  the normal Quantified Cognition monitor after the drills.
+- [x] Rehearse encrypted recovery and deletion replay, retention holds, extract
+  deletion and verified operator withdrawal. Verify the initial encrypted copy
+  with the off-host key; confirm administrator MFA with the operator and review
+  log settings/retention. See [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md).
 - [ ] Confirm acceptance of the implemented participant-ID consent and eligibility
-  flow, incorporate any required review/provider changes, and verify the operator
-  extract/deletion procedure before research opens.
+  flow and incorporate any required review/provider changes before research opens.
 - [ ] Test explicit package preview/send, uncertain receipt retries, withdrawal
   and deletion with uploads disabled, including lost-credential recovery.
 - [ ] Run the closed-state verifier and operations report immediately before

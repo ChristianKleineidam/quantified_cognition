@@ -51,6 +51,12 @@ process must be confirmed. Provider revocation/backup handling and the permitted
 live-account pilot remain outstanding. Implementation is not study/provider
 approval or feature activation.
 
+The independent monitor, encrypted recovery copies, external minimal deletion
+ledger and operator withdrawal procedure are now implemented. The operator
+approved Silentworker as the encrypted-copy destination and confirmed MFA.
+See [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md) for actual schedules, limits,
+role boundaries, key handling and the synthetic restore/operator rehearsals.
+
 ## Data handling and retention
 
 | Records | Operating limit and action |
@@ -91,8 +97,8 @@ cryptographic erasure of a stored JSONB package.
 The normal client flow queues deletion before recording withdrawal, blocks new
 submissions and retries while Anki is open. The current server deletion receipt
 confirms removal from active application storage. Before research activation,
-define acknowledgments/status for extracts, collaborators and recovery copies;
-do not label that receipt proof of full downstream deletion.
+retain the distinction between active-storage removal and pending registered
+copies; do not label an active-storage receipt proof of full downstream deletion.
 
 On receiving a verified withdrawal, stop affected research use immediately,
 including queued analyses, and start deletion across the inventory. Use 72 hours

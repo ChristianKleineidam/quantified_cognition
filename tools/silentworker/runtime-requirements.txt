@@ -3,3 +3,4 @@ aqt==26.9.3
 pytest==9.1.1
 ruff==0.16.10
 tzdata==2026.5
+psycopg[binary]==3.3.8

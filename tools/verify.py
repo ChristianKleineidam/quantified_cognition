@@ -84,7 +84,8 @@ def inspect_package(root: Path) -> dict:
     return {"file": packages[0].name, "entries": len(names), "manifest": manifest}
 
 
-def run_checks(root: Path, node: str, pglite: Path, report: Path) -> int:
+def run_checks(root: Path, node: str, pglite: Path, report: Path,
+               postgres_bin: Path | None = None) -> int:
     result = {"started_at": datetime.now(timezone.utc).isoformat(), "status": "running",
               "platform": sys.platform, "checks": []}
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -100,8 +101,13 @@ def run_checks(root: Path, node: str, pglite: Path, report: Path) -> int:
             ("backend", [node, "--test", "--test-concurrency=1", *[
                 str(p) for p in sorted((root / "supabase" / "tests").glob("*.test.mjs"))
             ]]),
-            ("package", [sys.executable, "tools/build_addon.py"]),
         ]
+        if postgres_bin is not None:
+            commands.append(("native_backend", [
+                sys.executable, "tools/native_postgres.py", "--postgres-bin", str(postgres_bin),
+                "--report", str(report.with_name("native-backend.xml")),
+            ]))
+        commands.append(("package", [sys.executable, "tools/build_addon.py"]))
         for name, command in commands:
             print(f"\n=== {name} ===", flush=True)
             start = time.monotonic()
@@ -130,11 +136,12 @@ def main():
     parser.add_argument("--node", default="node")
     parser.add_argument("--pglite", type=Path, default=os.environ.get("PGLITE_TEST_MODULE"))
     parser.add_argument("--report", type=Path, default=ROOT / ".reference/verification/report.json")
+    parser.add_argument("--postgres-bin", type=Path)
     args = parser.parse_args()
     if args.pglite is None:
         parser.error("Set PGLITE_TEST_MODULE or pass --pglite")
     args.report.parent.mkdir(parents=True, exist_ok=True)
-    raise SystemExit(run_checks(ROOT, args.node, args.pglite, args.report))
+    raise SystemExit(run_checks(ROOT, args.node, args.pglite, args.report, args.postgres_bin))
 
 
 if __name__ == "__main__":

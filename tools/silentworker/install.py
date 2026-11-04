@@ -105,6 +105,13 @@ def provision(node_source: Path) -> None:
     shutil.copyfile(SOURCE / requirements.name, requirements)
     run(str(RUNTIME / "venv/bin/python"), "-m", "pip", "install", "--no-cache-dir",
         "--only-binary=:all:", "-r", str(requirements))
+    pg_bin = RUNTIME / "pgsql/usr/lib/postgresql/17/bin"
+    for executable in ("initdb", "pg_ctl", "postgres"):
+        if not (pg_bin / executable).is_file():
+            raise RuntimeError("Provision the root-owned PostgreSQL 17 runtime before installation")
+    postgres_version = subprocess.check_output(
+        [str(pg_bin / "postgres"), "--version"], text=True,
+    ).strip()
     for name in ("poll.py",):
         shutil.copyfile(SOURCE / name, RUNTIME / name)
         (RUNTIME / name).chmod(0o644)
@@ -118,6 +125,7 @@ def provision(node_source: Path) -> None:
         "installed_at": datetime.now(timezone.utc).isoformat(), "node": node_version,
         "node_sha256": hashlib.sha256(node.read_bytes()).hexdigest(), "pglite": "0.5.11",
         "pglite_sha512": PGLITE_INTEGRITY,
+        "postgres": postgres_version, "postgres_bin": str(pg_bin),
     }, indent=2) + "\n")
     run("systemd-analyze", "verify", "/etc/systemd/system/quantified-cognition-tests.service",
         "/etc/systemd/system/quantified-cognition-tests.timer")

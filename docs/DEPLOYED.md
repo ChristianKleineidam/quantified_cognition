@@ -27,6 +27,21 @@ flag, protocol approval or provider permission. The installed maintenance
 function retains `SECURITY INVOKER`. See [backend operations](BACKEND_OPERATIONS.md)
 for reproduction, local timings and the remaining hosted-load checks.
 
+**4 November operations update:** migration
+`20261104211750_backend_operations_access.sql` is applied (15 migrations total).
+It adds restricted monitor/backup roles, a separate research-maintenance
+heartbeat, tracked recovery copies and audited operator withdrawal. All remain
+invoker functions. Independent Silentworker monitoring, five-minute deletion
+checks and encrypted daily recovery copies are installed. The initial live
+archive passed local key/integrity verification; the project had no submitted
+research packages, consent records or active participants. Synthetic native
+rehearsals passed 15 tests. Administrator MFA was confirmed by the operator,
+external database TLS enforcement is on, and the security advisor has no
+findings. See [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md) for boundaries and keys.
+Named alert drills triggered the existing Home Assistant automation at 21:57:56
+and 22:02:56 UTC; the normal Quantified Cognition monitor recovered afterward.
+Other Silentworker health failures remain outside this project's scope.
+
 **4 November website publication:** the public information site, privacy policy
 and research information are now hosted on Cloudflare Pages at
 [quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/).
@@ -36,8 +51,9 @@ settings or enable provider access, enrollment or uploads.
 **30 October desktop-beta recheck:** the management API reported this project
 `INACTIVE`. Public DNS and database checks were unavailable. It was not resumed
 at that check and no server settings were changed. The full deployment
-verification below remains historical. Deploy the pending updates and repeat
-the current closed-state checks before any separately authorized online pilot.
+verification from that date is historical and superseded by the 4 November
+deployments above. Repeat current closed-state checks before a separately
+authorized online pilot.
 
 | Setting | Value |
 | --- | --- |
@@ -47,10 +63,12 @@ the current closed-state checks before any separately authorized online pilot.
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
 | Function | `qs-service`, deployed version 11 |
-| Latest migration | `20261104203715_maintenance_lock_order.sql` |
+| Latest migration | `20261104211750_backend_operations_access.sql` |
 | Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |
 | Monitor | Active, every five minutes; private alerts |
+| Independent monitor | Silentworker; existing Home Assistant notification channel |
+| Recovery | Encrypted daily copies; independent deletion ledger; 7 days / 1 GiB |
 | Oura access | **Disabled** (`OURA_ENABLED=false`) |
 | Google Health access | **Disabled** (`GOOGLE_HEALTH_ENABLED=false`) |
 | Research registration/uploads | **Disabled** (`RESEARCH_ENABLED=false`) |
@@ -74,7 +92,8 @@ authenticated client roles. Governance functions use `SECURITY INVOKER`; the
 Edge role cannot approve a protocol or release research extracts. Both
 `qs-operations-monitor` and `qs-research-maintenance` ran successfully at 20:10
 UTC on their five-minute schedules. The operator report showed fresh successful
-probes and no active alerts. External alert delivery remains unconfigured.
+probes and no active alerts. The independent delivery integration was added in
+the later operations update above.
 
 The security advisor reported only informational `rls_enabled_no_policy`
 reminders for the intentionally private tables. These tables grant no direct

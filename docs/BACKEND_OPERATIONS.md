@@ -98,10 +98,14 @@ No OAuth token, health record or research package is requested by the monitor.
 It expects all three flags to be false and operations version 1. Update that
 expectation only as part of a separately authorized online launch.
 
-Alerts stay in private PostgreSQL tables; **no email, paging or external uptime
-service is configured**. A paused/unreachable project cannot alert through its
-own database. The operator report marks maintenance and probes stale after
-12 minutes; arrange independent delivery/uptime checks before an online pilot.
+Private PostgreSQL alerts are now also checked by the independent Silentworker
+monitor and reported through the existing Home Assistant notification channel.
+It checks public status, both maintenance heartbeats and recovery/ledger
+freshness every five minutes; the host-health publisher normally runs every
+15 minutes. Backend heartbeats are stale after 12 minutes. A paused/unreachable
+project cannot alert through its own database, but this external check can.
+See [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md) for delivery, recovery and host
+failure limits.
 
 ## Operator checks
 
@@ -184,7 +188,9 @@ randomly named databases, apply the real migrations, approve only an isolated
 synthetic protocol and remove their databases afterward. Missing configuration
 or dependencies fail the explicit run. They do not read cloud credentials or
 change hosted feature flags. This optional native suite is separate from the
-ordinary PGlite/Silentworker pass; its result is not implied by that pass.
+ordinary PGlite pass. The updated Silentworker controller now requires it using
+a fresh isolated native cluster, and also runs the encrypted recovery and
+operator rehearsals. See [SILENTWORKER.md](SILENTWORKER.md).
 
 ## Recovery
 

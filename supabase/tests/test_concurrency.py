@@ -58,6 +58,7 @@ def cluster():
         ).fetchone()["value"]
         if marker != "on":
             pytest.fail("Refusing a server without quantified_cognition.test_cluster=on")
+        previous_roles = {row["rolname"] for row in admin.execute("select rolname from pg_roles")}
         try:
             for role in ("anon", "authenticated", "service_role"):
                 if not admin.execute("select 1 from pg_roles where rolname=%s", (role,)).fetchone():
@@ -68,13 +69,19 @@ def cluster():
                     created_roles.append(role)
             admin.execute(sql.SQL("create database {}").format(sql.Identifier(template)))
             with connect({**settings, "dbname": template}) as source:
+                source.execute("""create schema supabase_migrations;
+                    create table supabase_migrations.schema_migrations(version text primary key)""")
                 for migration in sorted((ROOT / "supabase/migrations").glob("*.sql")):
                     source.execute(migration.read_text(encoding="utf-8"))
+                    source.execute("insert into supabase_migrations.schema_migrations values(%s)",
+                                   (migration.name.split("_", 1)[0],))
                 source.execute("""insert into qs_governance.protocols
                     (version,bundle_hash,bundle,notice_version,notice_hash,signature_method,
                      approved,approval_reference,enrollment_open)
                     values ('synthetic-v1',%s,'{}','test-v1',%s,'explicit_consent',
                             true,'isolated synthetic test',true)""", ("b" * 64, HASH))
+            created_roles.extend(role for role in ("qs_monitor_reader", "qs_backup_agent")
+                                 if role not in previous_roles)
             yield admin, settings, template
         finally:
             admin.execute(sql.SQL("drop database if exists {} with (force)").format(

@@ -63,7 +63,8 @@ def executor_command(source: Path, run_id: str) -> list[str]:
         "ProtectControlGroups": "yes", "RestrictSUIDSGID": "yes",
         "CapabilityBoundingSet": "", "ReadWritePaths": str(source),
         "InaccessiblePaths": f"-{CONFIG} -/run/credentials -/etc/credstore "
-                             "-/etc/credstore.encrypted -/run/dbus -/run/systemd/private",
+                             "-/etc/credstore.encrypted -/run/dbus -/run/systemd/private "
+                             "-/etc/quantified-cognition-ops -/var/lib/quantified-cognition-backup",
         "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6",
         "MemoryHigh": "768M", "MemoryMax": "1250M", "MemorySwapMax": "512M",
         "CPUQuota": "75%", "Nice": "15", "IOWeight": "10", "TasksMax": "128",
@@ -81,7 +82,8 @@ def executor_command(source: Path, run_id: str) -> list[str]:
         command.append(f"--setenv={key}={value}")
     return [*command, str(RUNTIME / "venv/bin/python"), str(source / "tools/verify.py"),
             "--node", str(RUNTIME / "bin/node"), "--pglite",
-            str(RUNTIME / "pglite/dist/index.js"), "--report",
+            str(RUNTIME / "pglite/dist/index.js"), "--postgres-bin",
+            str(RUNTIME / "pgsql/usr/lib/postgresql/17/bin"), "--report",
             str(source / ".reference/verification/report.json")]
 
 

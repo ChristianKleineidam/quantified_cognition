@@ -49,6 +49,10 @@ def test_executor_has_no_network_credentials_or_privileged_identity(tmp_path):
         assert f"--property={prop}" in command
     assert not any("deploy_key" in part or "LoadCredential" in part for part in command)
     assert str(tmp_path / "source/tools/verify.py") in command
+    assert "--postgres-bin" in command
+    postgres = command[command.index("--postgres-bin")+1].replace("\\", "/")
+    assert postgres == "/opt/quantified-cognition-tests/pgsql/usr/lib/postgresql/17/bin"
+    assert any("-/etc/quantified-cognition-ops" in item for item in command)
 
 
 @pytest.mark.parametrize("status,expected", [("passed", 0), ("failed", 1), ("running", 1)])

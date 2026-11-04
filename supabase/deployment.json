@@ -22,12 +22,12 @@
   "production_access_enabled": false,
   "verified_at_utc": "2026-11-04T20:21:20.144825+00:00",
   "function_version": 11,
-  "migration_version": "20261104203715",
+  "migration_version": "20261104211750",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
   "monitor_interval_minutes": 5,
   "monitor_expected_features_disabled": true,
-  "operator_notifications_configured": false,
+  "operator_notifications_configured": true,
   "desktop_beta_recheck_date": "2026-10-30",
   "project_status_at_desktop_recheck": "INACTIVE",
   "live_recheck_available": true,
@@ -39,7 +39,7 @@
     "research_controls_schema_exists": false,
     "pending_research_updates_deployed": false
   },
-  "applied_migration_count": 14,
+  "applied_migration_count": 15,
   "research_controls_version": 1,
   "research_protocol_version": "research-enrollment-v7",
   "research_protocol_bundle_hash": "94ea5579b053255f34082cb3a42ca83f295aea5660a602a53286fad542302485",
@@ -72,5 +72,39 @@
     "hosted_function_is_security_invoker": true,
     "feature_settings_modified": false,
     "security_warnings_or_errors": 0
+  },
+  "database_tls_enforced": true,
+  "operations_update": {
+    "recorded_at_utc": "2026-11-04T22:05:04.309053+00:00",
+    "native_ci_required": true,
+    "native_staged_tests_passed": 15,
+    "monitor_host": "silentworker",
+    "monitor_interval_minutes": 5,
+    "notification_channel": "existing Silentworker Home Assistant health automation",
+    "notification_rule_reports_new_project_failures": true,
+    "backup_destination_approved_by_operator": true,
+    "backup_schedule": "02:15 Europe/Berlin daily",
+    "backup_max_age_days": 7,
+    "backup_budget_bytes": 1073741824,
+    "deletion_poll_interval_minutes": 5,
+    "independent_deletion_ledger": true,
+    "private_recovery_identity_off_server": true,
+    "initial_live_archive_key_verified": true,
+    "administrator_mfa_confirmed_by_operator": true,
+    "security_advisor_findings": 0,
+    "monitor_role": "qs_monitor_reader",
+    "backup_role": "qs_backup_agent",
+    "research_submissions_at_verification": 0,
+    "active_participants_at_verification": 0,
+    "credentials_in_repository": false,
+    "agent_source_hashes": {
+      "backend_ops.py": "0615fa45fd1316e3a90a4db634b2b898f485a9ecccddeaf63f4c8298121c7e65",
+      "backend_recovery.py": "0b08dc0db1b6d62406bc397a0ca7f3dd1a4e38be781f4b0556ba489fa07f4fc7"
+    },
+    "alert_drill_automation_events_utc": [
+      "2026-11-04T21:57:56.768634+00:00",
+      "2026-11-04T22:02:56.754503+00:00"
+    ],
+    "alert_drill_normal_monitor_restored": true
   }
 }

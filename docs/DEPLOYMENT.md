@@ -193,3 +193,10 @@ deployed (14 migrations total). It fixes the native-test-reproduced deadline
 maintenance/withdrawal deadlock without changing the Edge handler, protocol
 approvals or feature flags. See [BACKEND_OPERATIONS.md](BACKEND_OPERATIONS.md)
 for the separate 11-test native concurrency suite and its local-only limits.
+
+The subsequent `20261104211750_backend_operations_access.sql` migration is
+deployed (15 total). Restricted machine roles, the research heartbeat, tracked
+encrypted recovery copies and verified operator withdrawal support the active
+Silentworker jobs. See [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md) for the upload
+pause switch, credential/key management, schedules and restore procedure. No
+online feature was enabled by these operations changes.
