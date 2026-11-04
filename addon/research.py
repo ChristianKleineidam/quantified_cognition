@@ -41,7 +41,7 @@ def _now() -> str:
 
 @dataclass(frozen=True)
 class SharingConfig:
-    notice_version: str = "research-sharing-v6"
+    notice_version: str = "research-sharing-v7"
     custom_notice_text: str = ""
 
     @classmethod
@@ -54,7 +54,7 @@ class SharingConfig:
         return cls(
             notice_version=version.strip()
             if isinstance(version, str) and version.strip()
-            else "research-sharing-v6",
+            else "research-sharing-v7",
             custom_notice_text=text.strip() if isinstance(text, str) else "",
         )
 
@@ -91,15 +91,17 @@ class SharingConfig:
             "credentials are excluded. "
         )
         return (
-            "Would you like to contribute to scientific research into learning, recall, "
+            "Would you be interested in contributing to scientific research into learning, recall, "
             "sleep and activity?\n\n" + data + "\n\n"
             "Sharing is optional. Your personal results are available whichever choice "
-            "you make. You can opt in later or change your choice through Research sharing. "
-            "The app records whether you opted in before seeing your first results. "
+            "you make. You can change your choice later through Research sharing. "
+            "The app records whether you expressed interest before your first results "
+            "were available. "
             "Data will only be sent after you separately choose and confirm an upload. "
             "JollyJoyJourney operates this research programme. Approved research collaborators "
             "may receive controlled access as described in the research information. "
-            "Research data has no fixed expiry; continued need is reviewed periodically. "
+            "Research data is kept while needed for the programme. We regularly review "
+            "that need and delete data that is no longer needed. "
             "Joining requires separate eligibility and explicit study consent. This question "
             "records your sharing preference and does not enroll you. "
             "Withdrawing sharing queues deletion of your previous uploads. "

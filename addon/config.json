@@ -6,7 +6,7 @@
     "base_url": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service"
   },
   "research_sharing": {
-    "notice_version": "research-sharing-v6",
+    "notice_version": "research-sharing-v7",
     "notice_text": ""
   }
 }

@@ -1,6 +1,6 @@
 # Enrollment and research-data controls
 
-Implemented in the **0.19.3 source**, tested with synthetic data. These migrations
+Implemented in the **0.19.4 source**, tested with synthetic data. These migrations
 have **not been deployed** to the inactive hosted project. Oura, Google Health and
 research uploads remain disabled. The prepared protocol is inserted with
 `approved=false`, `enrollment_open=false` and both provider permissions false.
@@ -10,7 +10,7 @@ An environment flag alone cannot approve enrollment.
 
 The first Yes / Not now / No remains a sharing **preference**. The original
 choice, event order, first-results opportunity and unknown legacy exposure are
-preserved. Updating to notice v6 asks for a current preference without changing
+preserved. Updating to notice v7 asks for a current preference without changing
 earlier timing. Existing CSV fields named `research_consent_*` remain the legacy
 preference audit for compatibility; they are not proof of signed enrollment.
 
@@ -169,9 +169,10 @@ The migrations are `20261102141401_research_enrollment_lifecycle.sql`,
 `20261104151505_research_protocol_v2.sql`,
 `20261104155542_research_protocol_v3.sql`,
 `20261104164851_research_protocol_v4.sql`,
-`20261104180329_participant_id_consent.sql` and
-`20261104180330_research_protocol_v5.sql` and
-`20261104184538_research_protocol_v6.sql`. Versions 2 through 4 revise public
+`20261104180329_participant_id_consent.sql`,
+`20261104180330_research_protocol_v5.sql`,
+`20261104184538_research_protocol_v6.sql` and
+`20261104191205_research_protocol_v7.sql`. Versions 2 through 4 revise public
 wording without expanding the data scope. Version 4 also states Google's
 Limited Use commitment explicitly. Version 5 removes the extra pseudonym field
 and links the explicit consent action to the existing participant ID. New
@@ -182,10 +183,13 @@ upgrading does not convert old consent to the new protocol. Earlier copies
 remain in migration history. Version 6 updates the project contact address to
 quantifiedcognition@jollyjoyjourney.com without changing research purposes, data
 scope or the consent action. The previous company contact continues to forward
-to the same operator inbox.
+to the same operator inbox. Version 7 binds the revised sharing notice: the
+initial Yes expresses interest, and retention uses purpose-and-review wording.
+It changes no research scope or enrollment consent. Legacy audit modes, field
+names, original choices and exposure timing remain intact.
 Apply them in order only as part of the planned closed-backend deployment.
 Existing rows are **not** backfilled as enrolled.
-Configure v6 notice/hash from `python tools/service_schema.py`; the source default
+Configure v7 notice/hash from `python tools/service_schema.py`; the source default
 and the last hosted v5 deployment are intentionally different until deployment.
 
 When participant documents change, choose a new enrollment protocol version,

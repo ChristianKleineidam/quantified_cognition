@@ -25,7 +25,8 @@ class SharingDialog(QDialog):
         self.setWindowTitle("Quantified Cognition · Research sharing")
         self.resize(660, 420)
         layout = QVBoxLayout(self)
-        heading = QLabel("Would you like to share data for scientific analysis?")
+        heading = QLabel("Would you be interested in contributing to scientific research?")
+        heading.setWordWrap(True)
         font = heading.font()
         font.setBold(True)
         heading.setFont(font)
@@ -37,7 +38,7 @@ class SharingDialog(QDialog):
         self.status.setWordWrap(True)
         self.status.setTextFormat(Qt.TextFormat.PlainText)
         if snapshot.current_choice is not None:
-            choice = {"opt_in": "Yes", "declined": "No", "deferred": "Not now"}[
+            choice = {"opt_in": "Interested", "declined": "No", "deferred": "Not now"}[
                 snapshot.current_choice
             ]
             self.status.setText(f"Current choice: {choice}. You can change it below.")
@@ -64,7 +65,7 @@ class SharingDialog(QDialog):
         buttons = QHBoxLayout()
         self.buttons = []
         for label, choice in (
-            ("Yes, allow sharing", "opt_in"),
+            ("Yes, I’m interested", "opt_in"),
             ("Not now", "deferred"),
             ("No, keep it private", "declined"),
         ):

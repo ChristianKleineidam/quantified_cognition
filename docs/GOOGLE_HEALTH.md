@@ -155,7 +155,7 @@ approved study enrollment process. Confirm acceptance of the implemented
 eligibility, information-copy and participant-ID consent flow and incorporate
 any required changes once the requirements are known.
 
-The v6 sharing notice and package schema v5 precisely include the daily Google
+The v7 sharing notice and package schema v5 precisely include the daily Google
 fields above and derived main-sleep/nap measurements, including reported nap
 light/deep/REM durations, alongside Anki/Oura fields.
 Exact session and review times remain excluded. Separate signed enrollment is

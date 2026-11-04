@@ -31,7 +31,7 @@ Research sharing is an optional Yes / Not now / No choice asked before the first
 With Yes selected, reopen Research sharing and choose **Review and submit data…** to inspect the complete package, recipient and privacy policy before sending. Each upload requires an explicit Send. Research submission retries reuse the prepared package ID; they never happen automatically. **Prepare latest data** replaces an unsent package. Not now or No queues deletion of previous uploads, and **Delete uploaded data…** requests deletion separately. Offline deletion retries while Anki is open and blocks new uploads until acknowledged. Oura disconnect deletes local Oura data; research submissions and previously saved CSV files have their own deletion controls.
 # Research enrollment
 
-The v6 sharing choice records a preference and preserves original first-view timing.
+The v7 sharing choice records a preference and preserves original first-view timing.
 Research enrollment is separate and remains closed in this beta. It requires
 eligibility, saveable information and explicit consent linked to the participant ID;
 each measurement upload still requires its own preview and Send. See the bundled

@@ -143,7 +143,7 @@ Use synthetic fixtures for development and agent-assisted work.
 
 The existing research-sharing-v5 audit is a local preference mechanism. Keep
 original preference/exposure times and unknown legacy status intact. The new
-scope, collaborators and retention are reflected in source notice v6; deploy its
+scope, collaborators and retention are reflected in source notice v7; deploy its
 matching server hash before any research upload is enabled. Do not edit v5's
 meaning retrospectively or interpret its research_consent_active field alone
 as proof of completed legal/provider-approved enrollment.

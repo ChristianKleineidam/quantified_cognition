@@ -89,9 +89,10 @@ def test_clock_changes_do_not_change_event_order_classification(tmp_path, monkey
 
 def test_new_notice_requires_new_choice_and_preserves_original_early_consent(tmp_path):
     path = tmp_path / "collection.anki2"
-    choose(path)
-    expose(path)
-    new_notice = SharingConfig(notice_version="research-sharing-v7")
+    old_notice = SharingConfig(notice_version="research-sharing-v6")
+    original = choose(path, config=old_notice)
+    expose(path, config=old_notice)
+    new_notice = SharingConfig()
     state = sharing_state(path, new_notice)
     assert state.current_choice is None
     assert state.metadata()["research_consent_active"] is False
@@ -99,6 +100,12 @@ def test_new_notice_requires_new_choice_and_preserves_original_early_consent(tmp
     renewed = choose(path, config=new_notice)
     assert renewed.metadata()["current_notice_consent_before_first_view"] is False
     assert renewed.metadata()["first_consent_notice_version"] == "research-sharing-v6"
+    assert renewed.participant_id == original.participant_id
+    assert renewed.events[: len(original.events)] == original.events
+    assert (
+        renewed.metadata()["sharing_first_choice_at_utc"]
+        == original.metadata()["sharing_first_choice_at_utc"]
+    )
     with closing(sqlite3.connect(audit_path(path))) as connection:
         assert connection.execute("select count(*) from notices").fetchone()[0] == 2
 

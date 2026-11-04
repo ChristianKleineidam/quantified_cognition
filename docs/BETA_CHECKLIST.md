@@ -94,7 +94,7 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   restoration and deletion replay, research retention and extract deletion.
 - [ ] Confirm acceptance of the implemented participant-ID consent and eligibility
   flow, incorporate any required review/provider changes, publish the documents,
-  and deploy/verify the closed enrollment/lifecycle backend and matching v6 notice.
+  and deploy/verify the closed enrollment/lifecycle backend and matching v7 notice.
   Verify the actual hosted maintenance jobs and operator extract/deletion procedure.
 - [ ] Test explicit package preview/send, uncertain receipt retries, withdrawal
   and deletion with uploads disabled, including lost-credential recovery.

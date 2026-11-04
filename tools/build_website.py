@@ -69,7 +69,7 @@ def build(output: Path) -> dict:
                 ("research", "Research information"),
                 ("methods", "Methods"),
                 ("privacy", "Privacy policy"),
-                ("contact", "Contact"),
+                ("contact", "Contact &amp; legal notice"),
             )
         )
         body = (
@@ -89,8 +89,8 @@ def build(output: Path) -> dict:
         write("documents/" + filename, source_path.read_bytes())
     page(
         "contact",
-        "Contact",
-        "Contact JollyJoyJourney, the operator of Quantified Cognition.",
+        "Contact & legal notice",
+        "Contact and legal information for JollyJoyJourney, the operator of Quantified Cognition.",
         (ROOT / "site/contact.html").read_text("utf-8"),
     )
     source = (ROOT / "site/website-privacy.md").read_text("utf-8")
