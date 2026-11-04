@@ -1,7 +1,15 @@
-# Disabled backend deployment
+# Backend deployment state
 
-Verified **26 October 2026, 23:15 UTC**. This is a deployed prelaunch backend;
+Code deployment verified **26 October 2026, 23:15 UTC**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
+
+**4 November project restoration:** the project was restored at the operator's
+request and now reports `ACTIVE_HEALTHY`. A read-only database query succeeded,
+and the live `/status` endpoint confirmed all three online features remain
+disabled. The restored service is still version 9 with sharing notice v5.
+Pending enrollment/lifecycle migrations and notice v7 have not been deployed;
+the `qs_governance` schema is not present. This restoration changed no function
+code, schema, provider credentials or feature flags.
 
 **4 November website publication:** the public information site, privacy policy
 and research information are now hosted on Cloudflare Pages at
@@ -9,11 +17,11 @@ and research information are now hosted on Cloudflare Pages at
 See [WEBSITE.md](WEBSITE.md). Publication did not resume Supabase, change hosted
 settings or enable provider access, enrollment or uploads.
 
-**30 October desktop-beta recheck:** the management API reports this project
-`INACTIVE`. Public DNS and database checks are unavailable. It was not resumed
-and no server settings were changed. The successful live verification below is
-historical; monitoring cannot run while the project is inactive. Restore only
-through a separately authorized operation, then repeat the closed-state checks.
+**30 October desktop-beta recheck:** the management API reported this project
+`INACTIVE`. Public DNS and database checks were unavailable. It was not resumed
+at that check and no server settings were changed. The full deployment
+verification below remains historical. Deploy the pending updates and repeat
+the current closed-state checks before any separately authorized online pilot.
 
 | Setting | Value |
 | --- | --- |

@@ -1,7 +1,7 @@
 # Enrollment and research-data controls
 
 Implemented in the **0.19.4 source**, tested with synthetic data. These migrations
-have **not been deployed** to the inactive hosted project. Oura, Google Health and
+have **not been deployed** to the hosted project. Oura, Google Health and
 research uploads remain disabled. The prepared protocol is inserted with
 `approved=false`, `enrollment_open=false` and both provider permissions false.
 An environment flag alone cannot approve enrollment.

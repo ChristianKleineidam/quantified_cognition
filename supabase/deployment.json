@@ -28,5 +28,13 @@
   "operator_notifications_configured": false,
   "desktop_beta_recheck_date": "2026-10-30",
   "project_status_at_desktop_recheck": "INACTIVE",
-  "live_recheck_available": false
+  "live_recheck_available": true,
+  "project_status": "ACTIVE_HEALTHY",
+  "restoration_verified_at_utc": "2026-11-04T19:37:14.797546+00:00",
+  "restoration_checks": {
+    "database_query_succeeded": true,
+    "disabled_feature_flags_verified": true,
+    "research_controls_schema_exists": false,
+    "pending_research_updates_deployed": false
+  }
 }
