@@ -66,6 +66,12 @@ introduced. Keep all three online feature flags false. Publishing these pages
 does not establish provider approval, accepted study enrollment or a verified
 research backend deployment.
 
+The 4 November live check verified all 19 public files against the build over
+HTTPS, including exact downloadable source documents, security headers and the
+custom 404 response. `_headers` is deployment configuration, the twentieth
+build file. The contact page was also checked in the browser after preventing
+email rewriting.
+
 The repository remains private until the separately requested public release.
 The site's footer therefore links to its software license and operator contact
 rather than offering an inaccessible source-repository or AnkiWeb download link.

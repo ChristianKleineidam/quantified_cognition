@@ -18,5 +18,15 @@
   "asset_archive": "dist/quantified-cognition-website.zip",
   "asset_files": 20,
   "functions": false,
-  "github_actions": false
+  "github_actions": false,
+  "deployment_id": "b36b94bf-437b-47ac-89d3-f514e3fd2aaf",
+  "deployed_source_revision": "239f3ed",
+  "deployed_at": "2026-11-04T15:05:40.149265Z",
+  "archive_sha256": "7f28a0e21a0b526c6b67a20a4c834691a0d55d8879f997a84698f8ff1a1e5e5f",
+  "archive_bytes": 76021,
+  "https_verified": true,
+  "public_files_verified": 19,
+  "canonical_documents_match": true,
+  "security_headers_verified": true,
+  "custom_404_verified": true
 }
