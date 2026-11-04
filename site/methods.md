@@ -5,6 +5,13 @@ memory formation. It compares your answers with Anki's FSRS predictions, so the
 scores account for how likely you were to remember each card and how long it
 had been since you studied it.
 
+These measurements use new, experimental methods. Their reliability for
+detecting changes in everyday cognitive performance has not yet been
+established. Use the results to spot patterns and inform personal experiments
+or adjustments to your routines, alongside other evidence and your own
+experience. They should not be the sole basis for major decisions. Quantified
+Cognition does not diagnose medical conditions or provide treatment advice.
+
 ## Recall: how you performed that day
 
 For each card, the add-on uses your first answer on an Anki day. Again counts
@@ -56,6 +63,13 @@ Scores include review counts, follow-up coverage and uncertainty intervals.
 Personal insights also show uncertainty and identify when there is
 insufficient data. Estimates depend on both the number of usable reviews and
 the number of days they represent.
+
+Uncertainty ranges describe statistical variation under the methods'
+assumptions; they do not cover every possible source of error. More observations
+and narrower ranges do not eliminate systematic bias or establish that the
+measurements are valid. For example, a consistent mismatch in FSRS predictions
+or selective follow-up reviews can influence scores even in a large history,
+without reliably reflecting a change in learning ability.
 
 Existing history is recalculated with your current FSRS settings. This allows
 older reviews to be analyzed, including eligible reviews from before FSRS and

@@ -1,6 +1,24 @@
 """Keep report controls reachable on smaller screens and at larger text scales."""
 
-from aqt.qt import QFrame, QLayout, QScrollArea, QVBoxLayout, QWidget
+from aqt.qt import QFrame, QLabel, QLayout, QScrollArea, Qt, QVBoxLayout, QWidget
+
+
+def measurement_limitations(parent):
+    note = QLabel(
+        "Quantified Cognition uses new, experimental methods to estimate learning and recall "
+        "from your Anki history. Their reliability for detecting changes in everyday cognitive "
+        "performance has not yet been established.\n\n"
+        "Use the results to spot patterns and inform personal experiments or adjustments to "
+        "your routines, alongside other evidence and your own experience. They should not be "
+        "the sole basis for major decisions. Quantified Cognition does not diagnose medical "
+        "conditions or provide treatment advice.\n\n"
+        "More observations and narrower uncertainty ranges do not eliminate possible bias "
+        "or establish that the measurements are valid.",
+        parent,
+    )
+    note.setWordWrap(True)
+    note.setTextFormat(Qt.TextFormat.PlainText)
+    return note
 
 
 def scrollable_report(dialog, width, height, name):

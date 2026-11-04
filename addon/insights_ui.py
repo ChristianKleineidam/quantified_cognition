@@ -156,7 +156,7 @@ class InsightsDialog(QDialog):
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self.destroyed.connect(lambda: setattr(self, "disposed", True))
         self.setWindowTitle("Quantified Cognition · Personal insights")
-        from .ui_layout import scrollable_report
+        from .ui_layout import measurement_limitations, scrollable_report
 
         layout, outer, self.content_scroll = scrollable_report(
             self, 1240, 650, "Personal insights content"
@@ -167,6 +167,8 @@ class InsightsDialog(QDialog):
         )
         intro.setWordWrap(True)
         layout.addWidget(intro)
+        self.measurement_note = measurement_limitations(self)
+        layout.addWidget(self.measurement_note)
         controls = QHBoxLayout()
         self.provider = QComboBox()
         self.provider.addItem("Oura", "oura")

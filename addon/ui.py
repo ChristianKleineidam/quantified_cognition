@@ -289,7 +289,7 @@ class MemoryReportDialog(QDialog):
         self.disposed = False
         self.destroyed.connect(lambda: setattr(self, "disposed", True))
         self.setWindowTitle("Quantified Cognition · Memory")
-        from .ui_layout import scrollable_report
+        from .ui_layout import measurement_limitations, scrollable_report
 
         layout, outer, self.content_scroll = scrollable_report(
             self, 960, 710, "Memory report content"
@@ -312,6 +312,8 @@ class MemoryReportDialog(QDialog):
         )
         explanation.setWordWrap(True)
         layout.addWidget(explanation)
+        self.measurement_note = measurement_limitations(self)
+        layout.addWidget(self.measurement_note)
 
         controls = QHBoxLayout()
         self.metric_selector = QComboBox()
