@@ -70,16 +70,21 @@ research backend deployment.
 
 The 4 November live check verified all 15 public files against the build over
 HTTPS, including exact downloadable source documents, security headers and the
-custom 404 response. `_headers` is deployment configuration, the sixteenth
-build file. The contact page was also checked in the browser after preventing
+custom 404 response. `_headers` and `_redirects` are deployment configuration;
+there are 17 build files. The contact page was also checked in the browser after preventing
 email rewriting.
 
 The former `/operations/` and `/research-controls/` pages and the downloads
 `RESEARCH_OPERATIONS.md`, `RESEARCH_CONTROLS.md` and `RESEARCH_DESIGN.md` are
-excluded from the current site. They should return the custom 404 page. When
+excluded from the current site. Their old URLs permanently redirect to the
+corresponding research information, privacy or Methods page. When
 upgrading an older local website build, use a fresh output directory or remove
 only those retired generated files before rebuilding; the build continues to
 refuse unexpected leftovers.
+
+Verify those redirects after deployment. Pages can serve stale removed assets
+on a custom hostname; a successful cache-purge API response alone is not proof
+that a retired manual is no longer served.
 
 The repository remains private until the separately requested public release.
 The site's footer therefore links to its software license and operator contact

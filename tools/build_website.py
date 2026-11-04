@@ -109,6 +109,18 @@ def build(output: Path) -> dict:
         'stroke="#d1e6a7" stroke-width="2.5" stroke-linecap="round"/></svg>',
     )
     write("license.txt", (ROOT / "LICENSE").read_bytes())
+    write(
+        "_redirects",
+        "/operations /research/ 301\n"
+        "/operations/ /research/ 301\n"
+        "/operations/index.html /research/ 301\n"
+        "/research-controls /privacy/ 301\n"
+        "/research-controls/ /privacy/ 301\n"
+        "/research-controls/index.html /privacy/ 301\n"
+        "/documents/RESEARCH_OPERATIONS.md /research/ 301\n"
+        "/documents/RESEARCH_CONTROLS.md /privacy/ 301\n"
+        "/documents/RESEARCH_DESIGN.md /methods/ 301\n",
+    )
     write("robots.txt", f"User-agent: *\nAllow: /\nSitemap: {BASE_URL}/sitemap.xml\n")
     routes = ["", *DOCUMENTS, "contact", "website-privacy"]
     write(
