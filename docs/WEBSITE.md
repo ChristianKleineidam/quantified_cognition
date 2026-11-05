@@ -4,6 +4,11 @@ The public information website uses **Cloudflare Pages**, with the custom domain
 `quantifiedcognition.jollyjoyjourney.com`. It is a static information site;
 publishing it does not enable Oura, Google Health or research uploads.
 
+Updated **5 November 2026** with Oura workout summaries in the privacy policy,
+participant information, Methods and landing page. The canonical participant
+documents match research enrollment v9; all 17 public files match the reviewed
+build. This publication does not open enrollment or provider access.
+
 Published on **4 November 2026** at
 [quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/).
 The custom domain and certificate are active. The

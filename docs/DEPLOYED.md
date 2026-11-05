@@ -3,11 +3,30 @@
 Latest hosted verification: **5 November 2026**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
 
-**5 November encryption deployment:** migrations
+**5 November workout update:** version 0.21.0 adds Oura workout imports,
+24-hour study-window summaries, historical associations and appended CSV fields.
+The deployed OAuth request uses `daily workout`. Function version **21** and
+migration `20261105134053_research_protocol_v9.sql` are verified (18 migrations
+total). Notice v9 and the frozen v9 documents match the published pages; all
+nine protocols remain unapproved, closed and without provider permissions.
+The original before-first-results sharing audit is preserved.
+
+All 17 public website files match the reviewed build. Four hosted code files
+match exactly and the hosted JSON schema is structurally identical. The security
+advisor has no findings; Oura, Google Health and research registration/uploads
+return their disabled responses. No provider account was connected or real
+health data imported. The Oura credential values were not read or changed.
+Tests cover synthetic workout corrections/deletions, partial grants, encrypted
+exports, unknown history before device use and background UI operation.
+Ten years/7,300 synthetic workouts took 0.031 seconds to parse and 0.16 seconds
+to match to studying; this excludes network and statistical estimation time.
+See [WORKOUT_VALIDATION.json](WORKOUT_VALIDATION.json) for the test/deployment record.
+
+**Earlier 5 November encryption deployment:** migrations
 `20261105112324_client_encrypted_research.sql` and
 `20261105113158_research_protocol_v8.sql` are applied (17 total). The live function
-is version 17, with notice v8 and the matching frozen document bundle. All eight
-protocols remain unapproved, closed and without provider permissions.
+was version 17, with notice v8 and the matching frozen document bundle. All eight
+protocols at that point were unapproved, closed and without provider permissions.
 
 Version 0.20.0 encrypts local health/insight caches and pending previews using
 OS-protected profile keys. Research measurements use client-side HPKE encryption;
@@ -308,7 +327,7 @@ disable values; no credential values were printed during verification.
 
 Review the published [JollyJoyJourney privacy policy](PRIVACY.md) and study
 information for any required approval changes, finish the [Oura approval checklist](OURA_APPROVAL.md)
-and its storage/revocation/deletion requirements, install Oura client credentials,
+and its storage/revocation/deletion requirements and permitted-account pilot,
 and complete [Google setup/research requirements](GOOGLE_HEALTH.md) with its own
 credentials and permitted live-account pilot. Review retention, logs, backup
 deletion and abuse controls as described in [DEPLOYMENT.md](DEPLOYMENT.md).

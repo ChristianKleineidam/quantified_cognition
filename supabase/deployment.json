@@ -11,8 +11,8 @@
     "GOOGLE_HEALTH_ENABLED": "false",
     "RESEARCH_ENABLED": "false",
     "SERVICE_URL": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service",
-    "RESEARCH_NOTICE_VERSION": "research-sharing-v8",
-    "RESEARCH_NOTICE_HASH": "74b7ba3295b51c61fa40dd060847c0a9c542834201ece4f3626df900077576a2",
+    "RESEARCH_NOTICE_VERSION": "research-sharing-v9",
+    "RESEARCH_NOTICE_HASH": "f5bc1ed9e63b7f560dbe964321c3418cbb420e8f4bbb21aa2fa35d8b7ea212c6",
     "RESEARCH_OPERATOR": "JollyJoyJourney",
     "PRIVACY_URL": "https://quantifiedcognition.jollyjoyjourney.com/privacy/"
   },
@@ -20,9 +20,9 @@
   "oura_approval_recorded": false,
   "google_health_approval_recorded": false,
   "production_access_enabled": false,
-  "verified_at_utc": "2026-11-05T12:23:37.045803+00:00",
-  "function_version": 17,
-  "migration_version": "20261105113158",
+  "verified_at_utc": "2026-11-05T14:02:43.078017+00:00",
+  "function_version": 21,
+  "migration_version": "20261105134053",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
   "monitor_interval_minutes": 5,
@@ -39,14 +39,14 @@
     "research_controls_schema_exists": false,
     "pending_research_updates_deployed": false
   },
-  "applied_migration_count": 17,
+  "applied_migration_count": 18,
   "research_controls_version": 1,
-  "research_protocol_version": "research-enrollment-v8",
-  "research_protocol_bundle_hash": "631c7f0e73e47a337378a4c3f638199c3a2d250b12dfc50b43d8f9ee97b9c9a3",
+  "research_protocol_version": "research-enrollment-v9",
+  "research_protocol_bundle_hash": "3e10cd6910cee787402240dba2f113227002518dedff353a5dc6b4d86af07627",
   "research_protocols_approved": 0,
   "research_protocols_open": 0,
-  "source_revision": "04fdbf0b6488c530ed53ff6efec7352197b56224",
-  "function_bundle_sha256": "13395fbc76108744df5408c238e28bdba83f921d08b7b1f659ec0e7e71cfd6e8",
+  "source_revision": "3265e7d4389890353e08d38667c003d64ea03ae9",
+  "function_bundle_sha256": "0bbcf6a8354175e0c6122c7d73493882c6a34332a78098a19a2bbdfaf94ea15c",
   "research_maintenance_job": "qs-research-maintenance",
   "research_maintenance_interval_minutes": 5,
   "deployment_checks": {
@@ -130,5 +130,25 @@
     "windows_dpapi_cache_roundtrip_verified": true,
     "portable_private_key_recovery_verified": true,
     "security_advisor_findings": 0
+  },
+  "workout_update": {
+    "verified_at_utc": "2026-11-05T14:02:43.078017+00:00",
+    "addon_version": "0.21.0",
+    "scopes": [
+      "daily",
+      "workout"
+    ],
+    "package_version": 6,
+    "health_database_version": 4,
+    "export_version": 7,
+    "insight_method_version": 6,
+    "source_files_matched": 5,
+    "protocol_approved": false,
+    "protocol_enrollment_open": false,
+    "provider_permissions": false,
+    "credential_values_read": false,
+    "provider_requests_made": false,
+    "security_advisor_findings": 0,
+    "evidence": "docs/WORKOUT_VALIDATION.json"
   }
 }

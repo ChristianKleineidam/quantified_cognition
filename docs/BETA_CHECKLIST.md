@@ -101,8 +101,9 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   keep every online feature closed. See [ENCRYPTION.md](ENCRYPTION.md) and
   [HOSTED_ENCRYPTION_RESULT.json](HOSTED_ENCRYPTION_RESULT.json).
 - [ ] Complete [Oura approval](OURA_APPROVAL.md) and
-  [Google Health requirements](GOOGLE_HEALTH.md), separately. Install only the
-  relevant server credentials after approval. No real-account import was tested
+  [Google Health requirements](GOOGLE_HEALTH.md), separately. Configure developer
+  credentials for permitted accounts while keeping production controls off until
+  the required approvals and authorized launch. No real-account import was tested
   during this task.
 - [ ] Verify approved-account authorization, refresh/revocation, corrections,
   pagination, naps/stages, steps and Oura workouts without logging credentials

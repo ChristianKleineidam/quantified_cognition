@@ -1120,6 +1120,10 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         assert any(
             row["timing"] == "after" and row["metric"] == "formation_long_term" for row in rows
         )
+        dialog.provider.setCurrentIndex(1)
+        pump_until(app, lambda: not dialog.busy)
+        assert dialog.result.provider == "google_health"
+        assert dialog.section.currentIndex() != 2 and not dialog.section.isTabVisible(2)
         assert not notices
     finally:
         release.set()
