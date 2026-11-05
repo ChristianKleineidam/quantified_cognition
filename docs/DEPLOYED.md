@@ -1,7 +1,33 @@
 # Backend deployment state
 
-Code deployment verified **4 November 2026, 20:21 UTC**. This is a deployed prelaunch backend;
+Latest hosted verification: **5 November 2026, 09:40 UTC**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
+
+**5 November synthetic hosted test:** a separate, access-key-protected Edge
+Function used temporary private schemas, prefixed RPCs and NOLOGIN roles inside
+this project. The four application modules were copied byte-for-byte. The test
+wrapper redirected every RPC to the temporary namespace and enabled research
+only for that endpoint, using a synthetic protocol with both providers disabled.
+The six migrations containing upload/lifecycle logic were copied with namespace
+substitutions; production protocol seeds, cron/extension changes and access to
+production migration history were excluded.
+
+The hosted HTTP-to-PostgreSQL flow passed: enrollment and a synthetic upload
+returned 200; retrying the identical package returned the same receipt and kept
+exactly one row, 6,441 active-storage bytes and one daily storage charge. Deletion
+returned a completed receipt and left zero submission rows or active-storage
+bytes. A later upload with the deleted credential returned 401. The daily usage
+counter correctly remained one after deletion.
+
+The test endpoint, both schemas, all nine public test RPCs, both temporary roles
+and the test secret were removed. The retired endpoint returns 404. Before/after
+snapshots match for live participant/submission/enrollment counts, storage
+counters, protocol approvals, RPC definitions, cron configuration and migration
+count. All three live feature flags remain false; the security advisor reports
+no findings. The live function is version 13 after installing/removing the
+temporary secret; its application bundle hash is unchanged. This was one small
+functional roundtrip through shared hosted infrastructure. Evidence and exact
+source hashes: [HOSTED_SMOKE_RESULT.json](HOSTED_SMOKE_RESULT.json).
 
 **4 November project restoration:** the project was restored at the operator's
 request and now reports `ACTIVE_HEALTHY`. A read-only database query succeeded,
@@ -62,7 +88,7 @@ authorized online pilot.
 | Project ref | `wfjlzecckihsgcvauqwt` |
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
-| Function | `qs-service`, deployed version 11 |
+| Function | `qs-service`, deployed version 13; unchanged application bundle |
 | Latest migration | `20261104211750_backend_operations_access.sql` |
 | Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |

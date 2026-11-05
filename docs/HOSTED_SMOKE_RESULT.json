@@ -1,0 +1,129 @@
+{
+  "status": "passed",
+  "project_ref": "wfjlzecckihsgcvauqwt",
+  "namespace": "qst_cb90519b_",
+  "function_name": "qs-service-smoke-cb90519b",
+  "synthetic_only": true,
+  "checked_at_utc": "2026-11-05T09:40:23.750509+00:00",
+  "checks": [
+    {
+      "step": "test_status",
+      "status": 200,
+      "milliseconds": 563
+    },
+    {
+      "step": "synthetic_terms",
+      "status": 200,
+      "milliseconds": 734
+    },
+    {
+      "step": "register_synthetic_identity",
+      "status": 200,
+      "milliseconds": 422
+    },
+    {
+      "step": "enroll_synthetic_identity",
+      "status": 200,
+      "milliseconds": 250
+    },
+    {
+      "step": "upload",
+      "status": 200,
+      "milliseconds": 328
+    },
+    {
+      "step": "retry_same_package",
+      "status": 200,
+      "milliseconds": 171
+    },
+    {
+      "step": "delete",
+      "status": 200,
+      "milliseconds": 281
+    },
+    {
+      "step": "deletion_receipt",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "step": "stale_upload_rejected",
+      "status": 401,
+      "milliseconds": 157
+    }
+  ],
+  "same_receipt_on_retry": true,
+  "upload_state": {
+    "budget_bytes": 6441,
+    "budget_rows": 1,
+    "daily_bytes": 6441,
+    "daily_rows": 1,
+    "rows": 1
+  },
+  "retry_state": {
+    "budget_bytes": 6441,
+    "budget_rows": 1,
+    "daily_bytes": 6441,
+    "daily_rows": 1,
+    "rows": 1
+  },
+  "deleted_state": {
+    "budget_bytes": 0,
+    "budget_rows": 0,
+    "daily_bytes": 6441,
+    "daily_rows": 1,
+    "rows": 0
+  },
+  "package_sha256": "c3959882cdbed50bdc606356f4db0e1ec05263f55e56afc4fca69aa26070581f",
+  "source_revision": "94b20a98285d542969bff361c90b4d7a1ca0c7bb",
+  "isolation": "Separate function, schemas, RPC names and NOLOGIN roles in the existing project; no production data copied",
+  "adaptations": [
+    "Namespace qs_ renamed throughout SQL and RPC transport",
+    "No cron/extension changes or public protocol seeds",
+    "No read grant on production migration history",
+    "Synthetic-only protocol; providers disabled; access-key and expiry wrapper"
+  ],
+  "original_source_hashes": {
+    "20261023170248_research_storage.sql": "68493f961a8bf9b9b4791ef3f7a104a36d63a1a64c480a27942471b04ae19f03",
+    "20261026230405_backend_operations.sql": "3ca68229cc1db965ec6d49e05e192a28d637c86f7336d19ca356bbc01525fea0",
+    "20261026230643_scheduled_monitoring.sql": "5641ec40490436f99a8e2a26755aa1e4d7e58645f6561e8e0f259a5c9deb0eec",
+    "20261026231031_isolate_pg_net_extension.sql": "f7c37c9d7d9cd4b57ac13e1a626c962c09befad60f5f65ecf03ad1f69c1eac08",
+    "20261102141401_research_enrollment_lifecycle.sql": "59a138b869f7b0d8f170e3941a522abd2756a61df03ae354d9d403bcb2c672bd",
+    "20261102142008_research_protocol_v1.sql": "684621e7cee8f2a5403706107317cacc9cb0e0435b7ffc6728e9b8553e65c45c",
+    "20261104151505_research_protocol_v2.sql": "e4a898c7c820bfdd3038bafc63a7f3f11ddd2eeb8b824d17da02531908d33ae6",
+    "20261104155542_research_protocol_v3.sql": "40b6905d0652a87cef869337472e21465572e5a2b5757fdf9077eda2f9000e09",
+    "20261104164851_research_protocol_v4.sql": "29eca96cba781433b5ebd7ebf6c029d3d8c139ed4453b5acf4be1840b3d404a3",
+    "20261104180329_participant_id_consent.sql": "ff2426bf4f0cc79cd393c6541158dec0d029bad9970e6abdb0543214b121667a",
+    "20261104180330_research_protocol_v5.sql": "04a9aa287dbbb5fe5c3335df78e00db7247ebf4ea91f435dd6f1e3d7ecdf20aa",
+    "20261104184538_research_protocol_v6.sql": "bec59fdc648ebd9e95ca1bc5b43f5d0079b4c25f9ce0e3c7797d5ddbfad6f3d5",
+    "20261104191205_research_protocol_v7.sql": "51641933e8355007268b364a51f2fcefac744c8453aaad8711d9f5cb1fb2792d",
+    "20261104203715_maintenance_lock_order.sql": "67d9a7347245902e511ff10f05a445b9c71c5b13d8d67715286e95a2a8c03c59",
+    "20261104211750_backend_operations_access.sql": "0a1ae8cd56f3098abaa351059aa94aa020ab70ef57989f107e99c734cf61a260",
+    "service.mjs": "618898024287a513c1774f60f06673452fa9b9a970a16049f2b15e6e55e7c30a",
+    "google.mjs": "31d24f9aa835f4be855755751df21741a397fc171b48929ca6b03cac8f7fcf72",
+    "operations.mjs": "7681cfe3f35ba472c023fc1cad4f91553c95f0ff0f6245aade98461cda86eaee",
+    "schema.json": "9995340c4f2fb2fb29df3a013574e31b2bc4e9e5829ff1e629ad82b012c6c0ab"
+  },
+  "cleanup": {
+    "checked_at_utc": "2026-11-05T09:44:06.285904+00:00",
+    "temporary_endpoint_status": 404,
+    "test_schemas": 0,
+    "test_functions": 0,
+    "test_roles": 0,
+    "test_access_key_removed": true,
+    "remaining_functions": [
+      "qs-service"
+    ],
+    "production_snapshot_unchanged": true,
+    "production_active_participants": 0,
+    "production_submissions": 0,
+    "production_enrollments": 0,
+    "production_protocols_approved": 0,
+    "production_protocols_open": 0,
+    "production_oura_enabled": false,
+    "production_google_health_enabled": false,
+    "production_research_enabled": false,
+    "security_advisor_findings": 0,
+    "live_function_version": 13
+  }
+}

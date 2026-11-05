@@ -21,7 +21,7 @@
   "google_health_approval_recorded": false,
   "production_access_enabled": false,
   "verified_at_utc": "2026-11-04T20:21:20.144825+00:00",
-  "function_version": 11,
+  "function_version": 13,
   "migration_version": "20261104211750",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
@@ -106,5 +106,15 @@
       "2026-11-04T22:02:56.754503+00:00"
     ],
     "alert_drill_normal_monitor_restored": true
+  },
+  "hosted_synthetic_smoke": {
+    "verified_at_utc": "2026-11-05T09:40:23.750509+00:00",
+    "evidence": "docs/HOSTED_SMOKE_RESULT.json",
+    "upload_passed": true,
+    "retry_deduplicated": true,
+    "deletion_passed": true,
+    "stale_credential_rejected": true,
+    "temporary_objects_removed": true,
+    "production_snapshot_unchanged": true
   }
 }

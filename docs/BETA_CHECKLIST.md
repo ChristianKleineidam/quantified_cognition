@@ -88,6 +88,12 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 - [x] Deploy/verify the closed enrollment/lifecycle backend and notice v7.
   Function 11, all 13 migrations, disabled HTTP routes, anonymous denial,
   quota responses and both scheduled maintenance jobs were verified on 4 November.
+- [x] Run one hosted synthetic upload, retry without duplication and deletion
+  through a separate endpoint and temporary schemas in the existing project.
+  Completed on 5 November; database counts, storage charges, deletion receipt and
+  rejection of the deleted credential passed. All temporary components were
+  removed and the live service remained closed. See
+  [HOSTED_SMOKE_RESULT.json](HOSTED_SMOKE_RESULT.json).
 - [ ] Complete [Oura approval](OURA_APPROVAL.md) and
   [Google Health requirements](GOOGLE_HEALTH.md), separately. Install only the
   relevant server credentials after approval. No real-account import was tested
