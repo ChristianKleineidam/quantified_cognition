@@ -103,14 +103,18 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 - [ ] Complete [Oura approval](OURA_APPROVAL.md) and
   [Google Health requirements](GOOGLE_HEALTH.md), separately. Configure developer
   credentials for permitted accounts while keeping production controls off until
-  the required approvals and authorized launch. No real-account import was tested
-  during this task.
+  the required approvals and authorized launch. The initial Oura account pilot
+  passed; Google Health's real-account pilot remains pending.
 - [ ] Verify approved-account authorization, refresh/revocation, corrections,
   pagination, naps/stages, steps and Oura workouts without logging credentials
   or raw responses. Check Daily-only grants, missing workout intensity,
-  duplicates/overlap, 24-hour windows and corrections/deletions. The Oura app and
-  server credential names are prepared; credentials have not been validated
-  against Oura and all online features remain disabled.
+  duplicates/overlap, 24-hour windows and corrections/deletions. Oura credentials
+  have been validated through the developer pilot; all online features remain disabled.
+- [x] Complete the initial Oura developer-account integration pilot: sign-in,
+  paginated sleep/steps/workouts, refresh rotation, incremental sync, encrypted
+  cache, CSV and disconnect/revocation. Clear imported test measurements and
+  restore disabled service flags. See [OURA_PILOT_RESULT.json](OURA_PILOT_RESULT.json).
+  This does not complete Google Health or provider-side account-revocation checks.
 - [ ] Test deployed function instances under representative pilot load. The local
   connection races above do not establish cloud throughput. Review ceilings for
   the intended pilot size, 429 retry

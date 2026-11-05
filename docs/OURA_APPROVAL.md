@@ -3,9 +3,20 @@
 Checked against Oura's official documentation on **5 November 2026**, including
 the V2 OpenAPI 1.43 workout contract. The operator has registered the developer
 application with Daily and Workout selected and saved both credential names in
-server secrets. Their values have not been tested against Oura. No wider-use or
-research approval is recorded and no real health data used in tests. The backend is deployed with
+server secrets. A consented developer-account pilot has now verified token
+exchange, refresh and revocation without exposing the client secret in logs. No wider-use or
+research approval is recorded. The backend is deployed with
 Oura access and research uploads disabled; see [DEPLOYED.md](DEPLOYED.md).
+
+The **5 November developer pilot** imported paginated sleep, daily activity and
+workouts directly into a disposable local Anki profile, checked its encrypted
+cache and aggregate CSV, rotated and persisted the refresh token, and completed
+an incremental sync. Disconnect removed the local Oura measurements; the revoked
+token was rejected. Oura was enabled only for the bounded test and restored to
+disabled afterward. Google Health and research uploads stayed disabled throughout;
+no enrollment or research submission was created. Saved evidence contains no
+health records, measurements, dates, identifiers or record counts. See
+[OURA_PILOT_RESULT.json](OURA_PILOT_RESULT.json).
 
 ## What is already implemented
 
@@ -105,10 +116,12 @@ terms and charges; neither hosting choice bypasses the agreement.
 
 ## Remaining external steps
 
-The operator must supply Oura credentials and
-published policy details; perform the live pilot; obtain Oura's written
+The developer app, credentials, public policy and initial account pilot are
+prepared. The operator must obtain Oura's written
 permissions and user-limit approval; then enable the appropriate production
-flags. The project and service URL are recorded in `supabase/deployment.json`;
-Oura credentials, final policy details and approvals are still required.
+flags. The project and service URL are recorded in `supabase/deployment.json`.
+Provider-side revocation, membership/permission failures and later scheduled
+sync behavior still need representative permitted-account checks. Wider-use and
+research approvals are still required.
 The repository is intended to make that pilot and application concrete,
 without requiring approval before the software can be developed and tested.

@@ -3,6 +3,17 @@
 Latest hosted verification: **5 November 2026**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
 
+**5 November live Oura developer pilot:** authorization/browser return,
+paginated sleep/activity/workout imports, encrypted caching, persisted refresh
+rotation, incremental sync, aggregate CSV and disconnect/revocation passed in a
+disposable local Anki profile. The temporary export and local Oura measurements
+were removed; the ordinary collection was not opened or modified. No research
+enrollment or upload occurred. All online features were restored to disabled.
+The same backend bundle is now function version **23** after the temporary
+configuration changes; its code and research protocol were unchanged. This was
+an integration-level live-account test, separate from the earlier synthetic
+desktop UI walkthrough. See [OURA_PILOT_RESULT.json](OURA_PILOT_RESULT.json).
+
 **5 November workout update:** version 0.21.0 adds Oura workout imports,
 24-hour study-window summaries, historical associations and appended CSV fields.
 The deployed OAuth request uses `daily workout`. Function version **21** and
@@ -14,8 +25,8 @@ The original before-first-results sharing audit is preserved.
 All 17 public website files match the reviewed build. Four hosted code files
 match exactly and the hosted JSON schema is structurally identical. The security
 advisor has no findings; Oura, Google Health and research registration/uploads
-return their disabled responses. No provider account was connected or real
-health data imported. The Oura credential values were not read or changed.
+return their disabled responses. Those pre-pilot checks used synthetic data only.
+The Oura credential values were not exposed or changed.
 Tests cover synthetic workout corrections/deletions, partial grants, encrypted
 exports, unknown history before device use and background UI operation.
 Ten years/7,300 synthetic workouts took 0.031 seconds to parse and 0.16 seconds

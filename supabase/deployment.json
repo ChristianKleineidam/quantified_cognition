@@ -20,8 +20,8 @@
   "oura_approval_recorded": false,
   "google_health_approval_recorded": false,
   "production_access_enabled": false,
-  "verified_at_utc": "2026-11-05T14:02:43.078017+00:00",
-  "function_version": 21,
+  "verified_at_utc": "2026-11-05T15:02:34.203569+00:00",
+  "function_version": 23,
   "migration_version": "20261105134053",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
@@ -150,5 +150,17 @@
     "provider_requests_made": false,
     "security_advisor_findings": 0,
     "evidence": "docs/WORKOUT_VALIDATION.json"
+  },
+  "oura_developer_pilot": {
+    "verified_at_utc": "2026-11-05T15:02:34.203569+00:00",
+    "passed": true,
+    "evidence": "docs/OURA_PILOT_RESULT.json",
+    "credentials_validated_through_oauth": true,
+    "credential_values_read": false,
+    "local_test_data_removed": true,
+    "test_connection_revoked": true,
+    "research_uploads_enabled": false,
+    "all_online_features_restored_disabled": true,
+    "production_approval": false
   }
 }
