@@ -34,6 +34,8 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "RESEARCH_OPERATIONS.md",
         "RESEARCH_CONTROLS.md",
         "ENCRYPTION.md",
+        "HOSTED_SMOKE_RESULT.json",
+        "HOSTED_ENCRYPTION_RESULT.json",
         "OURA_APPROVAL.md",
         "GOOGLE_HEALTH.md",
         "INSIGHTS.md",

@@ -94,6 +94,12 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   rejection of the deleted credential passed. All temporary components were
   removed and the live service remained closed. See
   [HOSTED_SMOKE_RESULT.json](HOSTED_SMOKE_RESULT.json).
+- [x] Encrypt managed local health/insight caches and pending packages; verify
+  legacy migration, WAL handling, corruption, wrong keys and interrupted writes.
+  Validate encrypted research admission, off-server decryption, retry/deletion
+  and registered extracts. Publish concise Terms and matching policy/notice v8;
+  keep every online feature closed. See [ENCRYPTION.md](ENCRYPTION.md) and
+  [HOSTED_ENCRYPTION_RESULT.json](HOSTED_ENCRYPTION_RESULT.json).
 - [ ] Complete [Oura approval](OURA_APPROVAL.md) and
   [Google Health requirements](GOOGLE_HEALTH.md), separately. Install only the
   relevant server credentials after approval. No real-account import was tested

@@ -1,7 +1,40 @@
 # Backend deployment state
 
-Latest hosted verification: **5 November 2026, 09:40 UTC**. This is a deployed prelaunch backend;
+Latest hosted verification: **5 November 2026**. This is a deployed prelaunch backend;
 Oura, Google Health and research uploads remain disabled.
+
+**5 November encryption deployment:** migrations
+`20261105112324_client_encrypted_research.sql` and
+`20261105113158_research_protocol_v8.sql` are applied (17 total). The live function
+is version 17, with notice v8 and the matching frozen document bundle. All eight
+protocols remain unapproved, closed and without provider permissions.
+
+Version 0.20.0 encrypts local health/insight caches and pending previews using
+OS-protected profile keys. Research measurements use client-side HPKE encryption;
+the private recipient key stays on the operator's computer. Consent and minimal
+operational metadata remain available for server enforcement. The new server
+rejects plaintext uploads; scientific allowlist checks run before encryption
+and after local decryption. The registered export releases encrypted packages
+with consent provenance for local analysis. See [ENCRYPTION.md](ENCRYPTION.md).
+
+Validation passed 413 Windows desktop tests, 42 backend tests and 15 native
+PostgreSQL/recovery tests on Silentworker. A native Windows DPAPI cache reopened
+in another process; an unchanged import preserved the ciphertext. Both protected
+copies of the research private key were verified locally. The v0.20.0 add-on
+archive passed identity, source, dependency-digest and licence-presence checks.
+
+A separate protected test endpoint and temporary schemas verified a real hosted
+encrypted upload, identical-receipt retry, local decryption of the stored
+ciphertext, deletion and rejection of the old credential. The test used one
+synthetic package. All temporary components were removed; the live data and
+settings matched their pre-test snapshot. The security advisor reports no
+findings. Evidence: [HOSTED_ENCRYPTION_RESULT.json](HOSTED_ENCRYPTION_RESULT.json).
+
+The [Terms of Use](https://quantifiedcognition.jollyjoyjourney.com/terms/) and
+updated privacy policy are published on the existing Pages site. All 17 public
+files matched the 19-file build over HTTPS, with canonical document equality,
+security headers and retired-manual redirects verified. Publication did not
+enable any online feature.
 
 **5 November synthetic hosted test:** a separate, access-key-protected Edge
 Function used temporary private schemas, prefixed RPCs and NOLOGIN roles inside
@@ -88,8 +121,8 @@ authorized online pilot.
 | Project ref | `wfjlzecckihsgcvauqwt` |
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
-| Function | `qs-service`, deployed version 13; unchanged application bundle |
-| Latest migration | `20261104211750_backend_operations_access.sql` |
+| Function | `qs-service`, deployed version 17 |
+| Latest migration | `20261105113158_research_protocol_v8.sql` |
 | Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |
 | Monitor | Active, every five minutes; private alerts |

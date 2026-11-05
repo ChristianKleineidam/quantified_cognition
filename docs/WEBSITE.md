@@ -90,3 +90,18 @@ that a retired manual is no longer served.
 The repository remains private until the separately requested public release.
 The site's footer therefore links to its software license and operator contact
 rather than offering an inaccessible source-repository or AnkiWeb download link.
+
+## 5 November update
+
+The concise [Terms of Use](https://quantifiedcognition.jollyjoyjourney.com/terms/)
+are available from the footer and document navigation, with a downloadable copy.
+The privacy policy explains local cache encryption, client-side research
+encryption, the off-server private key and readable consent/operational metadata.
+It also links Google's Developer and User Data Policy and Health Research Policy.
+The frozen participant bundle is version 8.
+
+Deployment `53581be3-c4eb-4dd0-a14a-ea051cd29c00` succeeded on the existing Direct
+Upload project. All 17 public files matched the 19-file build over HTTPS;
+headers, canonical documents, custom 404 and retired-manual redirects passed.
+Terms and the new privacy wording were also verified in the browser. No cache
+purge, DNS change, new service or online feature activation was required.

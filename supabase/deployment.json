@@ -11,8 +11,8 @@
     "GOOGLE_HEALTH_ENABLED": "false",
     "RESEARCH_ENABLED": "false",
     "SERVICE_URL": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service",
-    "RESEARCH_NOTICE_VERSION": "research-sharing-v7",
-    "RESEARCH_NOTICE_HASH": "78a2c7dbae23121bdbcbeb74713faeb395b66280cb55ec00f433c97afd9dc4d4",
+    "RESEARCH_NOTICE_VERSION": "research-sharing-v8",
+    "RESEARCH_NOTICE_HASH": "74b7ba3295b51c61fa40dd060847c0a9c542834201ece4f3626df900077576a2",
     "RESEARCH_OPERATOR": "JollyJoyJourney",
     "PRIVACY_URL": "https://quantifiedcognition.jollyjoyjourney.com/privacy/"
   },
@@ -20,9 +20,9 @@
   "oura_approval_recorded": false,
   "google_health_approval_recorded": false,
   "production_access_enabled": false,
-  "verified_at_utc": "2026-11-04T20:21:20.144825+00:00",
-  "function_version": 13,
-  "migration_version": "20261104211750",
+  "verified_at_utc": "2026-11-05T12:23:37.045803+00:00",
+  "function_version": 17,
+  "migration_version": "20261105113158",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
   "monitor_interval_minutes": 5,
@@ -39,14 +39,14 @@
     "research_controls_schema_exists": false,
     "pending_research_updates_deployed": false
   },
-  "applied_migration_count": 15,
+  "applied_migration_count": 17,
   "research_controls_version": 1,
-  "research_protocol_version": "research-enrollment-v7",
-  "research_protocol_bundle_hash": "94ea5579b053255f34082cb3a42ca83f295aea5660a602a53286fad542302485",
+  "research_protocol_version": "research-enrollment-v8",
+  "research_protocol_bundle_hash": "631c7f0e73e47a337378a4c3f638199c3a2d250b12dfc50b43d8f9ee97b9c9a3",
   "research_protocols_approved": 0,
   "research_protocols_open": 0,
-  "source_revision": "9407eb0defe7cdb1695f9edebe720311e48a2d2a",
-  "function_bundle_sha256": "3e3d5701ef46a888c9af267743be3f6cb53ecb55b21691eb8a47c404fa26fff6",
+  "source_revision": "04fdbf0b6488c530ed53ff6efec7352197b56224",
+  "function_bundle_sha256": "13395fbc76108744df5408c238e28bdba83f921d08b7b1f659ec0e7e71cfd6e8",
   "research_maintenance_job": "qs-research-maintenance",
   "research_maintenance_interval_minutes": 5,
   "deployment_checks": {
@@ -116,5 +116,19 @@
     "stale_credential_rejected": true,
     "temporary_objects_removed": true,
     "production_snapshot_unchanged": true
+  },
+  "client_encryption": {
+    "algorithm": "HPKE-X25519-HKDF-SHA256-AES256GCM",
+    "key_id": "07aabc3f826551f9a7bd7c7b9ed84ed04e0535afef7a8231e9df8fbb4feb53a3",
+    "private_key_off_server": true,
+    "local_cache_encryption": "AES-256-GCM with OS-protected profile key",
+    "hosted_roundtrip_passed": true,
+    "evidence": "docs/HOSTED_ENCRYPTION_RESULT.json",
+    "python_tests_passed": 413,
+    "backend_tests_passed": 42,
+    "native_postgres_recovery_tests_passed": 15,
+    "windows_dpapi_cache_roundtrip_verified": true,
+    "portable_private_key_recovery_verified": true,
+    "security_advisor_findings": 0
   }
 }
