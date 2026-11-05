@@ -35,6 +35,11 @@ def setup(tmp_path, monkeypatch):
         "privacy_url": "https://example.org/privacy",
         "notice_version": sharing.notice_version,
         "notice_hash": sharing.notice_hash,
+        "research_encryption": {
+            key: value
+            for key, value in submissions.public_configuration().items()
+            if key in ("key_id", "algorithm")
+        },
     }
     frozen = enrollment.load_bundle()
 
@@ -82,7 +87,9 @@ def test_package_is_immutable_reused_aggregate_only_and_does_not_mark_first_view
     assert not any(
         key in packet["columns"] for key in ("card_id", "deck_id", "bedtime_start", "access_token")
     )
-    storage.save_report(report_with_followup(), storage.database_path(source))
+    storage.save_report(
+        replace(report_with_followup(), parameters_hash="a" * 64), storage.database_path(source)
+    )
     assert submissions.prepare_submission(source, CONFIG, sharing)[0] == saved
     fresh = submissions.prepare_submission(source, CONFIG, sharing, reuse=False)[0]
     assert fresh["package"]["submission_id"] != packet["submission_id"]

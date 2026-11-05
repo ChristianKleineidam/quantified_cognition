@@ -13,6 +13,8 @@ from concurrent.futures import Future
 from dataclasses import asdict
 from datetime import date, datetime, timezone
 
+from .private_storage import LockedHealthData
+
 VERSION = 1
 FILENAME = "personal-insights-visits.json"
 FORMATION = ("formation", "formation_short_term", "formation_long_term")
@@ -162,7 +164,9 @@ def _read(source):
     try:
         if path.stat().st_size > 64 * 1024 * 1024:
             raise ValueError()
-        value = json.loads(path.read_text(encoding="utf-8"))
+        from .private_storage import read_json
+
+        value = read_json(path)
         if (
             not isinstance(value, dict)
             or value.get("version") != VERSION
@@ -180,6 +184,8 @@ def _read(source):
         ):
             raise ValueError()
         return value, ""
+    except LockedHealthData:
+        raise
     except (OSError, ValueError):
         return empty, "Previous visit history could not be read; this visit starts a new baseline."
 

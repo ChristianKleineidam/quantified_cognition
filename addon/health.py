@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 import uuid
 from collections import defaultdict
 from collections.abc import Callable
-from contextlib import closing
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 from .google_health import GOOGLE_HEALTH_CSV_FIELDS, GoogleHealthImport
 from .oura import ACCEPTED_SLEEP_TYPES, SLEEP_FIELDS, OuraImport, Sleep, timestamp_key
+from .private_storage import private_database
 from .sleep_sessions import SleepSession, merge_windows, normalize_sessions, oura_session
 
 HEALTH_DATABASE_NAME = "health.sqlite3"
@@ -81,14 +80,15 @@ def _initialize(connection):
     connection.execute("""create table if not exists sleep_windows (
         provider text not null, start_day text not null, end_day text not null,
         primary key(provider,start_day))""")
-    connection.execute(f"pragma user_version={HEALTH_VERSION}")
+    if version != HEALTH_VERSION:
+        connection.execute(f"pragma user_version={HEALTH_VERSION}")
 
 
 def health_revision_at(path: str | Path) -> str:
     path = Path(path).resolve()
     if not path.exists():
         return ""
-    with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as connection:
+    with private_database(path) as connection:
         if connection.execute("pragma user_version").fetchone()[0] not in (1, 2, HEALTH_VERSION):
             raise ValueError("Unsupported health database version.")
         row = connection.execute("select value from metadata where key='revision'").fetchone()
@@ -143,7 +143,7 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
     path = health_database_path(collection_path)
     if not path.exists():
         return HealthSnapshot("", {})
-    with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as connection:
+    with private_database(path) as connection:
         connection.execute("begin")
         version = connection.execute("pragma user_version").fetchone()[0]
         if version not in (1, 2, HEALTH_VERSION):
@@ -304,7 +304,7 @@ def save_google_health_import(
         path.parent.mkdir(parents=True, exist_ok=True)
         now, changed = datetime.now(timezone.utc).isoformat(), 0
         metadata_changed = False
-        with closing(sqlite3.connect(path)) as connection, connection:
+        with private_database(path, write=True) as connection, connection:
             connection.execute("pragma secure_delete=on")
             connection.execute("begin immediate")
             _initialize(connection)
@@ -441,7 +441,7 @@ def save_oura_import(
         changed = 0
         metadata_changed = False
         now = datetime.now(timezone.utc).isoformat()
-        with closing(sqlite3.connect(path)) as connection, connection:
+        with private_database(path, write=True) as connection, connection:
             connection.execute("pragma secure_delete=on")
             connection.execute("begin immediate")
             _initialize(connection)

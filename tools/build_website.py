@@ -18,6 +18,7 @@ DOCUMENTS = {
     "privacy": ("docs/PRIVACY.md", "Privacy policy"),
     "research": ("docs/RESEARCH_INFORMATION.md", "Research information"),
     "methods": ("site/methods.md", "Methods"),
+    "terms": ("site/terms.md", "Terms of Use"),
 }
 
 
@@ -69,6 +70,7 @@ def build(output: Path) -> dict:
                 ("research", "Research information"),
                 ("methods", "Methods"),
                 ("privacy", "Privacy policy"),
+                ("terms", "Terms of Use"),
                 ("contact", "Contact &amp; legal notice"),
             )
         )

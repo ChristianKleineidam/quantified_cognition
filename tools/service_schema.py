@@ -82,8 +82,13 @@ for name in SESSION_CSV_FIELDS:
     if name.endswith("_status"):
         schema["enums"][name] = ["", *STATUSES]
         schema["numeric"].remove(name)
-destination = Path(__file__).resolve().parents[1] / "supabase/functions/qs-service/schema.json"
+root = Path(__file__).resolve().parents[1]
+schema["encryption"] = json.loads((root / "addon/research_encryption.json").read_text())
+destination = root / "supabase/functions/qs-service/schema.json"
 destination.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
+(destination.parents[3] / "addon/research_schema.json").write_text(
+    json.dumps(schema, indent=2) + "\n", encoding="utf-8"
+)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
     "--config", type=Path, help="Deployed add-on config, including customized notice"

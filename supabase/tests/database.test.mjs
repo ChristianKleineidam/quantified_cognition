@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { protocol, enroll, payload } from "./research-fixtures.mjs";
+import { envelope } from "./encrypted-fixtures.mjs";
 
 test("Postgres migration: RLS/privileges, ownership, deduplication, deletion and stale uploads", async () => {
   const module = process.env.PGLITE_TEST_MODULE;
@@ -35,23 +36,30 @@ test("Postgres migration: RLS/privileges, ownership, deduplication, deletion and
     await db.query("select public.qs_register($1,$2)", [other, hash]);
     await enroll(db,id,hash); await enroll(db,other,hash);
     const submit = params => db.query("select public.qs_submit($1,$2,$3,$4,$5) receipt", params);
-    const params = [id, hash, submission, payload(id,{ schema_version: 5,
-      columns: ["date", "recall_score_pp"], rows: [["2026-10-01", "5"]] }), hash];
+    const sealed = person => envelope({...payload(person),submission_id:submission,created_at:new Date().toISOString()});
+    await assert.rejects(submit([id,hash,submission,payload(id),hash]),/encrypted_package_required/);
+    const params = [id, hash, submission, sealed(id), hash];
+    for (const malformed of [{...params[3],rows:[]},{...params[3],ciphertext:1234},
+      {...params[3],key_id:'f'.repeat(64)},{...params[3],enc:'A'}]) {
+      await assert.rejects(submit([id,hash,submission,malformed,hash]),/invalid_encrypted_package/);
+    }
+    await db.exec("reset role; update qs_governance.protocols set oura_permitted=false; set role service_role");
+    await assert.rejects(submit([id,hash,submission,{...params[3],providers:['oura']},hash]),/provider_permission_required/);
+    await db.exec("reset role; update qs_governance.protocols set oura_permitted=true; set role service_role");
     const first = (await submit(params)).rows[0].receipt;
     assert.deepEqual((await submit(params)).rows[0].receipt, first);
     await assert.rejects(submit([id, "wrong", submission, {}, hash]), /unauthorized/);
-    await assert.rejects(submit([other, hash, submission, payload(other), hash]), /submission conflict/);
-    await assert.rejects(submit([id, hash, submission, payload(id), "b".repeat(64)]), /submission conflict/);
+    await assert.rejects(submit([other, hash, submission, sealed(other), hash]), /submission conflict/);
+    await assert.rejects(submit([id, hash, submission, sealed(id), "b".repeat(64)]), /submission conflict/);
     assert.equal((await db.query("select count(*)::int n from qs_private.submissions")).rows[0].n, 1);
     await db.exec("reset role");
     const extract=crypto.randomUUID();
     await db.query("select qs_governance.register_extract($1,'synthetic','operator',null,'validation','test workspace',now()+interval '1 day',$2)",[extract,[id]]);
     await db.query("select set_config('qs.extract_id',$1,false)",[extract]);
     const exported = await db.query(await readFile(new URL("../research-export.sql", import.meta.url), "utf8"));
-    assert.equal(exported.rows[0].daily_record.date, "2026-10-01");
-    assert.equal(exported.rows[0].daily_record.recall_score_pp, "5");
-    assert.equal(exported.rows[0].daily_record.study_enrollment_id,id);
-    assert.equal(exported.rows[0].daily_record.study_consent_before_first_results,true);
+    assert.deepEqual(exported.rows[0].record.package,params[3]);
+    assert.equal(exported.rows[0].record.consent_timing.study_enrollment_id,id);
+    assert.equal(exported.rows[0].record.consent_timing.study_consent_before_first_results,true);
     assert.ok(!JSON.stringify(exported.rows).includes("Synthetic participant"));
     await db.exec("set role service_role");
     assert.equal((await db.query("select public.qs_delete($1,$2) ok", [id, "wrong"])).rows[0].ok, false);

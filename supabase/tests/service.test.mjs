@@ -6,6 +6,7 @@ import { createHandler as realHandler, sha256, validatePackage } from "../functi
 const createHandler = options => realHandler({ ...options,
   operations: { admit: async () => {}, record: async () => {} } });
 import schema from "../functions/qs-service/schema.json" with { type: "json" };
+import { envelope } from "./encrypted-fixtures.mjs";
 
 const env = {
   OURA_ENABLED: "true", RESEARCH_ENABLED: "true", OAUTH_STATE_SECRET: "s".repeat(48),
@@ -108,7 +109,7 @@ test("private research requests authenticate a separate capability; deletion wor
     return response(url.endsWith("qs_submit") ? { submission_id: calls.at(-1)[1].p_submission, received_at: "now" } : true);
   } });
   assert.equal((await handler(request("/research/participant", {}, auth))).status, 200);
-  const value = packet();
+  const value = envelope(packet());
   assert.equal((await handler(request("/research/submissions", value, auth))).status, 200);
   assert.equal(calls[1][1].p_hash, await sha256(secret));
   assert.equal(calls[1][1].p_payload.metadata.research_participant_id, id);

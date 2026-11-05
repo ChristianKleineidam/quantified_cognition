@@ -11,6 +11,7 @@ dist/
 .env.*
 !.env.example
 node_modules/
+addon/.crypto-runtime/
 supabase/.temp/
 supabase/.branches/
 

@@ -79,6 +79,31 @@ export function validatePackage(value, env) {
   }
 }
 
+export function validateEnvelope(value, env) {
+  exact(value, ["envelope_version", "algorithm", "compression", "key_id", "enrollment_id", "submission_id",
+    "created_at", "metadata", "providers", "row_count", "enc", "ciphertext"]);
+  if (value.envelope_version !== 1 || value.algorithm !== schema.encryption.algorithm || value.compression !== "zlib" ||
+      value.key_id !== schema.encryption.key_id || !UUID.test(value.enrollment_id) ||
+      !UUID.test(value.submission_id) || typeof value.created_at !== "string" ||
+      !Number.isFinite(Date.parse(value.created_at)) || !Number.isSafeInteger(value.row_count) ||
+      value.row_count < 1 || value.row_count > 36600) fail(400);
+  exact(value.metadata, ["research_participant_id", "sharing_notice_version", "sharing_notice_hash"]);
+  if (!UUID.test(value.metadata.research_participant_id) ||
+      value.metadata.sharing_notice_version !== env.RESEARCH_NOTICE_VERSION ||
+      value.metadata.sharing_notice_hash !== env.RESEARCH_NOTICE_HASH) fail(403);
+  if (!Array.isArray(value.providers) || value.providers.length > 2 ||
+      new Set(value.providers).size !== value.providers.length ||
+      value.providers.some(item => !["oura", "google_health"].includes(item))) fail(400);
+  const decode64 = (text, lower, upper) => {
+    if (typeof text !== "string" || text.length > 8 * 1024 * 1024 ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(text) || text.length % 4) fail(400);
+    let bytes; try { bytes = atob(text); } catch { fail(400); }
+    if (bytes.length < lower || bytes.length > upper || btoa(bytes) !== text) fail(400);
+  };
+  decode64(value.enc, 32, 32);
+  decode64(value.ciphertext, 16, 6 * 1024 * 1024 + 16);
+}
+
 export function createHandler({ env, fetch: fetcher, now = () => Date.now(), operations, log = () => {}, waitUntil }) {
   const enabled = feature => env[feature + "_ENABLED"] === "true";
   const callback = () => env.SERVICE_URL.replace(/\/$/, "") + "/oauth/callback";
@@ -162,6 +187,7 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
         operations_version: 1,
         research_controls_version: 1,
         operator: env.RESEARCH_OPERATOR || "", privacy_url: env.PRIVACY_URL || "",
+        research_encryption: { algorithm: schema.encryption.algorithm, key_id: schema.encryption.key_id },
         notice_version: env.RESEARCH_NOTICE_VERSION || "", notice_hash: env.RESEARCH_NOTICE_HASH || ""
       });
       if (route.startsWith("/google/oauth/")) return await google(request, url, route);
@@ -261,7 +287,7 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
         }
         if (route === "/research/submissions" && request.method === "POST") {
           await admit(request, "submit", id + ":" + hash);
-          const data = await body(request, 8 * 1024 * 1024); validatePackage(data, env);
+          const data = await body(request, 8 * 1024 * 1024); validateEnvelope(data, env);
           return json(await rpc("qs_submit", { p_id: id, p_hash: hash, p_submission: data.submission_id,
             p_payload: data, p_payload_hash: await sha256(JSON.stringify(data)) }));
         }

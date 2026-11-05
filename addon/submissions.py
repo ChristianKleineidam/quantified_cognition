@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import json
 import os
 import tempfile
@@ -13,7 +14,9 @@ from pathlib import Path
 from .enrollment import require_enrollment, withdraw_enrollment
 from .export import CSV_FIELDS, export_csv
 from .health import load_health
+from .private_storage import read_json, write_json
 from .research import RESEARCH_METADATA_FIELDS, sharing_state
+from .research_crypto import public_configuration, seal_package
 from .service import ServiceError, call_service
 from .storage import database_path, load_report, profile_job_lock, results_directory
 from .vault import read_secret, write_secret
@@ -27,6 +30,9 @@ def _path(source):
 
 
 def _atomic(path, value):
+    if path.name == "pending-submission.json":
+        write_json(path, value)
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     try:
@@ -55,6 +61,12 @@ def prepare_submission(source, config, sharing, *, reuse=True):
     status = call_service(config, "/status")
     if not status.get("research_enabled"):
         raise ServiceError("Research uploads have not been enabled by the operator yet.")
+    public = public_configuration()
+    expected_encryption = {key: public[key] for key in ("algorithm", "key_id")}
+    if status.get("research_encryption") != expected_encryption:
+        raise ServiceError(
+            "The research encryption key changed. Update the add-on before uploading."
+        )
     if (
         status.get("notice_version") != sharing.notice_version
         or status.get("notice_hash") != sharing.notice_hash
@@ -67,7 +79,7 @@ def prepare_submission(source, config, sharing, *, reuse=True):
         enrollment = require_enrollment(source, config)
         pending = _path(source)
         if reuse and pending.exists():
-            saved = json.loads(pending.read_text(encoding="utf-8"))
+            saved = read_json(pending)
             if (
                 saved["service"] == config.base_url
                 and saved["package"]["metadata"]["sharing_notice_hash"] == sharing.notice_hash
@@ -75,14 +87,14 @@ def prepare_submission(source, config, sharing, *, reuse=True):
                 and saved["package"].get("schema_version") == PACKAGE_VERSION
                 and saved["package"].get("columns") == PACKAGE_COLUMNS
                 and saved["package"].get("enrollment_id") == enrollment["id"]
+                and saved.get("envelope", {}).get("key_id") == public["key_id"]
             ):
                 return saved, status
-        with tempfile.TemporaryDirectory(dir=results_directory(source)) as directory:
-            path = Path(directory) / "aggregate.csv"
+        with io.StringIO(newline="") as handle:
             health = load_health(source)
-            export_csv(load_report(database_path(source)), path, health_snapshot=health)
-            with path.open(encoding="utf-8-sig", newline="") as handle:
-                rows = [[row[key] for key in PACKAGE_COLUMNS] for row in csv.DictReader(handle)]
+            export_csv(load_report(database_path(source)), handle, health_snapshot=health)
+            handle.seek(0)
+            rows = [[row[key] for key in PACKAGE_COLUMNS] for row in csv.DictReader(handle)]
             # The personal CSV also describes missing session matches. Those
             # algorithm-only placeholders are not provider history: leave a
             # provider completely blank when none of its data was imported.
@@ -118,6 +130,7 @@ def prepare_submission(source, config, sharing, *, reuse=True):
             "service": config.base_url,
             "consent_event": snapshot.choices[-1]["id"],
             "package": package,
+            "envelope": seal_package(package),
         }
         _atomic(pending, saved)
         return saved, status
@@ -129,7 +142,7 @@ def upload_submission(source, config, sharing, submission_id):
     with profile_job_lock(source, "submission"):
         snapshot = _consent(source, sharing)
         enrollment = require_enrollment(source, config)
-        saved = json.loads(_path(source).read_text(encoding="utf-8"))
+        saved = read_json(_path(source))
         package = saved["package"]
         if (
             package["submission_id"] != submission_id
@@ -153,7 +166,10 @@ def upload_submission(source, config, sharing, submission_id):
             call_service(config, "/research/participant", {}, token=token)
             connection["registered"] = True
             write_secret(source, "research", connection)
-        receipt = call_service(config, "/research/submissions", package, token=token)
+        envelope = saved.get("envelope")
+        if not envelope or envelope.get("key_id") != public_configuration()["key_id"]:
+            raise ServiceError("Prepare a new encrypted research package before uploading.")
+        receipt = call_service(config, "/research/submissions", envelope, token=token)
         if receipt.get("submission_id") != submission_id or not receipt.get("received_at"):
             raise ServiceError("The receipt was incomplete. Retry the same package to confirm it.")
         _atomic(results_directory(source) / "last-submission-receipt.json", receipt)

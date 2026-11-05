@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
@@ -61,7 +62,7 @@ def stored(cli, project, namespace):
     )[0]["snapshot"]
 
 
-def check(config, cli):
+def check(config, cli, private_key=None):
     project = config["project_ref"]
     namespace = config["namespace"]
     if not re.fullmatch(r"[a-z]{20}", project) or not re.fullmatch(r"qst_[0-9a-f]{8}_", namespace):
@@ -154,6 +155,11 @@ def check(config, cli):
         "columns": schema["columns"],
         "rows": [["2026-10-01" if name == "date" else "" for name in schema["columns"]]],
     }
+    sys.path.insert(0, str(ROOT))
+    from addon.research_crypto import open_package, seal_package
+
+    packet["rows"][0][schema["columns"].index("recall_score_pp")] = "3.125"
+    envelope = seal_package(packet)
     secret, receipt = config["upload_secret"], config["receipt_secret"]
     registered = False
     deleted = False
@@ -161,12 +167,21 @@ def check(config, cli):
         request("register_synthetic_identity", "/research/participant", {}, secret=secret)
         registered = True
         request("enroll_synthetic_identity", "/research/enrollment", evidence, secret=secret)
-        first = request("upload", "/research/submissions", packet, secret=secret)
+        first = request("upload", "/research/submissions", envelope, secret=secret)
         after_upload = stored(cli, project, namespace)
         assert after_upload["rows"] == after_upload["budget_rows"] == 1
         assert after_upload["daily_rows"] == baseline["daily_rows"] + 1
         assert after_upload["budget_bytes"] > 0
-        second = request("retry_same_package", "/research/submissions", packet, secret=secret)
+        stored_envelope = query(
+            cli, project, f"select payload from {namespace}private.submissions"
+        )[0]["payload"]
+        assert stored_envelope == envelope
+        assert "rows" not in stored_envelope and "columns" not in stored_envelope
+        if private_key is not None:
+            from tools.research_crypto import load_private
+
+            assert open_package(stored_envelope, load_private(private_key)) == packet
+        second = request("retry_same_package", "/research/submissions", envelope, secret=secret)
         after_retry = stored(cli, project, namespace)
         assert first == second, "Retry changed the original receipt"
         assert after_retry == after_upload, "Retry created a row or charged storage again"
@@ -187,7 +202,7 @@ def check(config, cli):
         confirmed = request("deletion_receipt", "/research/deletion-status", {}, secret=receipt)
         assert confirmed["complete"] is True
         request(
-            "stale_upload_rejected", "/research/submissions", packet, secret=secret, expected=401
+            "stale_upload_rejected", "/research/submissions", envelope, secret=secret, expected=401
         )
         assert stored(cli, project, namespace) == after_delete
         return {
@@ -199,6 +214,9 @@ def check(config, cli):
             "checked_at_utc": datetime.now(timezone.utc).isoformat(),
             "checks": checks,
             "same_receipt_on_retry": True,
+            "encrypted_at_client": True,
+            "stored_measurements_opaque": True,
+            "off_server_decryption_verified": private_key is not None,
             "upload_state": after_upload,
             "retry_state": after_retry,
             "deleted_state": after_delete,
@@ -220,8 +238,11 @@ def main():
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--supabase", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument(
+        "--private-key", type=Path, help="Optional off-server key for local decryption verification"
+    )
     args = parser.parse_args()
-    report = check(json.loads(args.config.read_text()), args.supabase)
+    report = check(json.loads(args.config.read_text()), args.supabase, args.private_key)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")
     print(

@@ -2,7 +2,6 @@
 
 import copy
 import csv
-import sqlite3
 import time
 from datetime import date, timedelta
 from urllib.parse import parse_qs, urlsplit
@@ -153,7 +152,9 @@ def test_migration_preserves_oura_and_daily_only_google_revision_and_deletion(tm
     source = tmp_path / "collection.anki2"
     health.save_oura_import(source, parse_oura_records([oura_sleep()], []))
     path = health.health_database_path(source)
-    with sqlite3.connect(path) as con:
+    from addon.private_storage import private_database
+
+    with private_database(path, write=True) as con:
         con.execute("drop table google_health_days")
         con.execute("pragma user_version=1")
     assert health.load_health(source).days[DAY].values["oura_total_sleep_seconds"] == 25200

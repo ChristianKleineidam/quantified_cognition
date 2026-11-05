@@ -23,6 +23,8 @@ from psycopg.conninfo import conninfo_to_dict
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
+from addon.research_crypto import seal_package
+
 ROOT = Path(__file__).resolve().parents[2]
 HASH = "a" * 64
 RECEIPT = "c" * 64
@@ -121,13 +123,32 @@ class Database:
                                (participant, HASH, Jsonb(evidence)))
         return participant
 
-    def packet(self, participant, *, value="2026-10-01"):
-        payload = {"enrollment_id": participant, "metadata": {
-            "research_participant_id": participant,
-            "sharing_notice_version": "test-v1", "sharing_notice_hash": HASH,
-        }, "columns": ["date"], "rows": [[value]]}
+    def packet(self, participant, *, value="2026-10-01", submission=None):
+        schema = json.loads((ROOT / "addon/research_schema.json").read_text())
+        metadata = dict.fromkeys(schema["metadata"], "")
+        metadata.update(
+            {
+                "research_participant_id": participant,
+                "sharing_notice_version": "test-v1",
+                "sharing_notice_hash": HASH,
+                "research_consent_active": True,
+                "sharing_current_choice": "opt_in",
+            }
+        )
+        submission = submission or str(uuid.uuid4())
+        payload = seal_package(
+            {
+                "schema_version": schema["package_version"],
+                "enrollment_id": participant,
+                "submission_id": submission,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "metadata": metadata,
+                "columns": schema["columns"],
+                "rows": [[value if name == "date" else "" for name in schema["columns"]]],
+            }
+        )
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
-        return participant, HASH, str(uuid.uuid4()), Jsonb(payload), digest
+        return participant, HASH, submission, Jsonb(payload), digest
 
     @staticmethod
     def submit(connection, packet):
@@ -234,8 +255,7 @@ def test_simultaneous_uploads_share_storage_budget_and_rejections_roll_back(db):
 def test_simultaneous_duplicate_uploads_store_one_package_and_one_receipt(db, conflicting):
     person = db.participant()
     packet = db.packet(person)
-    alternative = list(db.packet(person, value="2026-10-02"))
-    alternative[2] = packet[2]
+    alternative = db.packet(person, value="2026-10-02", submission=packet[2])
     results = db.race("select 1 from qs_private.participants where id=%s for update", 12,
                      lambda connection, index: db.submit(
                          connection, alternative if conflicting and index % 2 else packet,

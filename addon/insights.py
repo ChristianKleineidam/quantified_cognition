@@ -28,6 +28,7 @@ from .phase_comparisons import (
     build_phase_cohorts,
     compare_phases,
 )
+from .private_storage import LockedHealthData
 from .sleep_sessions import NAP_STAGES, study_features
 from .statistical_math import calendar_windows, draw_blocks
 
@@ -527,20 +528,9 @@ def history_coverage(report, health, provider, *, as_of, start=None, end=None):
 
 
 def _atomic_json(path, value):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=path.parent, delete=False
-        ) as handle:
-            temporary = Path(handle.name)
-            json.dump(value, handle, allow_nan=False, separators=(",", ":"))
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-    finally:
-        if temporary:
-            temporary.unlink(missing_ok=True)
+    from .private_storage import write_json
+
+    write_json(path, value)
 
 
 def load_insights(
@@ -592,13 +582,17 @@ def load_insights(
     with profile_job_lock(source, "insights"):
         check_cancelled()
         try:
-            cache = json.loads(path.read_text(encoding="utf-8"))
+            from .private_storage import read_json
+
+            cache = read_json(path)
             if (
                 not isinstance(cache, dict)
                 or cache.get("version") != VERSION
                 or not isinstance(cache.get("entries"), dict)
             ):
                 cache = {"version": VERSION, "entries": {}}
+        except LockedHealthData:
+            raise
         except (OSError, ValueError):
             cache = {"version": VERSION, "entries": {}}
         saved = cache["entries"].get(key)

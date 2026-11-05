@@ -1,8 +1,6 @@
 import csv
 import json
-import sqlite3
 import zipfile
-from contextlib import closing
 from datetime import date
 
 import pytest
@@ -61,7 +59,9 @@ def test_archive_imports_only_selected_fields_and_stores_no_account_data(tmp_pat
     assert result.snapshot.days[date(2026, 9, 8)].values["oura_steps"] == 0
     assert not source.exists()  # No live Anki collection is required or modified.
     assert private.encode() not in health.health_database_path(source).read_bytes()
-    with closing(sqlite3.connect(health.health_database_path(source))) as connection:
+    from addon.private_storage import private_database
+
+    with private_database(health.health_database_path(source)) as connection:
         stored = json.loads(connection.execute("select payload from oura_sleep").fetchone()[0])
     assert stored["bedtime_start"] == "2026-09-06T23:00:00+02:00"
     assert "id" not in stored and "email" not in stored

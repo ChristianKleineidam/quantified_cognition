@@ -57,6 +57,7 @@ def profile_job_lock(collection_path: str | Path, name: str = "update"):
         "submission",
         "insights",
         "visits",
+        "health",
     ):
         raise ValueError("Unknown profile lock.")
     key = os.path.normcase(str(Path(collection_path).resolve())) + ":" + name

@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { createHandler } from "../functions/qs-service/service.mjs";
 import schema from "../functions/qs-service/schema.json" with {type:"json"};
 import { protocol,evidence,notice } from "./research-fixtures.mjs";
+import { envelope } from "./encrypted-fixtures.mjs";
 
 test("real HTTP enrollment gate, explicit upload, and deletion status with all feature flags closed",async()=>{
   const {PGlite}=await import(pathToFileURL(process.env.PGLITE_TEST_MODULE).href);
@@ -50,7 +51,7 @@ test("real HTTP enrollment gate, explicit upload, and deletion status with all f
       sharing_current_choice:"opt_in",sharing_notice_version:notice.version,sharing_notice_hash:notice.hash});
     const packet={schema_version:5,enrollment_id:id,submission_id:crypto.randomUUID(),created_at:new Date().toISOString(),
       metadata,columns:schema.columns,rows:[schema.columns.map(k=>k==="date"?"2026-10-01":"")]};
-    assert.equal((await handler(request("/research/submissions",packet))).status,403);
+    assert.equal((await handler(request("/research/submissions",envelope(packet)))).status,403);
     const signed=evidence(id,{participant_id:publicId});
     assert.equal((await handler(request("/research/enrollment",{...signed,explicit_consent:false}))).status,400);
     const missing={...signed};delete missing.explicit_consent;
@@ -61,8 +62,10 @@ test("real HTTP enrollment gate, explicit upload, and deletion status with all f
     const first=await joined.json();assert.equal(first.enrollment_id,id);
     assert.deepEqual(await (await handler(request("/research/enrollment",signed))).json(),first);
     assert.equal((await handler(request("/research/enrollment",{...signed,participant_id:crypto.randomUUID()}))).status,409);
-    const sent=await handler(request("/research/submissions",packet));assert.equal(sent.status,200);
-    assert.deepEqual(await (await handler(request("/research/submissions",packet))).json(),await sent.json());
+    const encrypted=envelope(packet);
+    assert.equal((await handler(request("/research/submissions",packet))).status,400);
+    const sent=await handler(request("/research/submissions",encrypted));assert.equal(sent.status,200);
+    assert.deepEqual(await (await handler(request("/research/submissions",encrypted))).json(),await sent.json());
     const closed=createHandler({env:{...env,RESEARCH_ENABLED:"false"},fetch,log:value=>logs.push(value)});
     assert.equal((await closed(request("/research/enrollment",signed))).status,503);
     const deleted=await closed(request("/research/participant",{receipt_secret:receiptSecret},"DELETE"));
@@ -71,7 +74,7 @@ test("real HTTP enrollment gate, explicit upload, and deletion status with all f
     assert.equal(status.status,200);assert.equal((await status.json()).active_storage_deleted,true);
     assert.equal((await closed(request("/research/deletion-status",{},"POST","x".repeat(43)))).status,401);
     assert.equal((await db.query("select capability_hash from qs_private.participants where id=$1",[id])).rows[0].capability_hash,null);
-    assert.equal((await handler(request("/research/submissions",packet))).status,401);
+    assert.equal((await handler(request("/research/submissions",encrypted))).status,401);
     for(const value of ["extra pseudonym",publicId,id,secret,receiptSecret])assert.ok(!JSON.stringify(logs).includes(value));
   } finally {await db.close();}
 });

@@ -59,7 +59,10 @@ activity and provider values may change. Provider corrections and deletions
 replace the successful queried window; failures leave the previous cache intact.
 
 Daily aggregates and selected sleep sessions are stored in the separate
-`quantified-self-memory/health.sqlite3`. Sessions retain UTC start/end instants,
+`quantified-self-memory/health.sqlite3`. The database and derived insight caches
+are encrypted on disk using an OS-protected profile key; SQLite runs in memory.
+Legacy caches migrate on access. User-selected CSV exports remain readable.
+See [encryption and recovery](ENCRYPTION.md). Sessions retain UTC start/end instants,
 main-sleep/nap flags, processing status, durations and hashed record identifiers.
 Raw record/account/device IDs and individual step samples are not retained.
 Exact session timestamps remain local and are excluded from CSVs and research

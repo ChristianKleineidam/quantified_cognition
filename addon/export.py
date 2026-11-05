@@ -6,6 +6,7 @@ import csv
 import os
 import tempfile
 from collections.abc import Callable
+from contextlib import nullcontext
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -66,7 +67,12 @@ def export_csv(
     health_snapshot=None,
 ) -> int:
     count = 0
-    with Path(path).open("w", encoding="utf-8-sig", newline="") as handle:
+    context = (
+        nullcontext(path)
+        if hasattr(path, "write")
+        else Path(path).open("w", encoding="utf-8-sig", newline="")
+    )
+    with context as handle:
         writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS)
         writer.writeheader()
         anki_days = {day.day: day for day in report.days} if report is not None else {}

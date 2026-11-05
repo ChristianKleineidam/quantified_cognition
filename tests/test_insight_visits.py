@@ -12,7 +12,7 @@ import pytest
 from test_insights import AS_OF, FAST, inputs
 
 from addon import insight_visits as visits
-from addon import insights, storage
+from addon import insights, private_storage, storage
 
 
 def metric(count=40, cohort=100, pending=60, *, ready=False, excluded=0):
@@ -78,7 +78,9 @@ def test_first_visit_reserves_ticket_but_does_not_claim_a_display(tmp_path):
     source = tmp_path / "collection.anki2"
     state = visits.begin_visit(source, "oura")
     assert state["previous"] is None
-    assert json.loads(visits._path(source).read_text())["providers"] == {}
+    from addon.private_storage import read_json
+
+    assert read_json(visits._path(source))["providers"] == {}
     assert visits.begin_visit(source, "oura", state) == state
     assert visits.compare_visits(snapshot(), None)["first_visit"]
 
@@ -268,12 +270,20 @@ def test_owned_checkpoint_finishes_on_immediate_process_exit(tmp_path):
     script = """
 import json, sys
 from addon.insight_visits import begin_visit, queue_displayed_visit
+from addon import private_storage
+private_storage._key = lambda *args, **kwargs: bytes.fromhex(sys.argv[2])
 source = sys.argv[1]
 state = begin_visit(source, 'oura')
 queue_displayed_visit(source, json.load(sys.stdin), state, 1)
 """
     completed = subprocess.run(
-        [sys.executable, "-c", script, str(source)],
+        [
+            sys.executable,
+            "-c",
+            script,
+            str(source),
+            private_storage._key(visits._path(source), create=True).hex(),
+        ],
         input=json.dumps(snapshot()),
         capture_output=True,
         text=True,

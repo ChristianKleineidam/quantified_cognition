@@ -9,7 +9,7 @@ from datetime import date, timedelta
 import pytest
 from test_insights import AS_OF, FAST, inputs
 
-from addon import insights, storage
+from addon import insights, private_storage, storage
 from addon.backend import UpdateCancelled
 from addon.insights import build_series
 from addon.phase_comparisons import (
@@ -221,9 +221,8 @@ def test_cached_phase_estimates_and_export_do_not_replay_fsrs(tmp_path, monkeypa
     assert len(rows) == 42
     assert all(r["shift_minutes"] == "10" and not r["correlation"] for r in rows)
     assert {r["phase_donor"] for r in rows} == {"light", "REM"}
-    assert (
-        "PhasePoint"
-        not in (storage.results_directory(source) / "personal-insights.json").read_text()
+    assert "PhasePoint" not in json.dumps(
+        private_storage.read_json(storage.results_directory(source) / "personal-insights.json")
     )
     assert first.coverage["study_days"] == 240
 
@@ -235,7 +234,7 @@ def test_malformed_phase_cache_recovers(tmp_path, monkeypatch):
     monkeypatch.setattr("addon.health.load_health", lambda source: health)
     insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
     path = storage.results_directory(source) / "personal-insights.json"
-    value = json.loads(path.read_text())
+    value = private_storage.read_json(path)
     next(iter(value["entries"].values()))["phase_associations"] = None
     path.write_text(json.dumps(value))
     assert not insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF).reused

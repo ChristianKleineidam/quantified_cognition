@@ -4,7 +4,7 @@ Quantified Cognition analyzes your Anki history on your computer. Connecting a
 health account and contributing to research are choices you make separately.
 Research packages are sent only after you review and explicitly submit them.
 
-Updated **4 November 2026**. Health connections, research enrollment and research
+Updated **5 November 2026**. Health connections, research enrollment and research
 uploads are not yet available.
 
 ## Your data and choices
@@ -29,6 +29,11 @@ insights and sharing history. Sleep sessions and review times help match main
 sleep and naps to studying. Analysis can use temporary local Anki snapshots
 that contain card text. These files stay outside research uploads. Personal
 CSVs are saved to locations you choose.
+
+The app encrypts its local health cache, saved insight summaries and pending
+research packages using a key protected by your operating system's credential
+store. CSVs and other files you choose to export remain readable files under
+your control.
 
 Oura and Google Health connections import sleep durations, sleep stages and
 daily steps directly from the provider. Google's activity permission also
@@ -85,9 +90,10 @@ public summaries. Public material uses anonymous summaries or synthetic
 examples. Individual daily histories remain
 under controlled access.
 
-We follow Google's
-[User Data and Health Research Policy](https://developers.google.com/health/policies/health-api-user-data-and-research-policy),
-including its Limited Use requirements, when processing Google Health API data.
+Our use of Google Health API data follows the
+[Google Health API Developer and User Data Policy](https://developers.google.com/health/policies/health-api-developer-user-data-policy),
+including its Limited Use requirements, and Google's
+[Health Research Policy](https://developers.google.com/health/policies/health-api-user-data-and-research-policy).
 
 ## Access and safeguards
 
@@ -116,6 +122,14 @@ which can involve countries outside the European Economic Area. Correspondence
 is kept separately from research measurements. Research access outside the EEA
 requires an applicable adequacy decision or appropriate transfer safeguards;
 contact us for details or a copy of those safeguards.
+
+Research measurements are encrypted on your computer before upload. The hosted
+service stores encrypted packages; we decrypt them on an operator-controlled
+computer using a private key kept off that service. Consent records and the
+minimal identifiers, provider declarations and upload/deletion metadata needed
+to manage participation are held separately and remain accessible to the
+service. Approved collaborators can receive controlled research extracts as
+described above.
 
 We protect data with restricted access, encrypted connections, protected
 credentials and controlled research workspaces. Authorized hosting personnel

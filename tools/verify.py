@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
@@ -59,13 +60,23 @@ def inspect_package(root: Path) -> dict:
         raise RuntimeError("Expected exactly one freshly built add-on")
     with ZipFile(packages[0]) as archive:
         names = archive.namelist()
+        crypto_files = set()
+        crypto = {"platforms": {}}
+        if "private_storage.py" in names or "crypto_runtime.py" in names:
+            crypto = json.loads((root / "addon/crypto_wheels/manifest.json").read_text())
+            crypto_files = {"crypto_wheels/manifest.json", "crypto_wheels/README.md"}
+        for spec in crypto["platforms"].values():
+            name = "crypto_wheels/" + spec["filename"]
+            crypto_files.add(name)
+            if hashlib.sha256(archive.read(name)).hexdigest() != spec["sha256"]:
+                raise RuntimeError("Packaged crypto wheel digest mismatch")
         if len(names) != len(set(names)):
             raise RuntimeError("Duplicate archive entries")
         for name in names:
             path = Path(name)
             if path.is_absolute() or ".." in path.parts or "\\" in name:
                 raise RuntimeError(f"Unsafe archive path: {name}")
-            if not (name in {"manifest.json", "README.md", "LICENSE"}
+            if not (name in {"manifest.json", "README.md", "LICENSE"} or name in crypto_files
                     or ("/" not in name and path.suffix in {".py", ".json", ".md"})
                     or (name.startswith("docs/") and path.suffix in {".md", ".json", ".txt"})):
                 raise RuntimeError(f"Unexpected packaged file: {name}")

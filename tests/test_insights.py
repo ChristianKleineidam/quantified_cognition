@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 from test_storage import report_with_followup
 
-from addon import insights, storage
+from addon import insights, private_storage, storage
 from addon.backend import UpdateCancelled
 from addon.health import DailyHealth, HealthSnapshot
 from addon.insights import InsightSettings, Point, Series, build_series, correlate
@@ -425,7 +425,9 @@ def test_personal_summary_export_both_nights_and_failure_preserves_previous_file
 def test_cache_contains_only_summaries_and_no_raw_points(cached):
     source, _, _ = cached
     insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
-    payload = json.loads((storage.results_directory(source) / "personal-insights.json").read_text())
+    payload = private_storage.read_json(
+        storage.results_directory(source) / "personal-insights.json"
+    )
     saved = next(iter(payload["entries"].values()))
     assert set(saved) == {"generated_at", "associations", "phase_associations"}
     assert "points" not in json.dumps(saved)
@@ -512,7 +514,7 @@ def test_malformed_nested_cache_is_recalculated(cached, bad):
     source, _, _ = cached
     insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
     path = storage.results_directory(source) / "personal-insights.json"
-    payload = json.loads(path.read_text())
+    payload = private_storage.read_json(path)
     entry = next(iter(payload["entries"].values()))
     if bad == "wrong_structure":
         entry["associations"] = []

@@ -107,7 +107,10 @@ select set_config('qs.extract_id', '<new extract UUID>', false);
 
 The export checks current enrollment, retention and recipient access under the
 same participant locks as withdrawal. It marks the manifest released and outputs
-the latest submitted snapshot per public profile/day with provenance. Each new
+encrypted packages with consent provenance. The operator decrypts them locally
+and selects the latest received snapshot per public profile/day using
+`tools/research_crypto.py`; the private key stays off the server. See
+[ENCRYPTION.md](ENCRYPTION.md). Each new
 download/copy requires a new manifest; an existing release cannot be repeated.
 Use holder `collaborator` with an approved recipient UUID for controlled external
 access, or `workspace`/`recovery` for those copies. Recovery access is capped at

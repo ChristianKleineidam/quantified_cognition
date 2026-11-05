@@ -41,7 +41,7 @@ def _now() -> str:
 
 @dataclass(frozen=True)
 class SharingConfig:
-    notice_version: str = "research-sharing-v7"
+    notice_version: str = "research-sharing-v8"
     custom_notice_text: str = ""
 
     @classmethod
@@ -60,7 +60,7 @@ class SharingConfig:
         # Anki merges saved configuration over new defaults. A saved version of
         # our built-in notice must advance with its text; custom notices keep
         # their explicit version. Historical choices remain in the audit.
-        if not text and version in {f"research-sharing-v{number}" for number in range(1, 7)}:
+        if not text and version in {f"research-sharing-v{number}" for number in range(1, 8)}:
             version = cls().notice_version
         return cls(
             notice_version=version,
@@ -107,6 +107,9 @@ class SharingConfig:
             "The app records whether you expressed interest before your first results "
             "were available. "
             "Data will only be sent after you separately choose and confirm an upload. "
+            "Measurements are encrypted on your computer before upload; the research "
+            "decryption key stays off the hosted service. Consent records and minimal "
+            "upload and deletion metadata are handled separately. "
             "JollyJoyJourney operates this research programme. Approved research collaborators "
             "may receive controlled access as described in the research information. "
             "Research data is kept while needed for the programme. We regularly review "

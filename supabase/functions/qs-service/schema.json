@@ -471,5 +471,10 @@
       "unclassified sleep",
       "nap duration unavailable"
     ]
+  },
+  "encryption": {
+    "algorithm": "HPKE-X25519-HKDF-SHA256-AES256GCM",
+    "key_id": "07aabc3f826551f9a7bd7c7b9ed84ed04e0535afef7a8231e9df8fbb4feb53a3",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VuAyEAKO6Y/Li7LoEfFIF/KYoYjBRpSIRUSoHu+3/6/WIob1M=\n-----END PUBLIC KEY-----"
   }
 }

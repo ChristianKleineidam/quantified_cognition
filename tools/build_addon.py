@@ -7,14 +7,14 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 root = Path(__file__).resolve().parents[1]
-destination = root / "dist" / "quantified-cognition-0.19.4.ankiaddon"
+destination = root / "dist" / "quantified-cognition-0.20.0.ankiaddon"
 destination.parent.mkdir(exist_ok=True)
 manifest = {
     "package": "quantified_self_memory",
     "name": "Quantified Cognition",
     "min_point_version": 250900,
     "max_point_version": 260903,
-    "human_version": "0.19.4",
+    "human_version": "0.20.0",
 }
 with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
     archive.writestr("manifest.json", json.dumps(manifest, indent=2))
@@ -22,6 +22,9 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         if path.suffix in (".py", ".json", ".md"):
             archive.write(path, path.name)
     archive.write(root / "README.md", "README.md")
+    for path in sorted((root / "addon/crypto_wheels").iterdir()):
+        if path.suffix in (".whl", ".json", ".md"):
+            archive.write(path, "crypto_wheels/" + path.name)
     archive.write(root / "LICENSE", "LICENSE")
     for name in (
         "ANKIWEB_DESCRIPTION.txt",
@@ -30,6 +33,7 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "RESEARCH_DESIGN.md",
         "RESEARCH_OPERATIONS.md",
         "RESEARCH_CONTROLS.md",
+        "ENCRYPTION.md",
         "OURA_APPROVAL.md",
         "GOOGLE_HEALTH.md",
         "INSIGHTS.md",
