@@ -68,6 +68,24 @@ def test_hpke_roundtrip_randomness_and_minimal_readable_header(recipient):
     }
 
 
+def test_workout_summaries_roundtrip_and_raw_workout_fields_are_rejected(recipient):
+    data = packet()
+    for field, value in {
+        "oura_workout_count": "2",
+        "oura_workout_duration_seconds": "3600",
+        "oura_workout_before_hard_seconds": "1800",
+        "oura_workout_before_status": "available",
+    }.items():
+        data["rows"][0][data["columns"].index(field)] = value
+    encrypted = crypto.seal_package(data)
+    assert crypto.open_package(encrypted, recipient) == data
+    assert "oura_workout" not in json.dumps(encrypted)
+    data["columns"] = [*data["columns"], "workout_label"]
+    data["rows"][0].append("private label")
+    with pytest.raises(ValueError):
+        crypto.seal_package(data)
+
+
 @pytest.mark.parametrize(
     "field", ["ciphertext", "enc", "metadata", "row_count", "providers", "created_at"]
 )

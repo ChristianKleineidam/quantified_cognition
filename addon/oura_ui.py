@@ -105,10 +105,22 @@ class OuraDialog(QDialog):
         self.status.setTextFormat(Qt.TextFormat.PlainText)
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
-        self.table = QTableWidget(0, 9)
+        self.table = QTableWidget(0, 11)
         self.table.setAccessibleName("Saved daily health measurements")
         self.table.setHorizontalHeaderLabels(
-            ["Date", "Sleep", "Light", "Deep", "REM", "Awake", "Restless", "Steps", "Sleep data"]
+            [
+                "Date",
+                "Sleep",
+                "Light",
+                "Deep",
+                "REM",
+                "Awake",
+                "Restless",
+                "Steps",
+                "Sleep data",
+                "Workouts",
+                "Exercise",
+            ]
         )
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
@@ -140,6 +152,8 @@ class OuraDialog(QDialog):
         self.history_label.setVisible(google)
         self.history_start.setVisible(google)
         self.table.setColumnHidden(6, not google)
+        self.table.setColumnHidden(9, google)
+        self.table.setColumnHidden(10, google)
         self.explanation.setText(
             "Connect Google Health for sleep and daily steps in your Google Health account. "
             "First link your account in the Google Health mobile app. "
@@ -147,7 +161,9 @@ class OuraDialog(QDialog):
             "Sleep sessions and daily step totals are saved in this Anki profile. "
             "Research uploads require separate confirmation."
             if google
-            else "Connect Oura to sync sleep stages and daily steps automatically. "
+            else "Connect Oura to sync sleep stages, daily steps and workouts automatically. "
+            "Daily and Workout permissions are used. Workout labels, heart rate, calories and "
+            "distance are not saved. "
             "Measurements stay in this Anki profile. Uploads require separate confirmation."
         )
         self.note.setText(
@@ -158,6 +174,7 @@ class OuraDialog(QDialog):
                 "Recent days may change. "
                 if google
                 else "Oura’s assigned day can differ from Anki’s day boundary. "
+                "No recorded workout does not prove no exercise occurred. "
             )
             + "Missing values stay blank. Overlapping sleep periods are flagged. "
             "Oura and Google remain separate; their measurements are never added together."
@@ -255,6 +272,14 @@ class OuraDialog(QDialog):
                     if values.get(f"{self.prefix}_steps") is None
                     else f"{values[f'{self.prefix}_steps']:,}",
                     values.get(f"{self.prefix}_sleep_status") or "—",
+                    "—"
+                    if values.get("oura_workout_count") is None
+                    else str(values["oura_workout_count"]),
+                    (
+                        _duration(values.get("oura_workout_duration_seconds"))
+                        if values.get("oura_workout_status") == "available"
+                        else values.get("oura_workout_status") or "—"
+                    ),
                 ]
             )
             row = self.table.rowCount()

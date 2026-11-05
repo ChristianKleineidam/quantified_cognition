@@ -105,7 +105,11 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   relevant server credentials after approval. No real-account import was tested
   during this task.
 - [ ] Verify approved-account authorization, refresh/revocation, corrections,
-  pagination, naps/stages and steps without logging credentials or raw responses.
+  pagination, naps/stages, steps and Oura workouts without logging credentials
+  or raw responses. Check Daily-only grants, missing workout intensity,
+  duplicates/overlap, 24-hour windows and corrections/deletions. The Oura app and
+  server credential names are prepared; credentials have not been validated
+  against Oura and all online features remain disabled.
 - [ ] Test deployed function instances under representative pilot load. The local
   connection races above do not establish cloud throughput. Review ceilings for
   the intended pilot size, 429 retry

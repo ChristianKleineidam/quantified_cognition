@@ -51,6 +51,15 @@ studying. Actual sleep-session times distinguish main sleep from naps, whose
 timing, duration and stages are examined separately. Steps use the previous day
 for recall and the study day for formation.
 
+Oura workouts are compared in the 24 hours before the first review and after
+the last review. Recall uses only the preceding window; formation uses both
+separately. Comparisons cover recorded workouts, duration, easy/moderate/hard
+exercise and proximity to studying. Workouts between reviews are counted
+separately in the daily export. Duplicate recordings are not added twice;
+overlapping workouts and incomplete history are flagged. No recorded workout
+does not prove no exercise occurred. These comparisons account for calendar
+month when selected, but do not adjust for sleep or other lifestyle factors.
+
 Comparisons between light, deep and REM sleep use the same eligible days and
 account for total sleep duration. For example, an estimate for ten more minutes
 of deep sleep replacing light sleep compares a change in sleep composition

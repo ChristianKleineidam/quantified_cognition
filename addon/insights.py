@@ -31,8 +31,9 @@ from .phase_comparisons import (
 from .private_storage import LockedHealthData
 from .sleep_sessions import NAP_STAGES, study_features
 from .statistical_math import calendar_windows, draw_blocks
+from .workouts import study_workouts
 
-VERSION = 5
+VERSION = 6
 METRICS = ("recall", "formation", "formation_short_term", "formation_long_term")
 MAIN_FACTORS = (
     "total_sleep",
@@ -44,7 +45,15 @@ MAIN_FACTORS = (
     "steps",
 )
 NAP_FACTORS = ("nap_recorded", "nap_duration", *("nap_" + stage for stage in NAP_STAGES), "nap_gap")
-FACTORS = MAIN_FACTORS + NAP_FACTORS
+WORKOUT_FACTORS = (
+    "workout_recorded",
+    "workout_duration",
+    "workout_easy",
+    "workout_moderate",
+    "workout_hard",
+    "workout_gap",
+)
+FACTORS = MAIN_FACTORS + NAP_FACTORS + WORKOUT_FACTORS
 FACTOR_LABELS = (
     "Total sleep",
     "Light sleep",
@@ -59,6 +68,12 @@ FACTOR_LABELS = (
     "Deep sleep in naps",
     "REM sleep in naps",
     "Nap proximity",
+    "Recorded workout",
+    "Workout duration",
+    "Easy exercise",
+    "Moderate exercise",
+    "Hard exercise",
+    "Workout proximity",
 )
 PROVIDERS = ("oura", "google_health")
 
@@ -75,6 +90,7 @@ class InsightSettings:
     formation_age_days: int = 30
     formation_coverage: float = 80.0
     minimum_nap_group_days: int = 10
+    minimum_workout_group_days: int = 10
 
     def __post_init__(self):
         if (
@@ -87,6 +103,7 @@ class InsightSettings:
             or self.minimum_month_days < 3
             or self.formation_age_days < 30
             or self.minimum_nap_group_days < 2
+            or self.minimum_workout_group_days < 2
             or not 0 < self.formation_coverage <= 100
         ):
             raise ValueError("Invalid personal insight settings.")
@@ -163,6 +180,8 @@ class Association:
     reason: str
     nap_days: int | None = None
     no_recorded_nap_days: int | None = None
+    workout_days: int | None = None
+    no_recorded_workout_days: int | None = None
 
 
 @dataclass
@@ -198,7 +217,10 @@ def build_series(
         raise ValueError("The end date precedes the start date.")
     result = {}
     session_features = study_features(report, health, provider)
+    workout_features = study_workouts(report, health) if provider == "oura" else {}
     for factor in FACTORS:
+        if factor in WORKOUT_FACTORS and provider != "oura":
+            continue
         for metric in METRICS:
             if factor == "steps":
                 timings = ("previous_day",) if metric == "recall" else ("study_day",)
@@ -237,6 +259,25 @@ def build_series(
                         record = health.days.get(health_day)
                         value = record.values.get(f"{provider}_steps") if record else None
                         status = "available"
+                    elif factor in WORKOUT_FACTORS:
+                        values = workout_features[day.day]
+                        key = f"oura_workout_{timing}_"
+                        suffix = {
+                            "workout_recorded": "recorded",
+                            "workout_duration": "duration_seconds",
+                            "workout_easy": "easy_seconds",
+                            "workout_moderate": "moderate_seconds",
+                            "workout_hard": "hard_seconds",
+                            "workout_gap": "gap_seconds",
+                        }[factor]
+                        value, status = values[key + suffix], values[key + "status"]
+                        units = (
+                            1
+                            if factor == "workout_recorded"
+                            else 3600
+                            if factor == "workout_gap"
+                            else 60
+                        )
                     else:
                         values = session_features[day.day]
                         if factor in NAP_FACTORS:
@@ -266,7 +307,11 @@ def build_series(
                         continue
                     if not _finite(value) or value < 0:
                         omitted[
-                            "no recorded nap in window"
+                            "no recorded workout in window"
+                            if factor == "workout_gap" and values.get(key + "recorded") == 0
+                            else "workout intensity unavailable"
+                            if factor in ("workout_easy", "workout_moderate", "workout_hard")
+                            else "no recorded nap in window"
                             if factor in NAP_FACTORS
                             and factor != "nap_recorded"
                             and values.get(key + "recorded") == 0
@@ -380,6 +425,10 @@ def correlate(series, settings=DEFAULT_INSIGHT_SETTINGS, *, check_cancelled=lamb
         no_recorded_nap_days=sum(p.x == 0 for p in points)
         if series.factor == "nap_recorded"
         else None,
+        workout_days=sum(p.x == 1 for p in points) if series.factor == "workout_recorded" else None,
+        no_recorded_workout_days=sum(p.x == 0 for p in points)
+        if series.factor == "workout_recorded"
+        else None,
     )
     rows = _moments(points)
     grouped = _group_moments(rows) if rows else {}
@@ -414,6 +463,15 @@ def correlate(series, settings=DEFAULT_INSIGHT_SETTINGS, *, check_cancelled=lamb
         )
     if coefficient is None:
         return insufficient("Not enough variation in the measurement or score after adjustment.")
+    if (
+        series.factor == "workout_recorded"
+        and min(base["workout_days"], base["no_recorded_workout_days"])
+        < settings.minimum_workout_group_days
+    ):
+        return insufficient(
+            f"Needs at least {settings.minimum_workout_group_days} recorded-workout days "
+            "and as many days with no recorded workout."
+        )
     first = points[0].day
     # Calendar slots preserve gaps. Consecutive observed records separated by
     # weeks/months must never become fake adjacent days during resampling.

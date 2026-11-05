@@ -113,7 +113,9 @@ Oura accounts still need a deployment pilot. No test sends real health data.
    payloads, authorization headers and callback query strings out of logs;
    hosting access logs may otherwise retain URL/IP metadata.
 7. Keep all three enable flags false for the current desktop beta. Only after a
-   separate launch decision, set `OURA_ENABLED=true` for the permitted pilot. Set the desktop add-on
+   separate launch decision, set `OURA_ENABLED=true` for the permitted pilot. The Oura app
+   needs `daily` and `workout`; old/partial Daily-only grants leave workouts unknown.
+   Set the desktop add-on
    `services.base_url` to this function root. Verify the complete live flow with
    a consenting test account. Enable `RESEARCH_ENABLED=true` only after the
    policy, recipient and approved research-storage arrangements are ready.

@@ -1,8 +1,10 @@
 # Oura approval and release preparation
 
-Checked against Oura's official documentation on **23 October 2026**. This is a
-preparation checklist, not an approval application. No application has been
-submitted and no real health data used in tests. The backend is deployed with
+Checked against Oura's official documentation on **5 November 2026**, including
+the V2 OpenAPI 1.43 workout contract. The operator has registered the developer
+application with Daily and Workout selected and saved both credential names in
+server secrets. Their values have not been tested against Oura. No wider-use or
+research approval is recorded and no real health data used in tests. The backend is deployed with
 Oura access and research uploads disabled; see [DEPLOYED.md](DEPLOYED.md).
 
 ## What is already implemented
@@ -12,8 +14,10 @@ The desktop add-on uses authorization code OAuth with PKCE S256 and a temporary
 provides one fixed HTTPS redirect, code exchange, refresh and revocation. The
 Oura client secret exists only in server environment variables. The desktop
 stores rotating tokens in the OS credential store. Sleep and activity requests
-go directly to Oura, using only `daily` scope and minimal field projections.
-Background sync validates every page of both datasets before committing and
+go directly to Oura, using `daily` and `workout` scopes and minimal field projections.
+Workout requests retain only hashed ID, assigned day, start/end, intensity and
+categorical recording source; no labels, activity names, calories, distance or
+heart rate. Background sync validates every page before committing and
 reconciles successful windows. Private research storage has a separate explicit
 confirmation, precise aggregate allowlist, consent-timing metadata, receipts,
 idempotency, withdrawal and deletion. Personal use requires no research account.
@@ -31,27 +35,26 @@ deployment controls; they do not imply Oura approval by themselves.
   questions within learning/recall, sleep/activity and measurement validation;
   their controlled-collaboration and retention commitments still need accepted
   permissions and implemented controls before activation.
-- Fill in and publish [PRIVACY.md](PRIVACY.md): operator/contact, study purpose,
-  region, retention, permitted recipients, international transfers, backup/log
-  retention, deletion process and study/ethics information as applicable. Do not
-  publish placeholders as an operational policy.
+- Keep the published [privacy policy](PRIVACY.md), Terms and participant
+  information consistent with the registered app and actual fields.
 - Choose the app's public name, project/site URL, icon and support address.
   Describe the sleep/activity–memory research purpose accurately; do not imply
   endorsement or put Oura's marks in the app name without permission.
-- Register the Oura developer app and exact HTTPS callback
-  `https://PROJECT.supabase.co/functions/v1/qs-service/oauth/callback` (or the
-  equivalent fixed domain actually deployed). Store the client secret on the
-  backend; never in an add-on package or repository.
+- Registered callback:
+  `https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service/oauth/callback`.
+  Keep the client secret on the backend, never in an add-on package or repository.
 - Deploy a dedicated Supabase project using [DEPLOYMENT.md](DEPLOYMENT.md).
   Verify its region, private-table permissions, logs, abuse controls, backups
   and monitoring. Publish the same recipient/policy information the app shows.
 - Pilot using the developer app's permitted users and real consenting test
-  accounts. Verify browser return, renewal, sleep/step accuracy, corrections,
+  accounts. Verify browser return, renewal, sleep/step/workout accuracy, corrections,
   revocation, membership errors, disconnection, CSV, upload and deletion. The
   automated tests use synthetic records and cannot replace this provider test.
 - Prepare a short screen recording and data-flow description, including the
   full-package upload preview and visible exclusions. Provide the source URL,
-  scope justification (`daily` only), policy URL, callback and support contact.
+  scope justification (`daily` for sleep/steps; `workout` for exercise timing,
+  duration and intensity), policy URL, callback and support contact. Check partial
+  grants: Workout denial must leave sleep/steps usable and workout values unknown.
 
 ## Ask Oura to confirm the intended data uses explicitly
 

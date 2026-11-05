@@ -38,6 +38,39 @@ No scatter plot or ranking is put in front of these comparisons.
 **Phase comparisons** returns to the overview. Switching views or tabs reuses
 the current results without calculation. Full saved history remains the default.
 
+## Oura workouts
+
+The separate **Workouts** tab shows recorded-workout indicators, duration,
+easy/moderate/hard minutes and proximity to studying. Recall uses the 24 hours
+before the first review; all three formation metrics show both that window and
+the 24 hours after the last review. Windows use actual timestamps, including
+offsets, rather than provider day labels. Workouts crossing a window boundary
+are excluded from that comparison; between-review counts are exported separately.
+
+Duration/intensity comparisons include zero for queried, covered windows with
+no recorded workout. Proximity uses workout windows only. No recorded workout
+does not establish that no exercise occurred. An unqueried, denied or incomplete
+history stays unknown. Queried windows also need reported Oura measurement days:
+history before device use and dates without measurements do not become zeros.
+This availability check conservatively uses the UTC dates touched by the window.
+Identical intervals are counted once; conflicting or
+overlapping workouts are flagged, and missing intensity is not assigned a category.
+
+These use the existing calendar-month adjustment and calendar-block uncertainty,
+minimum 60 eligible days over 90 calendar days and six occupied 14-day blocks.
+The recorded-workout comparison also needs at least ten days in each group.
+Formation uses the existing age, coverage, review-count and outcome-day gates.
+These exploratory correlations do not adjust for sleep, total exercise or other
+lifestyle factors; intensity coefficients do not rank independent effects.
+Method v6 invalidates older insight estimates once. Unchanged imports preserve
+the health revision; later visits reuse the same cached estimates.
+
+Package v6 appends workout columns after the existing CSV columns. Daily totals
+use Oura's assigned date. Study-window summaries use the Anki study day; durations
+and gaps use seconds. Labels, activity names, exact times and record identifiers
+are excluded. Sharing notice v9 and enrollment v9 disclose the added fields and
+require a new current choice/consent while preserving the original timing audit.
+
 ## What changed since the last visit
 
 The overview compares with the last successfully saved, displayed visit for

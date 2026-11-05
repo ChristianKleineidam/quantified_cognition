@@ -403,7 +403,7 @@ def test_personal_summary_export_both_nights_and_failure_preserves_previous_file
     source, _, _ = cached
     result = insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
     destination = tmp_path / "insights.csv"
-    assert insights.export_insights(result, destination) == 130
+    assert insights.export_insights(result, destination) == 172
     with destination.open(encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
     assert {

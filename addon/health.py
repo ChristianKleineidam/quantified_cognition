@@ -14,9 +14,10 @@ from .google_health import GOOGLE_HEALTH_CSV_FIELDS, GoogleHealthImport
 from .oura import ACCEPTED_SLEEP_TYPES, SLEEP_FIELDS, OuraImport, Sleep, timestamp_key
 from .private_storage import private_database
 from .sleep_sessions import SleepSession, merge_windows, normalize_sessions, oura_session
+from .workouts import WORKOUT_DAILY_FIELDS, Workout, summarize
 
 HEALTH_DATABASE_NAME = "health.sqlite3"
-HEALTH_VERSION = 3
+HEALTH_VERSION = 4
 HEALTH_CSV_FIELDS = (
     "oura_total_sleep_seconds",
     "oura_light_sleep_seconds",
@@ -51,6 +52,8 @@ class HealthSnapshot:
     days: dict[date, DailyHealth]
     sessions: tuple[SleepSession, ...] = ()
     sleep_windows: dict[str, tuple] = field(default_factory=dict)
+    workouts: tuple[Workout, ...] = ()
+    workout_windows: tuple = ()
 
 
 @dataclass(frozen=True)
@@ -64,7 +67,7 @@ class ImportResult:
 
 def _initialize(connection):
     version = connection.execute("pragma user_version").fetchone()[0]
-    if version not in (0, 1, 2, HEALTH_VERSION):
+    if version not in (0, 1, 2, 3, HEALTH_VERSION):
         raise ValueError("This health database needs a newer add-on version.")
     connection.execute("create table if not exists metadata (key text primary key, value text)")
     connection.execute("""create table if not exists oura_sleep (
@@ -73,6 +76,9 @@ def _initialize(connection):
     connection.execute("""create table if not exists oura_activity (
         day text primary key, steps integer, imported_at text not null)""")
     connection.execute("create table if not exists oura_raw_days (day text primary key)")
+    connection.execute("""create table if not exists oura_workouts (
+        key text primary key, day text not null, payload text not null,
+        imported_at text not null)""")
     connection.execute("""create table if not exists google_health_days (
         day text primary key, payload text not null, synced_at text not null)""")
     connection.execute("""create table if not exists google_health_sleep (
@@ -89,7 +95,7 @@ def health_revision_at(path: str | Path) -> str:
     if not path.exists():
         return ""
     with private_database(path) as connection:
-        if connection.execute("pragma user_version").fetchone()[0] not in (1, 2, HEALTH_VERSION):
+        if connection.execute("pragma user_version").fetchone()[0] not in (1, 2, 3, HEALTH_VERSION):
             raise ValueError("Unsupported health database version.")
         row = connection.execute("select value from metadata where key='revision'").fetchone()
         return row[0] if row else ""
@@ -146,7 +152,7 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
     with private_database(path) as connection:
         connection.execute("begin")
         version = connection.execute("pragma user_version").fetchone()[0]
-        if version not in (1, 2, HEALTH_VERSION):
+        if version not in (1, 2, 3, HEALTH_VERSION):
             raise ValueError("Unsupported health database version.")
         row = connection.execute("select value from metadata where key='revision'").fetchone()
         revision = row[0] if row else ""
@@ -186,6 +192,16 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
             if row.kind != "daily_summary" or row.day not in raw_days
         ]
         windows = defaultdict(list)
+        workouts = []
+        workout_days = defaultdict(list)
+        if version >= 4:
+            for day, payload, imported in connection.execute(
+                "select day,payload,imported_at from oura_workouts"
+            ):
+                workout = Workout(**json.loads(payload))
+                workouts.append(workout)
+                workout_days[day].append(workout)
+                dates_imported[day].append(imported)
         if version >= 3:
             sessions.extend(
                 SleepSession(**json.loads(payload))
@@ -196,8 +212,8 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
             ):
                 windows[provider].append((lower, upper))
     daily = {}
-    for day in sorted(grouped.keys() | activities.keys()):
-        values = {field: None for field in HEALTH_CSV_FIELDS}
+    for day in sorted(grouped.keys() | activities.keys() | workout_days.keys()):
+        values = dict.fromkeys((*HEALTH_CSV_FIELDS, *WORKOUT_DAILY_FIELDS))
         periods = grouped.get(day, [])
         if day in raw_days:
             periods = [row for row in periods if row.kind != "daily_summary"]
@@ -227,15 +243,25 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
         if day in activities:
             values["oura_steps"], imported = activities[day]
             dates_imported[day].append(imported)
-        if not periods and day not in activities:
+        if not periods and day not in activities and day not in workout_days:
             continue
+        if any(lower <= day < upper for lower, upper in windows["oura_workout"]):
+            summary, status = summarize(workout_days[day])
+            values.update({"oura_workout_" + key: value for key, value in summary.items()})
+            values["oura_workout_status"] = status
+        else:
+            values["oura_workout_status"] = "workout history unavailable"
         values["oura_day_basis"] = "provider_assigned_day"
         values["oura_imported_at_utc"] = max(dates_imported[day])
         values["oura_data_version"] = 1  # Provider format is independent of DB schema migrations.
         daily[date.fromisoformat(day)] = DailyHealth(values)
     for day, payload, synced_at in google:
         day = date.fromisoformat(day)
-        values = dict(daily[day].values) if day in daily else dict.fromkeys(HEALTH_CSV_FIELDS)
+        values = (
+            dict(daily[day].values)
+            if day in daily
+            else dict.fromkeys((*HEALTH_CSV_FIELDS, *WORKOUT_DAILY_FIELDS))
+        )
         values.update(json.loads(payload))
         values["google_health_synced_at_utc"] = synced_at
         daily[day] = DailyHealth(values)
@@ -243,7 +269,13 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
         revision,
         daily,
         normalize_sessions(sessions),
-        {provider: merge_windows(rows) for provider, rows in windows.items()},
+        {
+            provider: merge_windows(rows)
+            for provider, rows in windows.items()
+            if provider != "oura_workout"
+        },
+        tuple(workouts),
+        merge_windows(windows["oura_workout"]),
     )
 
 
@@ -422,6 +454,7 @@ def save_oura_import(
     check_cancelled: Callable[[], None] = lambda: None,
     authoritative_window: tuple[str, str] | None = None,
     clear: bool = False,
+    workouts_unavailable: bool = False,
 ) -> ImportResult:
     """Commit selected fields atomically, then retry the CSV without FSRS replay."""
     from .research import sharing_state
@@ -501,9 +534,43 @@ def save_oura_import(
                         (record.day, record.steps, now),
                     )
                     changed += 1
+            if clear or workouts_unavailable or prepared.workouts_fetched:
+                lower, upper = authoritative_window or ("0001-01-01", "9999-12-31")
+                old = dict(
+                    connection.execute(
+                        "select key,payload from oura_workouts"
+                        + ("" if clear or workouts_unavailable else " where day>=? and day<?"),
+                        () if clear or workouts_unavailable else (lower, upper),
+                    )
+                )
+                wanted = (
+                    {}
+                    if clear or workouts_unavailable
+                    else {
+                        row.key: json.dumps(asdict(row), sort_keys=True)
+                        for row in prepared.workouts
+                    }
+                )
+                for key in old.keys() - wanted.keys():
+                    connection.execute("delete from oura_workouts where key=?", (key,))
+                    changed += 1
+                for record in prepared.workouts if not (clear or workouts_unavailable) else ():
+                    check_cancelled()
+                    if old.get(record.key) != wanted[record.key]:
+                        connection.execute(
+                            "insert or replace into oura_workouts values (?,?,?,?)",
+                            (record.key, record.day, wanted[record.key], now),
+                        )
+                        changed += 1
+                if clear or workouts_unavailable or authoritative_window:
+                    metadata_changed = _save_window(
+                        connection, "oura_workout", lower, upper, clear or workouts_unavailable
+                    )
             if clear or authoritative_window:
                 lower, upper = authoritative_window or (None, None)
-                metadata_changed = _save_window(connection, "oura", lower, upper, clear)
+                metadata_changed = (
+                    _save_window(connection, "oura", lower, upper, clear) or metadata_changed
+                )
             if changed or metadata_changed:
                 connection.execute(
                     "insert or replace into metadata values ('revision', ?)", (uuid.uuid4().hex,)

@@ -6,13 +6,13 @@ formation and recall. Sharing those measurements can help us investigate how
 learning relates to sleep, activity and study patterns, and improve the methods
 used to measure it.
 
-Updated **4 November 2026**. Research enrollment and uploads are currently closed.
+Updated **5 November 2026**. Research enrollment and uploads are currently closed.
 
 ## What your contribution helps us learn
 
 Later Anki reviews provide information about how effectively you learned on an
 earlier day. Combined with sleep and activity measurements, they let us explore
-relationships with total sleep, deep and REM sleep, naps and everyday activity.
+relationships with total sleep, deep and REM sleep, naps, everyday activity and exercise.
 The programme also examines how reliable these learning measures are and can
 develop new questions and methods within this research area.
 
@@ -30,11 +30,13 @@ Participation is voluntary and unpaid. Your personal results and insights
 remain available whether you participate or not.
 
 Each submission is a package of available daily Anki scores, review counts,
-uncertainty, follow-up information, sleep stages, nap and step summaries, and
+uncertainty, follow-up information, sleep stages, nap and step summaries,
+Oura workout duration, intensity and timing summaries, and
 calculation and sharing metadata. You can contribute Anki data alone. The
 [privacy policy](PRIVACY.md) describes the included fields in detail.
 
-Card content, individual reviews and review pairs, exact sleep or review times,
+Card content, individual reviews and review pairs, exact sleep, workout or review times,
+workout labels and activity names,
 provider account IDs, credentials, your name and email are excluded from the
 package. You review each package and explicitly send it. Uploads are never
 automatic, and saying Yes in the initial sharing prompt sends nothing. We

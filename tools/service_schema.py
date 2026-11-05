@@ -9,6 +9,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from addon.export import CSV_FIELDS  # noqa: E402
 from addon.research import RESEARCH_METADATA_FIELDS, SharingConfig  # noqa: E402
 from addon.sleep_sessions import SESSION_CSV_FIELDS, STATUSES  # noqa: E402
+from addon.workouts import STATUSES as WORKOUT_STATUSES  # noqa: E402
+from addon.workouts import WORKOUT_DAILY_FIELDS, WORKOUT_STUDY_FIELDS  # noqa: E402
 
 columns = [name for name in CSV_FIELDS if name not in RESEARCH_METADATA_FIELDS]
 text = {
@@ -72,7 +74,7 @@ enums.update(
     }
 )
 schema = {
-    "package_version": 5,
+    "package_version": 6,
     "columns": columns,
     "metadata": list(RESEARCH_METADATA_FIELDS),
     "numeric": [name for name in columns if name not in text and name not in enums],
@@ -81,6 +83,10 @@ schema = {
 for name in SESSION_CSV_FIELDS:
     if name.endswith("_status"):
         schema["enums"][name] = ["", *STATUSES]
+        schema["numeric"].remove(name)
+for name in (*WORKOUT_DAILY_FIELDS, *WORKOUT_STUDY_FIELDS):
+    if name.endswith("_status"):
+        schema["enums"][name] = ["", *WORKOUT_STATUSES]
         schema["numeric"].remove(name)
 root = Path(__file__).resolve().parents[1]
 schema["encryption"] = json.loads((root / "addon/research_encryption.json").read_text())

@@ -29,7 +29,7 @@ function packet() {
   Object.assign(metadata, { research_participant_id: id, research_consent_active: true,
     sharing_current_choice: "opt_in", sharing_notice_version: env.RESEARCH_NOTICE_VERSION,
     sharing_notice_hash: env.RESEARCH_NOTICE_HASH });
-  return { schema_version: 5, enrollment_id: id, submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
+  return { schema_version: schema.package_version, enrollment_id: id, submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
     metadata, columns: schema.columns,
     rows: [schema.columns.map(k => k === "date" ? "2026-10-01" : "")] };
 }
@@ -46,7 +46,7 @@ test("OAuth code + PKCE, exact redirect, state integrity and denial", async () =
   assert.equal(started.status, 200);
   const start = await started.json(), authorize = new URL(start.authorize_url);
   assert.equal(authorize.origin, "https://cloud.ouraring.com");
-  assert.equal(authorize.searchParams.get("scope"), "daily");
+  assert.equal(authorize.searchParams.get("scope"), "daily workout");
   assert.equal(authorize.searchParams.get("code_challenge_method"), "S256");
   assert.equal(authorize.searchParams.get("redirect_uri"), env.SERVICE_URL + "/oauth/callback");
   assert.ok(!start.authorize_url.includes(env.OURA_CLIENT_SECRET));

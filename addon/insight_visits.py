@@ -37,6 +37,11 @@ def _health_days(health, provider):
                     session.wake_day,
                 ]
             )
+    if provider == "oura":
+        for workout in health.workouts:
+            sessions.setdefault(workout.day, []).append(
+                [workout.start, workout.end, workout.intensity, workout.source]
+            )
     out = {}
     ignored = {
         f"{provider}_{field}" for field in ("imported_at_utc", "synced_at_utc", "data_version")
@@ -95,7 +100,11 @@ def make_snapshot(
     estimates = {}
     for key, value in result.associations.items():
         estimates["association/" + key] = dict(
-            scope="nap" if key.startswith("nap_") else "main",
+            scope="nap"
+            if key.startswith("nap_")
+            else "workout"
+            if key.startswith("workout_")
+            else "main",
             status=value.status,
             days=value.days,
             low=value.low,
@@ -228,7 +237,7 @@ def _valid_snapshot(value, provider):
                 return False
         for estimate in value["estimates"].values():
             if (
-                estimate["scope"] not in ("main", "nap")
+                estimate["scope"] not in ("main", "nap", "workout")
                 or estimate["status"] not in ("exploratory estimate", "insufficient data")
                 or type(estimate["days"]) is not int
                 or estimate["days"] < 0

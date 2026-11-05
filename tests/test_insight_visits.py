@@ -319,7 +319,7 @@ def test_snapshot_contains_counts_and_hashes_not_raw_health_or_review_times(tmp_
     old["estimates"]["association/deep_sleep/recall/before"].update(low=-1, high=1)
     result.visit_changes = visits.compare_visits(result.visit_snapshot, old)
     export_path = tmp_path / "insights.csv"
-    assert insights.export_insights(result, export_path) == 130
+    assert insights.export_insights(result, export_path) == 172
     with export_path.open(encoding="utf-8-sig", newline="") as stream:
         row = next(
             r
@@ -343,7 +343,7 @@ def test_seasonal_timezone_abbreviation_is_not_a_change_of_timezone_rules():
         phase_associations={},
         memory_metadata={"timezone": "CEST"},
     )
-    health = SimpleNamespace(days={}, sessions=())
+    health = SimpleNamespace(days={}, sessions=(), workouts=())
     first = visits.make_snapshot(value, None, health, method_version=4, as_of=AS_OF)
     value.memory_metadata["timezone"] = "CET"
     second = visits.make_snapshot(value, None, health, method_version=4, as_of=AS_OF)

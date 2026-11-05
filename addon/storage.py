@@ -33,7 +33,7 @@ DIRECTORY_NAME = "quantified-self-memory"
 DATABASE_NAME = "results.sqlite3"
 PREFERENCES_NAME = "daily-settings.json"
 SCHEMA_VERSION = 2
-EXPORT_VERSION = 6
+EXPORT_VERSION = 7
 DAILY_COLUMNS = ["date"] + [
     f"{metric}_{field}" for metric in METRIC_PREFIXES for field in METRIC_FIELDS
 ]

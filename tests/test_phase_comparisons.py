@@ -215,7 +215,7 @@ def test_cached_phase_estimates_and_export_do_not_replay_fsrs(tmp_path, monkeypa
     second = insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
     assert second.reused and second.phase_associations == first.phase_associations
     target = tmp_path / "insights.csv"
-    assert insights.export_insights(second, target) == 130
+    assert insights.export_insights(second, target) == 172
     with target.open(encoding="utf-8-sig", newline="") as stream:
         rows = [r for r in csv.DictReader(stream) if r["analysis_kind"] == "phase_substitution"]
     assert len(rows) == 42

@@ -1102,6 +1102,16 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         dialog.table.setCurrentCell(1, 3)
         assert "insufficient data" in dialog.detail.text().lower()
         assert "nap days only" in dialog.note.text()
+        dialog.all_button.setChecked(False)
+        dialog.section.setCurrentIndex(2)
+        assert dialog.result is result and not dialog.busy
+        assert dialog.table.rowCount() == 6
+        assert dialog.table.item(0, 0).text() == "Recorded workout"
+        assert dialog.table.item(1, 0).text() == "Workout duration"
+        assert "24 hours" in dialog.note.text()
+        assert "insufficient data" in dialog.detail.text().lower()
+        assert "individual associations" in dialog.summary.text()
+        assert dialog.chart.isVisible() and not dialog.all_button.isVisible()
         assert sharing_state(source).metadata()["research_consent_before_first_view"] is True
         dialog.export()
         pump_until(app, lambda: not dialog.busy)

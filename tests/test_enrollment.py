@@ -253,5 +253,5 @@ def test_frozen_documents_match_source_and_seed():
     root = Path(__file__).resolve().parents[1]
     for name, content in frozen["bundle"]["documents"].items():
         assert content == (root / "docs" / name).read_text("utf-8")
-    seed = (root / "supabase/migrations/20261105113158_research_protocol_v8.sql").read_text("utf-8")
+    seed = (root / "supabase/migrations/20261105134053_research_protocol_v9.sql").read_text("utf-8")
     assert frozen["sha256"] in seed

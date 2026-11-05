@@ -21,6 +21,7 @@ SLEEP_PROJECTION = (
     "id,day,type,bedtime_start,bedtime_end,total_sleep_duration,light_sleep_duration,"
     "deep_sleep_duration,rem_sleep_duration,awake_time,sleep_algorithm_version"
 )
+WORKOUT_PROJECTION = "id,day,start_datetime,end_datetime,intensity,source"
 
 
 def _clear_local(source, sharing):
@@ -177,7 +178,11 @@ def _collection(source, config, credentials, kind, start, end, check_cancelled):
         params = {
             "start_date": start,
             "end_date": end,
-            "fields": SLEEP_PROJECTION if kind == "sleep" else "id,day,steps",
+            "fields": {
+                "sleep": SLEEP_PROJECTION,
+                "workout": WORKOUT_PROJECTION,
+                "daily_activity": "id,day,steps",
+            }[kind],
         }
         if cursor:
             params["next_token"] = cursor
@@ -213,7 +218,9 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
             if force:
                 raise ServiceError("Oura authorization expired. Select Connect Oura again.")
             return None
-        backfill = credentials.get("sleep_session_version") != 1
+        backfill = (
+            credentials.get("sleep_session_version") != 1 or credentials.get("workout_version") != 1
+        )
         if not force and not backfill and now - credentials.get("last_sync", 0) < 3600:
             return None
         if credentials.get("needs_clear"):
@@ -225,15 +232,35 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
         start = "2000-01-01" if full else (today - timedelta(days=30)).isoformat()
         end = (today + timedelta(days=2)).isoformat()  # Includes provider days east of local time.
         try:
+            if not call_service(config, "/status").get("oura_enabled"):
+                raise ServiceError(
+                    "Oura access has not been enabled by the operator yet.", retry_after=3600
+                )
             nights = _collection(source, config, credentials, "sleep", start, end, check_cancelled)
             activity = _collection(
                 source, config, credentials, "daily_activity", start, end, check_cancelled
             )
-            prepared = parse_oura_records(nights, activity)
+            try:
+                workouts = _collection(
+                    source, config, credentials, "workout", start, end, check_cancelled
+                )
+            except ServiceError as error:
+                if error.status != 403:
+                    raise
+                # An older/partial grant must not break sleep/steps or fabricate zeros.
+                workouts = None
+            try:
+                prepared = parse_oura_records(nights, activity, workouts)
+            except ValueError:
+                raise ServiceError(
+                    "Oura returned invalid measurements. Saved data is unchanged.", retry_after=3600
+                ) from None
             # Oura may include an inclusive end boundary. Commit only our window.
             prepared = OuraImport(
                 tuple(r for r in prepared.sleep if start <= r.day < end),
                 tuple(r for r in prepared.activity if start <= r.day < end),
+                workouts=tuple(r for r in prepared.workouts if start <= r.day < end),
+                workouts_fetched=prepared.workouts_fetched,
             )
             check_cancelled()
             result = save_oura_import(
@@ -241,12 +268,16 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
                 prepared,
                 sharing=sharing,
                 authoritative_window=(start, end),
+                workouts_unavailable=workouts is None,
                 check_cancelled=check_cancelled,
             )
-            credentials.update(last_sync=now, last_error="", retry_at=0)
+            credentials.update(
+                last_sync=now, last_error="", retry_at=0, workout_access=workouts is not None
+            )
             if full:
                 credentials["last_full_sync"] = now
                 credentials["sleep_session_version"] = 1
+                credentials["workout_version"] = 1
             write_secret(source, "oura", credentials)
             return result
         except ServiceError as error:
@@ -281,7 +312,13 @@ def connection_summary(source):
         return "Oura is not connected."
     if credentials.get("last_error"):
         return credentials["last_error"]
-    return "Oura is connected. Sleep and steps sync automatically while Anki is open."
+    text = "Oura is connected. Sleep, steps and workouts sync automatically while Anki is open."
+    if credentials.get("workout_access") is False:
+        text = (
+            "Sleep and steps are connected. Workout access is unavailable; "
+            "connect Oura again and allow Workout to include it."
+        )
+    return text
 
 
 def saved_oura(source):

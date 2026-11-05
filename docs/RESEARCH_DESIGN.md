@@ -55,7 +55,7 @@ and describe this limitation. Do not identify people by linking external data.
 ## Data and outcome definitions
 
 The research dataset consists of the disclosed daily package, currently package
-schema 4, plus a separate minimal enrollment/consent record. It contains no raw
+schema 6, plus a separate minimal enrollment/consent record. It contains no raw
 cards, individual reviews or review-pair records. Data categories and exclusions
 are specified in the policy; the package allowlist in the software remains
 authoritative for what can actually be transmitted.
@@ -104,8 +104,15 @@ For recall, preceding main sleep is temporally relevant; subsequent sleep is
 not a recall exposure. For formation, examine preceding and following main
 sleep separately. Match using the software's actual-session rules, with naps
 kept separate. Consider nap occurrence, duration, phases and proximity to
-studying. Activity uses the preceding day for recall and the study day for
+studying. Daily steps use the preceding day for recall and the study day for
 formation in the initial framework; alternative lags must be identified as such.
+Oura workout summaries use the 24 hours before the first review and after the
+last review, with recall using only the former. Compare recorded occurrence,
+duration, intensity and proximity separately; preserve missing observation
+days and incomplete windows rather than infer no exercise. Record exercise
+between reviews separately. Exercise intensity summaries are not independent
+of total exercise; sleep and other confounding factors need suitable analysis
+and adequate common observations before adjusted claims are made.
 
 Compare light, deep and REM phases on the same eligible days within an
 outcome/timing comparison. Account for total sleep and express phase comparisons

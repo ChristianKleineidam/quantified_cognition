@@ -49,7 +49,7 @@ test("real HTTP enrollment gate, explicit upload, and deletion status with all f
     const metadata=Object.fromEntries(schema.metadata.map(k=>[k,""]));
     Object.assign(metadata,{research_participant_id:publicId,research_consent_active:true,
       sharing_current_choice:"opt_in",sharing_notice_version:notice.version,sharing_notice_hash:notice.hash});
-    const packet={schema_version:5,enrollment_id:id,submission_id:crypto.randomUUID(),created_at:new Date().toISOString(),
+    const packet={schema_version:schema.package_version,enrollment_id:id,submission_id:crypto.randomUUID(),created_at:new Date().toISOString(),
       metadata,columns:schema.columns,rows:[schema.columns.map(k=>k==="date"?"2026-10-01":"")]};
     assert.equal((await handler(request("/research/submissions",envelope(packet)))).status,403);
     const signed=evidence(id,{participant_id:publicId});

@@ -214,7 +214,7 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
           const flow = await sign({ ...data, provider: "oura", expires: now() + 600000 });
           const authorize = new URL("https://cloud.ouraring.com/oauth/authorize");
           for (const [key, value] of Object.entries({ client_id: env.OURA_CLIENT_ID, response_type: "code", redirect_uri: callback(),
-            scope: "daily", state: flow, code_challenge: data.code_challenge, code_challenge_method: "S256" })) authorize.searchParams.set(key, value);
+            scope: "daily workout", state: flow, code_challenge: data.code_challenge, code_challenge_method: "S256" })) authorize.searchParams.set(key, value);
           return json({ authorize_url: authorize.toString(), flow });
         }
         if (route === "/oauth/exchange") {

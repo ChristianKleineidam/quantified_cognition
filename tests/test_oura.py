@@ -222,13 +222,14 @@ def test_combined_csv_keeps_health_only_days_and_preserves_existing_columns(tmp_
     assert rows[1]["oura_steps"] == "10000"
     assert rows[1]["recall_count"] == "" and rows[1]["formation_status"] == ""
     assert rows[2]["oura_total_sleep_seconds"] == ""
+    previous_end = CSV_FIELDS.index("oura_main_before_total_sleep_seconds")
     from addon.sleep_sessions import SESSION_CSV_FIELDS
-
-    previous_end = len(CSV_FIELDS) - len(SESSION_CSV_FIELDS)
     assert CSV_FIELDS[previous_end - len(health.HEALTH_CSV_FIELDS) : previous_end] == list(
         health.HEALTH_CSV_FIELDS
     )
-    assert CSV_FIELDS[previous_end:] == list(SESSION_CSV_FIELDS)
+    assert CSV_FIELDS[previous_end : previous_end + len(SESSION_CSV_FIELDS)] == list(
+        SESSION_CSV_FIELDS
+    )
     assert export_csv_atomic(None, destination, health_data=snapshot.days) == 2
     assert read_csv(destination)[0]["parameters_hash"] == ""
 

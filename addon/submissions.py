@@ -22,7 +22,7 @@ from .storage import database_path, load_report, profile_job_lock, results_direc
 from .vault import read_secret, write_secret
 
 PACKAGE_COLUMNS = [key for key in CSV_FIELDS if key not in RESEARCH_METADATA_FIELDS]
-PACKAGE_VERSION = 5
+PACKAGE_VERSION = 6
 
 
 def _path(source):

@@ -14,6 +14,8 @@ from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+from .workouts import Workout, parse_workouts
+
 MAX_FILE_BYTES = 64 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 512 * 1024 * 1024
 MAX_RECORDS = 200_000
@@ -53,10 +55,12 @@ class OuraImport:
     sleep: tuple[Sleep, ...]
     activity: tuple[Activity, ...]
     ignored_files: int = 0
+    workouts: tuple[Workout, ...] = ()
+    workouts_fetched: bool = False
 
     @property
     def days(self) -> list[str]:
-        return sorted({row.day for row in (*self.sleep, *self.activity)})
+        return sorted({row.day for row in (*self.sleep, *self.activity, *self.workouts)})
 
     @property
     def description(self) -> str:
@@ -176,10 +180,10 @@ def _record(row: dict) -> tuple[Sleep | None, Activity | None]:
     return sleep, activity
 
 
-def parse_oura_records(sleep_records, activity_records) -> OuraImport:
+def parse_oura_records(sleep_records, activity_records, workout_records=None) -> OuraImport:
     """Validate complete API pages before committing any part of a sync."""
     nights, activities = {}, {}
-    if len(sleep_records) + len(activity_records) > MAX_RECORDS:
+    if len(sleep_records) + len(activity_records) + len(workout_records or ()) > MAX_RECORDS:
         raise ValueError("The Oura response contains too many records.")
     for row in sleep_records:
         if not isinstance(row, dict) or not row.get("id") or not row.get("type"):
@@ -201,7 +205,12 @@ def parse_oura_records(sleep_records, activity_records) -> OuraImport:
         if activity.day in activities and activities[activity.day] != activity:
             raise ValueError("Oura returned conflicting activity records.")
         activities[activity.day] = activity
-    return OuraImport(tuple(nights.values()), tuple(activities.values()))
+    return OuraImport(
+        tuple(nights.values()),
+        tuple(activities.values()),
+        workouts=parse_workouts(workout_records or ()),
+        workouts_fetched=workout_records is not None,
+    )
 
 
 def _json_records(data) -> Iterable[dict]:

@@ -1,5 +1,5 @@
 {
-  "package_version": 5,
+  "package_version": 6,
   "columns": [
     "date",
     "recall_score_pp",
@@ -148,7 +148,32 @@
     "google_health_nap_before_rem_sleep_seconds",
     "google_health_nap_after_light_sleep_seconds",
     "google_health_nap_after_deep_sleep_seconds",
-    "google_health_nap_after_rem_sleep_seconds"
+    "google_health_nap_after_rem_sleep_seconds",
+    "oura_workout_recorded",
+    "oura_workout_count",
+    "oura_workout_duration_seconds",
+    "oura_workout_easy_seconds",
+    "oura_workout_moderate_seconds",
+    "oura_workout_hard_seconds",
+    "oura_workout_status",
+    "oura_workout_before_recorded",
+    "oura_workout_before_count",
+    "oura_workout_before_duration_seconds",
+    "oura_workout_before_easy_seconds",
+    "oura_workout_before_moderate_seconds",
+    "oura_workout_before_hard_seconds",
+    "oura_workout_before_gap_seconds",
+    "oura_workout_before_status",
+    "oura_workout_after_recorded",
+    "oura_workout_after_count",
+    "oura_workout_after_duration_seconds",
+    "oura_workout_after_easy_seconds",
+    "oura_workout_after_moderate_seconds",
+    "oura_workout_after_hard_seconds",
+    "oura_workout_after_gap_seconds",
+    "oura_workout_after_status",
+    "oura_between_review_workout_count",
+    "oura_workout_matching_version"
   ],
   "metadata": [
     "research_participant_id",
@@ -290,7 +315,29 @@
     "google_health_nap_before_rem_sleep_seconds",
     "google_health_nap_after_light_sleep_seconds",
     "google_health_nap_after_deep_sleep_seconds",
-    "google_health_nap_after_rem_sleep_seconds"
+    "google_health_nap_after_rem_sleep_seconds",
+    "oura_workout_recorded",
+    "oura_workout_count",
+    "oura_workout_duration_seconds",
+    "oura_workout_easy_seconds",
+    "oura_workout_moderate_seconds",
+    "oura_workout_hard_seconds",
+    "oura_workout_before_recorded",
+    "oura_workout_before_count",
+    "oura_workout_before_duration_seconds",
+    "oura_workout_before_easy_seconds",
+    "oura_workout_before_moderate_seconds",
+    "oura_workout_before_hard_seconds",
+    "oura_workout_before_gap_seconds",
+    "oura_workout_after_recorded",
+    "oura_workout_after_count",
+    "oura_workout_after_duration_seconds",
+    "oura_workout_after_easy_seconds",
+    "oura_workout_after_moderate_seconds",
+    "oura_workout_after_hard_seconds",
+    "oura_workout_after_gap_seconds",
+    "oura_between_review_workout_count",
+    "oura_workout_matching_version"
   ],
   "enums": {
     "recall_status": [
@@ -470,6 +517,33 @@
       "sleep processing",
       "unclassified sleep",
       "nap duration unavailable"
+    ],
+    "oura_workout_status": [
+      "",
+      "available",
+      "workout history unavailable",
+      "workout history incomplete",
+      "review times unavailable",
+      "overlapping workouts",
+      "workout overlaps study boundary"
+    ],
+    "oura_workout_before_status": [
+      "",
+      "available",
+      "workout history unavailable",
+      "workout history incomplete",
+      "review times unavailable",
+      "overlapping workouts",
+      "workout overlaps study boundary"
+    ],
+    "oura_workout_after_status": [
+      "",
+      "available",
+      "workout history unavailable",
+      "workout history incomplete",
+      "review times unavailable",
+      "overlapping workouts",
+      "workout overlaps study boundary"
     ]
   },
   "encryption": {

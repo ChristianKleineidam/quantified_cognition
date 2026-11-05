@@ -15,6 +15,7 @@ from .health import HEALTH_CSV_FIELDS, DailyHealth
 from .metrics import SHORT_TERM_MAX_DAYS
 from .research import RESEARCH_METADATA_FIELDS
 from .sleep_sessions import SESSION_CSV_FIELDS, study_features
+from .workouts import WORKOUT_DAILY_FIELDS, WORKOUT_STUDY_FIELDS, study_workouts
 
 if TYPE_CHECKING:
     from .backend import Report
@@ -53,6 +54,8 @@ CSV_FIELDS = (
     + ["formation_completeness"]
     + list(HEALTH_CSV_FIELDS)
     + list(SESSION_CSV_FIELDS)
+    + list(WORKOUT_DAILY_FIELDS)
+    + list(WORKOUT_STUDY_FIELDS)
 )
 
 
@@ -84,6 +87,9 @@ def export_csv(
             }
             if health_snapshot is not None
             else {}
+        )
+        workout_data = (
+            study_workouts(report, health_snapshot) if health_snapshot is not None else {}
         )
         for day_date in sorted(anki_days.keys() | health_data.keys()):
             if (start and day_date < start) or (end and day_date > end):
@@ -136,6 +142,7 @@ def export_csv(
                 row.update(health_data[day_date].values)
             for daily_features in session_data.values():
                 row.update(daily_features.get(day_date, {}))
+            row.update(workout_data.get(day_date, {}))
             writer.writerow(row)
             count += 1
     return count

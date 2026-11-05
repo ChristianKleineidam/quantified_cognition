@@ -25,8 +25,8 @@ benefits and risks.
 ## Information used by the add-on
 
 Local profile files hold calculated scores, health measurements, personal
-insights and sharing history. Sleep sessions and review times help match main
-sleep and naps to studying. Analysis can use temporary local Anki snapshots
+insights and sharing history. Sleep, workout and review times help match main
+sleep, naps and exercise to studying. Analysis can use temporary local Anki snapshots
 that contain card text. These files stay outside research uploads. Personal
 CSVs are saved to locations you choose.
 
@@ -36,7 +36,9 @@ store. CSVs and other files you choose to export remain readable files under
 your control.
 
 Oura and Google Health connections import sleep durations, sleep stages and
-daily steps directly from the provider. Google's activity permission also
+daily steps directly from the provider. Oura also supplies workout timing,
+duration, intensity and recording source. We do not save workout labels,
+activity names, calories, distance or heart-rate records. Google's activity permission also
 covers other activity data; we fetch daily steps. Available history and missing
 measurements depend on the provider. You sign in on the provider's website.
 Our connection service exchanges and renews access tokens without storing
@@ -51,6 +53,9 @@ light, deep, REM and awake sleep durations, Google's restless time,
 sleep-period counts and daily steps. Main sleep before and after studying,
 nap counts, sleep-stage and duration summaries, gaps to studying, between-review
 nap counts and matching status are included when available.
+Oura workout summaries include recorded-workout indicators, counts, total and
+easy/moderate/hard durations, the 24 hours before and after studying, gaps to
+studying, between-review counts and availability status.
 
 Packages also contain dates, sources, method and Anki versions, an FSRS settings
 fingerprint, timezone, Anki day boundary, calculation settings, generation and
@@ -61,8 +66,9 @@ results help us understand participation patterns. Unknown earlier exposure is
 recorded as unknown; the full local event log is excluded.
 
 **Excluded from research packages:** card questions and answers; card and deck
-names and IDs; individual reviews and review pairs; exact sleep or review
-times; raw health records and record IDs; heart rate; location; name and email;
+names and IDs; individual reviews and review pairs; exact sleep, workout or review
+times; workout labels and activity names; raw health records and record IDs;
+heart rate; location; name and email;
 provider account or device IDs; passwords and tokens. Personal insight charts,
 cached correlations and return-visit comparisons are also excluded.
 

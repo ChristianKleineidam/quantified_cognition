@@ -41,6 +41,7 @@ from .insights import (
     FACTORS,
     MAIN_FACTORS,
     NAP_FACTORS,
+    WORKOUT_FACTORS,
     InputsChanged,
     InsightSettings,
     export_insights,
@@ -162,7 +163,8 @@ class InsightsDialog(QDialog):
             self, 1240, 650, "Personal insights content"
         )
         intro = QLabel(
-            "Your sleep and memory across all saved history. Revisit whenever you have more data. "
+            "Your sleep, activity and memory across all saved history. "
+            "Revisit whenever you have more data. "
             "Higher memory scores mean better performance than FSRS predicted."
         )
         intro.setWordWrap(True)
@@ -209,6 +211,7 @@ class InsightsDialog(QDialog):
         self.section = QTabBar()
         self.section.addTab("Main sleep & steps")
         self.section.addTab("Naps")
+        self.section.addTab("Workouts")
         self.section.currentChanged.connect(self.section_changed)
         layout.addWidget(self.section)
         self.summary = QLabel("Loading your history…")
@@ -281,6 +284,8 @@ class InsightsDialog(QDialog):
 
     def section_text(self):
         naps = self.section.currentIndex() == 1
+        workouts = self.section.currentIndex() == 2
+        self.all_button.setVisible(not workouts)
         self.section.setTabText(
             0, "Main sleep & steps" if self.all_button.isChecked() else "Main sleep"
         )
@@ -289,10 +294,22 @@ class InsightsDialog(QDialog):
             labels.append(
                 label.split("\n")[0]
                 + ("\nBefore studying" if timing == "before" else "\nAfter studying")
-                if naps
+                if naps or workouts
                 else label
             )
         self.set_headers(labels)
+        if workouts:
+            self.note.setText(
+                "Workouts use the 24 hours before the first review and after the last review. "
+                "Recall uses only the before window. Duration and intensity include zero on "
+                "covered days with no recorded workout; proximity uses workout days only. "
+                "Overlapping records "
+                "are excluded. No record does not prove no exercise occurred. Formation needs "
+                "≥30-day-old study days and ≥80% evaluated follow-ups. Approximate 95% ranges use "
+                "14-day calendar blocks. These exploratory associations do not control for sleep "
+                "and do not establish cause and effect."
+            )
+            return
         if not self.all_button.isChecked():
             self.note.setText(
                 f"Each arrow moves {SHIFT_MINUTES} minutes from the first phase to the second, "
@@ -459,12 +476,15 @@ class InsightsDialog(QDialog):
         self.provider.setCurrentIndex(self.provider.findData(result.provider))
         self.provider.blockSignals(False)
         self.auto_provider = False
+        self.section.setTabVisible(2, result.provider == "oura")
+        if result.provider != "oura" and self.section.currentIndex() == 2:
+            self.section.setCurrentIndex(0)
         self.summary.setText(self.overview_text(result))
         self.changes.setText(
             overview_changes(
                 result.visit_changes,
-                scope="nap" if self.section.currentIndex() else "main",
-                phases=not self.all_button.isChecked(),
+                scope=("main", "nap", "workout")[self.section.currentIndex()],
+                phases=not self.associations_view(),
             )
         )
         self.changes.setVisible(not self.all_button.isChecked())
@@ -475,8 +495,8 @@ class InsightsDialog(QDialog):
             + (" · reused unchanged analysis" if result.reused else "")
         )
         self.export_button.setEnabled(True)
-        self.chart.setVisible(self.all_button.isChecked())
-        if not self.all_button.isChecked():
+        self.chart.setVisible(self.associations_view())
+        if not self.associations_view():
             self.show_phase_results(result)
             if newly_displayed:
                 self.checkpoint_visit(result)
@@ -484,7 +504,7 @@ class InsightsDialog(QDialog):
         self.table.blockSignals(True)
         self.rows = [
             factor
-            for factor in (NAP_FACTORS if self.section.currentIndex() else MAIN_FACTORS)
+            for factor in (MAIN_FACTORS, NAP_FACTORS, WORKOUT_FACTORS)[self.section.currentIndex()]
             if factor != "restless" or result.provider == "google_health"
         ]
         self.table.clearSpans()
@@ -575,7 +595,7 @@ class InsightsDialog(QDialog):
                 "No saved health measurements. Open Health data to connect and import your history."
             )
         coverage = result.coverage
-        scope = "nap" if self.section.currentIndex() else "main"
+        scope = ("main", "nap", "workout")[self.section.currentIndex()]
         groups = [cohort for cohort in result.phase_cohorts.values() if cohort.scope == scope]
         ready = sum(
             all(
@@ -593,11 +613,18 @@ class InsightsDialog(QDialog):
             f"{coverage.get('study_days', 0):,} completed study days · "
             f"{coverage.get('health_days', result.health_days):,} saved health days. "
         )
-        if self.all_button.isChecked():
+        if self.associations_view():
             individual = [
                 value
                 for key, value in result.associations.items()
-                if key.startswith("nap_") == (scope == "nap")
+                if (
+                    "nap"
+                    if key.startswith("nap_")
+                    else "workout"
+                    if key.startswith("workout_")
+                    else "main"
+                )
+                == scope
                 and (result.provider == "google_health" or not key.startswith("restless/"))
             ]
             available = sum(value.status == "exploratory estimate" for value in individual)
@@ -732,10 +759,13 @@ class InsightsDialog(QDialog):
             timing = "previous_day" if metric == "recall" else "study_day"
         return f"{factor}/{metric}/{timing}"
 
+    def associations_view(self):
+        return self.all_button.isChecked() or self.section.currentIndex() == 2
+
     def select_cell(self, row, column):
         if not self.result or column < 1 or not 0 <= row < len(self.rows):
             return
-        if not self.all_button.isChecked():
+        if not self.associations_view():
             self.select_phase(row, column)
             return
         factor = self.rows[row]
@@ -745,7 +775,7 @@ class InsightsDialog(QDialog):
         series, value = self.result.series[key], self.result.associations[key]
         name = FACTOR_LABELS[FACTORS.index(factor)]
         context = label.replace("\n", " · ")
-        if factor in NAP_FACTORS:
+        if factor in NAP_FACTORS or factor in WORKOUT_FACTORS:
             context = label.split("\n")[0] + (
                 " · before studying" if timing == "before" else " · after studying"
             )
@@ -779,6 +809,11 @@ class InsightsDialog(QDialog):
                 f" {value.nap_days:,} recorded-nap days; "
                 f"{value.no_recorded_nap_days:,} with no recorded nap."
             )
+        if value.workout_days is not None:
+            text += (
+                f" {value.workout_days:,} recorded-workout days; "
+                f"{value.no_recorded_workout_days:,} with no recorded workout."
+            )
         if value.days:
             text += f" Study dates {value.first_day} to {value.last_day}."
         if self.result.settings.adjust_month and value.raw_correlation is not None:
@@ -802,12 +837,14 @@ class InsightsDialog(QDialog):
         units = (
             "steps"
             if factor == "steps"
+            else "minutes in the 24-hour window"
+            if factor in WORKOUT_FACTORS and factor not in ("workout_recorded", "workout_gap")
             else "minutes on nap days"
             if factor in NAP_FACTORS and factor not in ("nap_recorded", "nap_gap")
             else "hours from studying"
-            if factor == "nap_gap"
+            if factor in ("nap_gap", "workout_gap")
             else "0=no record, 1=recorded"
-            if factor == "nap_recorded"
+            if factor in ("nap_recorded", "workout_recorded")
             else "hours"
         )
         self.chart.x_label = (

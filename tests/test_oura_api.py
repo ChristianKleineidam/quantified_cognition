@@ -32,6 +32,7 @@ def connection(tmp_path, monkeypatch):
     monkeypatch.setattr(
         oura_api, "write_secret", lambda path, slot, value: saved.update({slot: value})
     )
+    monkeypatch.setattr(oura_api, "call_service", lambda *a, **kw: {"oura_enabled": True})
     return source, saved
 
 
@@ -50,6 +51,9 @@ def test_paginated_direct_sync_minimizes_fields_and_commits_atomically(connectio
                 "data": [] if "next_token" in params else [sleep()],
                 "next_token": None if "next_token" in params else "second",
             }
+        if "/workout?" in url:
+            assert params["fields"] == [oura_api.WORKOUT_PROJECTION]
+            return {"data": [], "next_token": None}
         assert params["fields"] == ["id,day,steps"]
         return {
             "data": [{"id": "never-retained", "day": "2026-09-07", "steps": 0}],
@@ -59,11 +63,12 @@ def test_paginated_direct_sync_minimizes_fields_and_commits_atomically(connectio
     monkeypatch.setattr(oura_api, "request_json", request)
     monkeypatch.setattr(storage, "build_report", lambda *a, **kw: pytest.fail("FSRS replay"))
     result = oura_api.sync_oura(source, CONFIG, SharingConfig())
-    assert len(calls) == 3 and all(token == "old-access" for _, token in calls)
+    assert len(calls) == 4 and all(token == "old-access" for _, token in calls)
     assert parse_qs(urlsplit(calls[0][0]).query)["start_date"] == ["2000-01-01"]
     assert result.snapshot.days[date(2026, 9, 7)].values["oura_steps"] == 0
     assert saved["oura"]["last_full_sync"] > 0
     assert saved["oura"]["sleep_session_version"] == 1
+    assert saved["oura"]["workout_version"] == 1
     assert oura_api.sync_oura(source, CONFIG, SharingConfig()) is None  # Hourly throttle.
     before = result.snapshot.revision
     result = oura_api.sync_oura(source, CONFIG, SharingConfig(), force=True)
@@ -113,7 +118,9 @@ def test_refresh_rotation_is_persisted_before_cancellation(connection, monkeypat
     saved["oura"]["expires_at"] = 0
     calls = []
 
-    def refresh(config, route, data):
+    def refresh(config, route, data=None):
+        if route == "/status":
+            return {"oura_enabled": True}
         calls.append(data["refresh_token"])
         return {"access_token": "new-access", "refresh_token": "new-refresh", "expires_in": 3600}
 
@@ -176,6 +183,8 @@ def test_desktop_connect_verifies_pkce_and_resets_previous_account_history(conne
     pending, callbacks = {}, []
 
     def service_call(config, route, data=None):
+        if route == "/status":
+            return {"oura_enabled": True}
         if route == "/oauth/start":
             pending.update(data)
             return {
@@ -237,6 +246,80 @@ def test_https_redirects_are_denied_and_errors_never_include_credentials(monkeyp
     with pytest.raises(ServiceError) as error:
         service.request_json("https://example.com", token="private")
     assert "private" not in str(error.value) and error.value.status == 401
+
+
+def test_disabled_operator_switch_blocks_direct_reads_with_cached_credentials(
+    connection, monkeypatch
+):
+    source, saved = connection
+    monkeypatch.setattr(oura_api, "call_service", lambda *a, **k: {"oura_enabled": False})
+    monkeypatch.setattr(oura_api, "request_json", lambda *a, **k: pytest.fail("Oura contacted"))
+    with pytest.raises(ServiceError, match="not been enabled"):
+        oura_api.sync_oura(source, CONFIG, SharingConfig())
+    assert saved["oura"]["retry_at"] > time.time() + 3500
+    assert not health.health_database_path(source).exists()
+
+
+def test_denied_workout_scope_preserves_sleep_steps_without_reusing_workout_coverage(
+    connection, monkeypatch
+):
+    from test_workouts import workout
+
+    source, saved = connection
+    health.save_oura_import(
+        source,
+        parse_oura_records([], [], [workout()]),
+        authoritative_window=("2025-01-01", "2027-01-01"),
+    )
+
+    def request(url, **kwargs):
+        if "/workout?" in url:
+            raise ServiceError("Forbidden", status=403)
+        return {
+            "data": [sleep()] if "/sleep?" in url else [{"day": "2026-09-07", "steps": 4000}],
+            "next_token": None,
+        }
+
+    monkeypatch.setattr(oura_api, "request_json", request)
+    result = oura_api.sync_oura(source, CONFIG, SharingConfig())
+    assert not result.snapshot.workouts and not result.snapshot.workout_windows
+    assert result.snapshot.days[date(2026, 9, 7)].values["oura_steps"] == 4000
+    assert result.snapshot.days[date(2026, 9, 7)].values["oura_workout_count"] is None
+    assert saved["oura"]["workout_access"] is False
+    assert "Workout access is unavailable" in oura_api.connection_summary(source)
+
+
+def test_failed_or_invalid_workout_page_does_not_commit_sleep_deletions(connection, monkeypatch):
+    from test_workouts import workout
+
+    source, saved = connection
+    before = health.save_oura_import(
+        source,
+        parse_oura_records([sleep()], [], [workout()]),
+        authoritative_window=("2025-01-01", "2027-01-01"),
+    ).snapshot
+
+    def request(url, **kwargs):
+        if "/workout?" in url:
+            raise ServiceError("Rate limited", status=429, retry_after=1800)
+        return {"data": [], "next_token": None}
+
+    monkeypatch.setattr(oura_api, "request_json", request)
+    with pytest.raises(ServiceError):
+        oura_api.sync_oura(source, CONFIG, SharingConfig(), force=True)
+    assert health.load_health(source) == before
+    assert saved["oura"]["retry_at"] > time.time() + 1700
+    monkeypatch.setattr(
+        oura_api,
+        "request_json",
+        lambda url, **kwargs: {
+            "data": [workout(start_datetime="invalid")] if "/workout?" in url else [],
+            "next_token": None,
+        },
+    )
+    with pytest.raises(ServiceError, match="invalid measurements"):
+        oura_api.sync_oura(source, CONFIG, SharingConfig(), force=True)
+    assert health.load_health(source) == before
 
 
 @pytest.mark.skipif(__import__("sys").platform != "win32", reason="Windows DPAPI")
