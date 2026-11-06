@@ -41,7 +41,7 @@ def _now() -> str:
 
 @dataclass(frozen=True)
 class SharingConfig:
-    notice_version: str = "research-sharing-v9"
+    notice_version: str = "research-sharing-v10"
     custom_notice_text: str = ""
 
     @classmethod
@@ -60,7 +60,7 @@ class SharingConfig:
         # Anki merges saved configuration over new defaults. A saved version of
         # our built-in notice must advance with its text; custom notices keep
         # their explicit version. Historical choices remain in the audit.
-        if not text and version in {f"research-sharing-v{number}" for number in range(1, 9)}:
+        if not text and version in {f"research-sharing-v{number}" for number in range(1, 10)}:
             version = cls().notice_version
         return cls(
             notice_version=version,
@@ -83,8 +83,8 @@ class SharingConfig:
             return self.custom_notice_text
         data = (
             "Daily recall and overall, short-term and long-term memory formation scores, "
-            "counts, uncertainty and coverage; Oura and Google Health daily total sleep, "
-            "light/deep/REM/awake durations, Google restless time, sleep-period counts, "
+            "counts, uncertainty and coverage; Oura daily total sleep, "
+            "light/deep/REM/awake durations, sleep-period counts, "
             "data availability and steps when available; dates, sources and calculation versions. "
             "Separate main-sleep durations before and after studying, recorded-nap indicators, "
             "nap counts and total/light/deep/REM durations, gaps to studying, and matching status "
@@ -93,14 +93,14 @@ class SharingConfig:
             "24-hour summaries before and after studying, gaps to studying, between-review "
             "workout counts and availability status are included when available. "
             "Anki version, FSRS settings fingerprint, timezone, day boundary, calculation "
-            "settings, Oura algorithm versions, Google sleep types, provider day conventions "
+            "settings, Oura algorithm versions, date conventions "
             "and sync times are included. "
             "A random participant ID links contributions, together with your sharing "
             "choice and whether it preceded your first results view. "
             "Card questions and answers, card/deck names and IDs, individual reviews, "
             "exact sleep, workout or review times, workout labels and activity names, "
             "raw health records, heart rate, location, name, email, "
-            "Oura/Google account and device IDs and "
+            "Oura account and device IDs and "
             "credentials are excluded. "
         )
         return (

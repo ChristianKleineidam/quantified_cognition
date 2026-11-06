@@ -165,11 +165,9 @@ Review the personal health-connection consent separately too; a provider's
 OAuth authorization screen is not automatically proof of valid explicit consent
 for every operation described by the app.
 
-Complete Google's research intake and obtain review-board approval or waiver
-and its required supporting materials. Confirm whether personal-only API use
-is subject to any study-app requirements too. With Oura, confirm permission for
-local historical storage, user CSV export, hosted research retention, intended
-analysis and controlled collaborators. Resolve whether its Aggregator/End
+The first release's research scope covers Anki and Oura. Confirm Oura's
+permission for local historical storage, user CSV export, hosted research
+retention, intended analysis and controlled collaborators. Resolve whether its Aggregator/End
 Customer requirements apply. Implement the accepted revocation notification and
 offline-data process; current desktop polling is not continuous notification.
 No provider app, ethics application or account is submitted by these documents.

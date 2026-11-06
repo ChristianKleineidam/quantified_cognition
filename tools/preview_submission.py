@@ -1,4 +1,4 @@
-"""Render the actual upload screen with synthetic summary text, without sending."""
+"""Render the combined research dialog with a synthetic package."""
 
 import os
 import sys
@@ -10,9 +10,8 @@ sys.path.insert(0, str(root))
 
 from aqt.qt import QApplication, QFont, QFontDatabase, QWidget  # noqa: E402
 
-from addon.research import SharingConfig  # noqa: E402
-from addon.service import ServiceConfig  # noqa: E402
-from addon.submission_ui import SubmissionDialog  # noqa: E402
+from addon.research import SharingConfig, SharingSnapshot  # noqa: E402
+from addon.sharing_ui import SharingDialog  # noqa: E402
 
 app = QApplication([])
 if os.name == "nt":
@@ -22,23 +21,29 @@ if os.name == "nt":
     if font_id >= 0:
         app.setFont(QFont(QFontDatabase.applicationFontFamilies(font_id)[0], 10))
 parent = QWidget()
-dialog = SubmissionDialog(
+sharing = SharingConfig()
+dialog = SharingDialog(
     parent,
     str(root / ".reference/preview.anki2"),
-    ServiceConfig("https://example.supabase.co/functions/v1/qs-service"),
-    SharingConfig(),
+    SharingSnapshot(
+        "synthetic", "new",
+        [{"scope": sharing.scope, "event_type": "sharing_choice", "choice": "opt_in"}],
+        sharing,
+    ),
 )
-dialog.summary.setText(
-    "180 days · 2026-04-27 to 2026-10-23\nRecipient: Example memory study\n"
-    "Service: https://example.supabase.co/functions/v1/qs-service"
-)
+dialog.enrolled = True
+dialog.package = {"submission_id": "synthetic"}
+dialog.details_button.setText("Full sharing notice and study information")
+dialog.preview.setText("180 days · 2026-04-27 to 2026-10-23\nRecipient · Example memory study")
+dialog.preview.show()
 dialog.privacy.setText(
     '<a href="https://example.org/privacy">Study information and privacy policy</a>'
 )
 dialog.status.setText("Review the package, then choose Send. Nothing has been uploaded.")
-dialog.send.setEnabled(True)
+dialog.update_actions()
 dialog.show()
-app.processEvents()
+for _ in range(4):
+    app.processEvents()
 destination = root / ".reference/submission-preview.png"
 dialog.grab().save(str(destination))
 print(destination)

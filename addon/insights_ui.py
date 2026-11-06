@@ -27,6 +27,7 @@ from aqt.qt import (
     QWidget,
 )
 
+from . import health
 from .backend import UpdateCancelled
 from .background import run_file_job
 from .insight_visits import (
@@ -41,6 +42,7 @@ from .insights import (
     FACTORS,
     MAIN_FACTORS,
     NAP_FACTORS,
+    SLEEP_SHARE_FACTORS,
     WORKOUT_FACTORS,
     InputsChanged,
     InsightSettings,
@@ -68,6 +70,11 @@ COLUMNS = (
 
 def number(value):
     return "—" if value is None else f"{value:+.2f}"
+
+
+def sleep_duration(seconds):
+    hours, minutes = divmod(round(seconds / 60), 60)
+    return f"{hours}h {minutes:02d}m"
 
 
 class AssociationChart(QWidget):
@@ -149,7 +156,7 @@ class InsightsDialog(QDialog):
         self.selected_key = None
         self.selected_phase = None
         self.rows = []
-        self.auto_provider = provider is None
+        self.auto_provider = health.GOOGLE_HEALTH_IN_RELEASE and provider is None
         self.pending_reload = False
         self.visit_states = {}
         self.visit_revision = 0
@@ -160,7 +167,7 @@ class InsightsDialog(QDialog):
         from .ui_layout import measurement_limitations, scrollable_report
 
         layout, outer, self.content_scroll = scrollable_report(
-            self, 1240, 650, "Personal insights content"
+            self, 1240, 790, "Personal insights content"
         )
         intro = QLabel(
             "Your sleep, activity and memory across all saved history. "
@@ -174,11 +181,13 @@ class InsightsDialog(QDialog):
         controls = QHBoxLayout()
         self.provider = QComboBox()
         self.provider.addItem("Oura", "oura")
-        self.provider.addItem("Google Health", "google_health")
-        if provider == "google_health":
-            self.provider.setCurrentIndex(1)
+        if health.GOOGLE_HEALTH_IN_RELEASE:
+            self.provider.addItem("Google Health", "google_health")
+            if provider == "google_health":
+                self.provider.setCurrentIndex(1)
         self.provider.setAccessibleName("Health data source")
         controls.addWidget(self.provider)
+        self.provider.setVisible(health.GOOGLE_HEALTH_IN_RELEASE)
         self.period = QComboBox()
         for label, days in (
             ("All saved history", None),
@@ -196,10 +205,10 @@ class InsightsDialog(QDialog):
         )
         controls.addWidget(self.adjust)
         controls.addStretch()
-        self.all_button = QPushButton("All associations")
-        self.all_button.setCheckable(True)
-        self.all_button.toggled.connect(self.view_changed)
-        controls.addWidget(self.all_button)
+        self.stage_button = QPushButton("Stage comparisons")
+        self.stage_button.setCheckable(True)
+        self.stage_button.toggled.connect(self.view_changed)
+        controls.addWidget(self.stage_button)
         self.refresh_button = QPushButton("Update history")
         self.refresh_button.clicked.connect(self.refresh_memory)
         controls.addWidget(self.refresh_button)
@@ -209,7 +218,7 @@ class InsightsDialog(QDialog):
         controls.addWidget(self.export_button)
         layout.addLayout(controls)
         self.section = QTabBar()
-        self.section.addTab("Main sleep & steps")
+        self.section.addTab("Main sleep and steps")
         self.section.addTab("Naps")
         self.section.addTab("Workouts")
         self.section.currentChanged.connect(self.section_changed)
@@ -218,6 +227,11 @@ class InsightsDialog(QDialog):
         self.summary.setWordWrap(True)
         self.summary.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(self.summary)
+        self.sleep_summary = QLabel()
+        self.sleep_summary.setWordWrap(True)
+        self.sleep_summary.setTextFormat(Qt.TextFormat.PlainText)
+        self.sleep_summary.hide()
+        layout.addWidget(self.sleep_summary)
         self.changes = QLabel()
         self.changes.setWordWrap(True)
         self.changes.setTextFormat(Qt.TextFormat.PlainText)
@@ -275,19 +289,17 @@ class InsightsDialog(QDialog):
         if self.result is not None:
             self.show_result(self.result)
 
-    def view_changed(self, show_all):
-        returning = self.result and not self.result.visit_changes.get("first_visit", True)
-        self.resize(1240, (960 if returning else 900) if show_all else 650)
-        self.all_button.setText("Phase comparisons" if show_all else "All associations")
+    def view_changed(self, show_stages):
+        self.stage_button.setText("Sleep measures" if show_stages else "Stage comparisons")
         self.selected_key = None
         self.section_changed(self.section.currentIndex())
 
     def section_text(self):
         naps = self.section.currentIndex() == 1
         workouts = self.section.currentIndex() == 2
-        self.all_button.setVisible(not workouts)
+        self.stage_button.setVisible(not workouts)
         self.section.setTabText(
-            0, "Main sleep & steps" if self.all_button.isChecked() else "Main sleep"
+            0, "Main sleep" if self.stage_button.isChecked() else "Main sleep and steps"
         )
         labels = ["Measurement"]
         for label, _metric, timing in COLUMNS:
@@ -310,13 +322,12 @@ class InsightsDialog(QDialog):
                 "and do not establish cause and effect."
             )
             return
-        if not self.all_button.isChecked():
+        if self.stage_button.isChecked():
             self.note.setText(
-                f"Each arrow moves {SHIFT_MINUTES} minutes from the first phase to the second, "
-                "holding total sleep and the remaining phase constant. All three rows use the "
-                "same days within each column. Formation uses ≥30-day-old study days with ≥80% "
-                "evaluated follow-ups. Approximate 95% ranges use 14-day calendar blocks. "
-                "These are associations, not causal effects."
+                f"Each comparison swaps {SHIFT_MINUTES} minutes of one stage for the same amount "
+                "of another while total sleep stays the same. All three rows use the same days "
+                "within each column. Formation uses study days at least 30 days old with at least "
+                "80% of follow-ups evaluated. Approximate 95% ranges use 14-day calendar blocks."
             )
             return
         self.note.setText(
@@ -327,8 +338,9 @@ class InsightsDialog(QDialog):
                 "does not prove no nap occurred. Naps between reviews are exported separately. "
                 if naps
                 else "Main sleep uses actual sessions before the first review and after the last "
-                "review, within 36 hours; naps are separate. Steps use the previous day for "
-                "recall and the study day for formation. "
+                "review, within 36 hours. Stage percentages use time asleep on nights with all "
+                "three stages recorded. Steps use the previous day for recall and the study day "
+                "for formation. "
             )
             + "Formation needs ≥30-day-old study days and ≥80% evaluated follow-ups. Approximate "
             "95% ranges use 14-day calendar blocks. Comparisons are exploratory, not causal."
@@ -348,7 +360,7 @@ class InsightsDialog(QDialog):
             self.refresh_button,
             self.health_button,
             self.section,
-            self.all_button,
+            self.stage_button,
         ):
             control.setEnabled(not busy)
         self.export_button.setEnabled(not busy and self.result is not None)
@@ -429,6 +441,7 @@ class InsightsDialog(QDialog):
         self.summary.setText(
             "Matching your saved history and estimating uncertainty in the background…"
         )
+        self.sleep_summary.hide()
         self.changes.setText("Comparing with your last visit…")
         self.detail.setText("")
         visit_states = dict(self.visit_states)
@@ -480,6 +493,25 @@ class InsightsDialog(QDialog):
         if result.provider != "oura" and self.section.currentIndex() == 2:
             self.section.setCurrentIndex(0)
         self.summary.setText(self.overview_text(result))
+        main_sleep_view = self.section.currentIndex() == 0 and self.associations_view()
+        self.sleep_summary.setVisible(bool(result.health_days) and main_sleep_view)
+        sleep = result.main_sleep
+        if sleep is not None:
+            stages = " · ".join(
+                f"{label} {sleep_duration(duration)} ({share:.1f}%)"
+                for label, duration, share in zip(
+                    ("Light", "Deep", "REM"),
+                    sleep.average_stage_seconds,
+                    sleep.average_stage_percent,
+                    strict=True,
+                )
+            )
+            self.sleep_summary.setText(
+                f"Average main sleep across {sleep.nights:,} nights with all stages recorded\n"
+                f"Total {sleep_duration(sleep.average_total_seconds)} · {stages}"
+            )
+        else:
+            self.sleep_summary.setText("No saved main sleep with all three stages available.")
         self.changes.setText(
             overview_changes(
                 result.visit_changes,
@@ -487,7 +519,7 @@ class InsightsDialog(QDialog):
                 phases=not self.associations_view(),
             )
         )
-        self.changes.setVisible(not self.all_button.isChecked())
+        self.changes.setVisible(self.associations_view())
         generated = result.generated_at.replace("T", " ")[:16]
         memory = result.memory_generated_at.replace("T", " ")[:16]
         self.saved_label.setText(
@@ -652,7 +684,7 @@ class InsightsDialog(QDialog):
         self.table.clearSpans()
         self.table.setRowCount(3)
         scope = "nap" if self.section.currentIndex() else "main"
-        headers = [f"{SHIFT_MINUTES}-minute\nshift"]
+        headers = [f"Swap {SHIFT_MINUTES}\nminutes"]
         for label, metric, timing in COLUMNS:
             cohort = result.phase_cohorts.get(f"{scope}/{metric}/{timing}")
             headers.append(
@@ -760,7 +792,7 @@ class InsightsDialog(QDialog):
         return f"{factor}/{metric}/{timing}"
 
     def associations_view(self):
-        return self.all_button.isChecked() or self.section.currentIndex() == 2
+        return not self.stage_button.isChecked() or self.section.currentIndex() == 2
 
     def select_cell(self, row, column):
         if not self.result or column < 1 or not 0 <= row < len(self.rows):
@@ -837,6 +869,8 @@ class InsightsDialog(QDialog):
         units = (
             "steps"
             if factor == "steps"
+            else "% of time asleep"
+            if factor in SLEEP_SHARE_FACTORS
             else "minutes in the 24-hour window"
             if factor in WORKOUT_FACTORS and factor not in ("workout_recorded", "workout_gap")
             else "minutes on nap days"

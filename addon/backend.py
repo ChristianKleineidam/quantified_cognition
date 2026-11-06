@@ -74,8 +74,6 @@ def input_fingerprint(
         {key: deck.get(key) for key in ("id", "conf", "dyn")} for deck in collection.decks.all()
     ]
     policy = deleted_history_policy(collection, deck_configs)
-    thresholds = asdict(settings)
-    del thresholds["default_display_days"]
     digest = hashlib.sha256()
 
     def add(value):
@@ -94,7 +92,7 @@ def input_fingerprint(
             # Its phase can change at DST even when historical local dates do not.
             "native_cutoff_phase": cutoff % 86_400,
             "created": collection.crt,
-            "thresholds": thresholds,
+            "thresholds": asdict(settings),
             "timezone": (time.tzname, time.timezone, time.daylight),
             "deleted_history_policy": policy.reason,
             # If presets disagree, only this excluded count affects output.

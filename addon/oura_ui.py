@@ -20,6 +20,7 @@ from aqt.qt import (
     QVBoxLayout,
 )
 
+from . import health
 from .backend import UpdateCancelled
 from .background import run_file_job
 from .export import export_csv_atomic
@@ -31,7 +32,7 @@ from .google_health_api import (
     sync_google_health,
 )
 from .health import HealthSnapshot, load_health
-from .oura_api import connect_oura, disconnect_oura, saved_oura, sync_oura
+from .oura_api import connect_oura, connection_status, disconnect_oura, sync_oura
 from .research import finish_csv_exposure, prepare_csv_exposure, sharing_state
 from .service import ServiceConfig
 from .storage import database_path, load_report
@@ -70,9 +71,12 @@ class OuraDialog(QDialog):
         controls = QHBoxLayout()
         self.provider_selector = QComboBox()
         self.provider_selector.setAccessibleName("Health data source")
-        self.provider_selector.addItems(["Oura", "Google Health"])
+        self.provider_selector.addItem("Oura")
+        if health.GOOGLE_HEALTH_IN_RELEASE:
+            self.provider_selector.addItem("Google Health")
         self.provider_selector.currentIndexChanged.connect(self.change_provider)
         controls.addWidget(self.provider_selector)
+        self.provider_selector.setVisible(health.GOOGLE_HEALTH_IN_RELEASE)
         self.choose_button = QPushButton("Connect Oura…")
         self.choose_button.clicked.connect(self.connect_oura)
         controls.addWidget(self.choose_button)
@@ -162,12 +166,14 @@ class OuraDialog(QDialog):
             "Research uploads require separate confirmation."
             if google
             else "Connect Oura to sync sleep stages, daily steps and workouts automatically. "
-            "Daily and Workout permissions are used. Workout labels, heart rate, calories and "
+            "In Oura, allow Daily for sleep and steps and Workout for workouts. "
+            "Allow both to sync everything. Workout labels, heart rate, calories and "
             "distance are not saved. "
             "Measurements stay in this Anki profile. Uploads require separate confirmation."
         )
         self.note.setText(
-            "Showing up to 100 recent days; CSV combines all saved health and Anki days. "
+            "The table shows all saved days for this provider. "
+            "CSV includes saved health and Anki history. "
             + (
                 "Google sleep uses the local wake date; steps use Google’s civil day. "
                 "Sleep uses whole minutes. Classic sleep has no light/deep/REM values. "
@@ -176,12 +182,11 @@ class OuraDialog(QDialog):
                 else "Oura’s assigned day can differ from Anki’s day boundary. "
                 "No recorded workout does not prove no exercise occurred. "
             )
-            + "Missing values stay blank. Overlapping sleep periods are flagged. "
-            "Oura and Google remain separate; their measurements are never added together."
+            + "Missing values stay blank. Overlapping sleep periods are flagged."
         )
 
     def change_provider(self, index):
-        if self.busy:
+        if self.busy or index < 0:
             return
         self.prefix = "google_health" if index else "oura"
         self.provider = "Google Health" if index else "Oura"
@@ -234,15 +239,25 @@ class OuraDialog(QDialog):
 
     def load(self):
         def read():
-            loader = saved_google_health if self.prefix == "google_health" else saved_oura
-            snapshot, message = loader(self.collection_path)
-            return self.expose(snapshot), message
+            if self.prefix == "oura":
+                snapshot = load_health(self.collection_path)
+                message, connected = connection_status(self.collection_path)
+            else:
+                snapshot, message = saved_google_health(self.collection_path)
+                connected = False
+            return self.expose(snapshot), message, connected
 
         def loaded(result):
-            self.show_snapshot(result[0])
-            self.status.setText(result[1])
+            snapshot, message, connected = result
+            self.show_snapshot(snapshot)
+            self.status.setText(message)
+            self.set_oura_button(connected)
 
         self.run(read, loaded)
+
+    def set_oura_button(self, connected):
+        if self.prefix == "oura":
+            self.choose_button.setText("Change Oura permissions…" if connected else "Connect Oura…")
 
     def show_snapshot(self, snapshot):
         self.snapshot = snapshot
@@ -252,8 +267,9 @@ class OuraDialog(QDialog):
             for day, health in snapshot.days.items()
             if health.values.get(f"{self.prefix}_day_basis")
         }
-        for day, health in sorted(days.items(), reverse=True)[:100]:
-            values = health.values
+        self.table.setRowCount(len(days))
+        for row, (day, measurements) in enumerate(sorted(days.items(), reverse=True)):
+            values = measurements.values
             cells = (
                 [day.isoformat()]
                 + [
@@ -282,8 +298,6 @@ class OuraDialog(QDialog):
                     ),
                 ]
             )
-            row = self.table.rowCount()
-            self.table.insertRow(row)
             for column, value in enumerate(cells):
                 self.table.setItem(row, column, QTableWidgetItem(value))
         if days:
@@ -341,24 +355,30 @@ class OuraDialog(QDialog):
             self.synced,
         )
 
-    def synced(self, result):
+    def synced(self, outcome):
+        result, connection_message, connected = outcome
         if result is None:
             self.status.setText(f"Connect {self.provider} first, then sync your measurements.")
             return
         self.show_snapshot(result.snapshot)
+        self.set_oura_button(connected)
         if result.changed_records or result.metadata_changed:
             from .ui import notify_insights_updated
 
             notify_insights_updated(self.collection_path)
         self.status.setText(
             f"{self.provider} synced. {result.changed_records:,} new, changed or deleted records."
+            + (f" {connection_message}" if connection_message else "")
             + (f" CSV retry pending: {result.csv_error}" if result.csv_error else "")
         )
 
     def expose_result(self, result):
+        connection_message, connected = "", False
         if result is not None:
             self.expose(result.snapshot)
-        return result
+            if self.prefix == "oura":
+                connection_message, connected = connection_status(self.collection_path)
+        return result, connection_message, connected
 
     def disconnect(self):
         from aqt.utils import askUser
@@ -375,6 +395,7 @@ class OuraDialog(QDialog):
         def done(result):
             self.show_snapshot(result[0])
             self.status.setText(result[1])
+            self.set_oura_button(False)
             from .ui import notify_insights_updated
 
             notify_insights_updated(self.collection_path)

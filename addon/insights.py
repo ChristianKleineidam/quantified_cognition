@@ -16,6 +16,7 @@ from contextlib import closing
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from statistics import mean
 
 from .phase_comparisons import (
     CLOSURE_TOLERANCE_MINUTES,
@@ -35,11 +36,12 @@ from .workouts import study_workouts
 
 VERSION = 6
 METRICS = ("recall", "formation", "formation_short_term", "formation_long_term")
+SLEEP_STAGES = ("light_sleep", "deep_sleep", "rem_sleep")
+SLEEP_SHARE_FACTORS = tuple(f"{stage}_share" for stage in SLEEP_STAGES)
 MAIN_FACTORS = (
     "total_sleep",
-    "light_sleep",
-    "deep_sleep",
-    "rem_sleep",
+    *SLEEP_STAGES,
+    *SLEEP_SHARE_FACTORS,
     "awake",
     "restless",
     "steps",
@@ -56,9 +58,12 @@ WORKOUT_FACTORS = (
 FACTORS = MAIN_FACTORS + NAP_FACTORS + WORKOUT_FACTORS
 FACTOR_LABELS = (
     "Total sleep",
-    "Light sleep",
-    "Deep sleep",
-    "REM sleep",
+    "Light sleep (hours)",
+    "Deep sleep (hours)",
+    "REM sleep (hours)",
+    "Light sleep (%)",
+    "Deep sleep (%)",
+    "REM sleep (%)",
     "Awake",
     "Restless",
     "Daily steps",
@@ -201,10 +206,49 @@ class Insights:
     visit_snapshot: dict = field(default_factory=dict)
     visit_changes: dict = field(default_factory=dict)
     visit_state: dict = field(default_factory=dict)
+    main_sleep: SleepStageSummary | None = None
 
 
 def _finite(value):
     return type(value) in (int, float) and math.isfinite(value)
+
+
+def _stage_shares(total, stages):
+    if not _finite(total) or total <= 0 or any(not _finite(s) or s < 0 for s in stages):
+        return None
+    staged = sum(stages)
+    if staged <= 0 or abs(staged - total) > CLOSURE_TOLERANCE_MINUTES * 60:
+        return None
+    return tuple(100 * stage / staged for stage in stages)
+
+
+@dataclass(frozen=True)
+class SleepStageSummary:
+    nights: int
+    average_total_seconds: float
+    average_stage_seconds: tuple[float, ...]
+    average_stage_percent: tuple[float, ...]
+
+
+def summarize_main_sleep(health, provider, *, start=None, end=None):
+    """Use the same complete, unambiguous main sleep sessions for every stage."""
+    nights = []
+    for session in health.sessions:
+        if session.provider != provider or session.kind != "main" or session.status != "available":
+            continue
+        wake_day = date.fromisoformat(session.wake_day or session.day)
+        if (start and wake_day < start) or (end and wake_day > end):
+            continue
+        total = session.values.get("total_sleep")
+        stages = tuple(session.values.get(stage) for stage in SLEEP_STAGES)
+        shares = _stage_shares(total, stages)
+        if shares is not None:
+            nights.append((total, *stages, *shares))
+    if not nights:
+        return None
+    averages = tuple(map(mean, zip(*nights, strict=True)))
+    stage_end = 1 + len(SLEEP_STAGES)
+    return SleepStageSummary(len(nights), averages[0], averages[1:stage_end], averages[stage_end:])
 
 
 def build_series(
@@ -299,9 +343,18 @@ def build_series(
                             status = values[key + "status"]
                         else:
                             key = f"{provider}_main_{timing}_"
-                            value = values[key + factor + "_seconds"]
-                            units = 3600
                             status = values[key + "status"]
+                            if factor in SLEEP_SHARE_FACTORS:
+                                stages = tuple(
+                                    values[key + stage + "_seconds"] for stage in SLEEP_STAGES
+                                )
+                                shares = _stage_shares(values[key + "total_sleep_seconds"], stages)
+                                value = (
+                                    shares[SLEEP_SHARE_FACTORS.index(factor)] if shares else None
+                                )
+                            else:
+                                value = values[key + factor + "_seconds"]
+                                units = 3600
                     if status not in ("available", "nap duration unavailable"):
                         omitted[status] += 1
                         continue
@@ -317,6 +370,8 @@ def build_series(
                             and values.get(key + "recorded") == 0
                             else "nap stage unavailable"
                             if factor in {"nap_" + stage for stage in NAP_STAGES}
+                            else "complete sleep staging unavailable"
+                            if factor in SLEEP_SHARE_FACTORS
                             else "missing health measurement"
                         ] += 1
                         continue
@@ -756,6 +811,7 @@ def load_insights(
         phase_cohorts,
         phase_associations,
         history_coverage(report, health, provider, as_of=as_of, start=start, end=end),
+        main_sleep=summarize_main_sleep(health, provider, start=start, end=end),
     )
     from .insight_visits import make_snapshot
 

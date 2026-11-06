@@ -4,9 +4,10 @@ Checked against Oura's official documentation on **5 November 2026**, including
 the V2 OpenAPI 1.43 workout contract. The operator has registered the developer
 application with Daily and Workout selected and saved both credential names in
 server secrets. A consented developer-account pilot has now verified token
-exchange, refresh and revocation without exposing the client secret in logs. No wider-use or
-research approval is recorded. The backend is deployed with
-Oura access and research uploads disabled; see [DEPLOYED.md](DEPLOYED.md).
+exchange, refresh and revocation without exposing the client secret in logs.
+Oura is the sole health integration for the first release. The developer-limit
+beta is active. The request for wider access and optional research uploads was
+resubmitted on 6 November 2026. Research uploads are closed.
 
 The **5 November developer pilot** imported paginated sleep, daily activity and
 workouts directly into a disposable local Anki profile, checked its encrypted

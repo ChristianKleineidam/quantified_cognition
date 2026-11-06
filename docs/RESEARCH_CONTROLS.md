@@ -10,16 +10,15 @@ An environment flag alone cannot approve enrollment.
 
 The first Yes / Not now / No remains a sharing **preference**. The original
 choice, event order, first-results opportunity and unknown legacy exposure are
-preserved. Updating to notice v7 asks for a current preference without changing
-earlier timing. Existing CSV fields named `research_consent_*` remain the legacy
+preserved. Updating to the Oura-only notice asks for a current preference without
+changing earlier timing. Existing CSV fields named `research_consent_*` remain the legacy
 preference audit for compatibility; they are not proof of signed enrollment.
 
-Research sharing → **Research enrollment…** opens eligibility first (18 or over,
-own data), followed by the complete, saveable participant information, policy,
-explicit health-data consent and **Agree and join research**. This action runs in
-the background and records enrollment only. **Review and submit data…** still
-requires a package preview and a separate Send for every contribution. No
-measurements are sent merely by enrolling. Personal use is independent of enrollment.
+When participation is open, **Research sharing…** shows eligibility (18 or over,
+own data), the saveable study information and policy, and the explicit health-data
+consent statement. **Agree and join research** records enrollment in the background
+and prepares a package for review in the same window. Each contribution requires
+**Send this package**. Personal use is available without enrolling.
 
 The exact documents and statement are frozen in `addon/research_enrollment.json`.
 Their version/hash must match the approved server protocol. Protocol v5 records

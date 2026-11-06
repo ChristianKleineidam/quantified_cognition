@@ -7,12 +7,12 @@
   "service_url": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service",
   "dashboard_url": "https://supabase.com/dashboard/project/wfjlzecckihsgcvauqwt",
   "environment": {
-    "OURA_ENABLED": "false",
+    "OURA_ENABLED": "true",
     "GOOGLE_HEALTH_ENABLED": "false",
     "RESEARCH_ENABLED": "false",
     "SERVICE_URL": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service",
-    "RESEARCH_NOTICE_VERSION": "research-sharing-v9",
-    "RESEARCH_NOTICE_HASH": "f5bc1ed9e63b7f560dbe964321c3418cbb420e8f4bbb21aa2fa35d8b7ea212c6",
+    "RESEARCH_NOTICE_VERSION": "research-sharing-v10",
+    "RESEARCH_NOTICE_HASH": "778347527e043eea7fc30fdf26e8e24ec1a1c6561e8c5e8ff117a3d84efab534",
     "RESEARCH_OPERATOR": "JollyJoyJourney",
     "PRIVACY_URL": "https://quantifiedcognition.jollyjoyjourney.com/privacy/"
   },
@@ -20,13 +20,13 @@
   "oura_approval_recorded": false,
   "google_health_approval_recorded": false,
   "production_access_enabled": false,
-  "verified_at_utc": "2026-11-05T15:02:34.203569+00:00",
-  "function_version": 23,
-  "migration_version": "20261105134053",
+  "verified_at_utc": "2026-11-06T19:14:20.012948+00:00",
+  "function_version": 27,
+  "migration_version": "20261106190333",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
   "monitor_interval_minutes": 5,
-  "monitor_expected_features_disabled": true,
+  "monitor_expected_features_disabled": false,
   "operator_notifications_configured": true,
   "desktop_beta_recheck_date": "2026-10-30",
   "project_status_at_desktop_recheck": "INACTIVE",
@@ -39,7 +39,7 @@
     "research_controls_schema_exists": false,
     "pending_research_updates_deployed": false
   },
-  "applied_migration_count": 18,
+  "applied_migration_count": 19,
   "research_controls_version": 1,
   "research_protocol_version": "research-enrollment-v9",
   "research_protocol_bundle_hash": "3e10cd6910cee787402240dba2f113227002518dedff353a5dc6b4d86af07627",
@@ -162,5 +162,13 @@
     "research_uploads_enabled": false,
     "all_online_features_restored_disabled": true,
     "production_approval": false
+  },
+  "oura_only_research_scope": {
+    "protocol": "research-enrollment-v10",
+    "bundle_hash": "3e1892b7451be25ef6640c1ccabe4e36ce2247384ea65e9c18fde04dfffcd77b",
+    "approved": false,
+    "enrollment_open": false,
+    "oura_research_permitted": false,
+    "google_health_exclusion_enforced": true
   }
 }

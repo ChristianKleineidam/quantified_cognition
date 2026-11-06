@@ -101,7 +101,7 @@ the sharing-notice hash are unchanged.
 Use a development environment with aqt installed and an existing packaged add-on:
 
 ```powershell
-python tools/desktop_beta.py --root M:\CodexTemp\new-beta-profile --package dist/quantified-cognition-0.18.1.ankiaddon --upgrade-from dist/quantified-self-memory-0.17.4.ankiaddon --choice opt_in --health-fixture --review-close
+python tools/desktop_beta.py --root M:\CodexTemp\new-beta-profile --package dist/quantified-cognition-0.21.0.ankiaddon --upgrade-from dist/quantified-self-memory-0.17.4.ankiaddon --choice opt_in --health-fixture --review-close
 ```
 
 The root must not already exist. The runner leaves screenshots and `result.json`

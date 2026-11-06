@@ -4,8 +4,8 @@ Quantified Cognition analyzes your Anki history on your computer. Connecting a
 health account and contributing to research are choices you make separately.
 Research packages are sent only after you review and explicitly submit them.
 
-Updated **5 November 2026**. Health connections, research enrollment and research
-uploads are not yet available.
+Updated **6 November 2026**. Oura connections are limited during the beta.
+Research enrollment and uploads are currently closed.
 
 ## Your data and choices
 
@@ -35,12 +35,11 @@ research packages using a key protected by your operating system's credential
 store. CSVs and other files you choose to export remain readable files under
 your control.
 
-Oura and Google Health connections import sleep durations, sleep stages and
-daily steps directly from the provider. Oura also supplies workout timing,
+The Oura connection imports sleep durations, sleep stages and
+daily steps directly from Oura. It also imports workout timing,
 duration, intensity and recording source. We do not save workout labels,
-activity names, calories, distance or heart-rate records. Google's activity permission also
-covers other activity data; we fetch daily steps. Available history and missing
-measurements depend on the provider. You sign in on the provider's website.
+activity names, calories, distance or heart-rate records. Available history and
+missing measurements depend on Oura. You sign in on Oura's website.
 Our connection service exchanges and renews access tokens without storing
 them in the research database. The add-on saves credentials in your operating
 system's protected local store.
@@ -48,8 +47,8 @@ system's protected local store.
 **Research packages contain daily measurements:** recall and overall,
 short-term and long-term memory formation scores; predicted and observed
 recall; evaluated, cohort, pending and excluded counts; follow-up coverage,
-uncertainty and quality indicators. Available health data include total,
-light, deep, REM and awake sleep durations, Google's restless time,
+uncertainty and quality indicators. Available Oura data include total,
+light, deep, REM and awake sleep durations,
 sleep-period counts and daily steps. Main sleep before and after studying,
 nap counts, sleep-stage and duration summaries, gaps to studying, between-review
 nap counts and matching status are included when available.
@@ -95,11 +94,6 @@ Findings may appear in scientific publications, reports, presentations and
 public summaries. Public material uses anonymous summaries or synthetic
 examples. Individual daily histories remain
 under controlled access.
-
-Our use of Google Health API data follows the
-[Google Health API Developer and User Data Policy](https://developers.google.com/health/policies/health-api-developer-user-data-policy),
-including its Limited Use requirements, and Google's
-[Health Research Policy](https://developers.google.com/health/policies/health-api-user-data-and-research-policy).
 
 ## Access and safeguards
 

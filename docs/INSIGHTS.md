@@ -9,8 +9,8 @@ reports without it have an unknown method. A method change is flagged rather
 than attributed to newly matured outcomes or improved uncertainty. Existing
 association caches remain reusable when their actual matched inputs are unchanged.
 
-Open **Tools → Quantified Cognition Personal Insights…**, or **Personal insights…**
-from the memory report or health screen. The default is **all saved history**,
+Open **Personal insights…** from the memory report or health screen.
+The default is **all saved history**,
 including data collected before installing this add-on. There is no installation
 date cutoff, daily streak or seven-day default. Users can return after months
 of new data and see the expanded history. Past three years and past twelve
@@ -19,24 +19,21 @@ dates or the dates on which later formation outcomes occurred.
 
 ## A compact overview first
 
-The opening view summarizes selected completed study days, saved health days,
-their date ranges, and how many of the seven memory/timing combinations can
-support all three adjusted phase comparisons. It also reports study days with
-pending formation outcomes and days younger than 30 days. Pending outcomes can
-remain on a day that already meets the 80% follow-up threshold.
+The opening view shows the average total, light, deep and REM durations for main
+sleep. The stage percentages are the average of the nightly shares, using the
+same saved nights with all three stages and consistent sleep totals. This summary
+includes nights without matched Anki reviews. Awake time is outside the share.
 
-The default table has three rows: **Light → deep**, **Light → REM**, and
-**REM → deep**. Each means a ten-minute reallocation at fixed total sleep and
-fixed remaining phase. Cells show the associated memory-score difference in
-percentage points and an approximate 95% range, or **insufficient data**. The
-headers show common eligible day counts. Recall and all six formation/timing
-columns remain visible together, with separate Main sleep and Naps tabs.
-Selecting a cell explains the substitution, adjustment, counts and exclusions.
-No scatter plot or ranking is put in front of these comparisons.
+The default table shows correlations for sleep duration and stage percentages
+with recall and all six formation and timing combinations. Select a cell for
+matched-day counts, uncertainty and a scatter plot. The table labels comparisons
+with insufficient data. **Naps** and **Workouts** have their own tabs.
 
-**All associations** opens the original correlation tables and scatter plots;
-**Phase comparisons** returns to the overview. Switching views or tabs reuses
-the current results without calculation. Full saved history remains the default.
+**Stage comparisons** opens the adjusted estimates. A row such as **Light → deep**
+shows the estimated difference associated with 10 more minutes of deep sleep and
+10 fewer minutes of light sleep at the same total duration. Each column uses the
+same eligible days across all three swaps. **Sleep measures** returns to the
+duration and percentage view. Switching views reuses the current results.
 
 ## Oura workouts
 
@@ -137,7 +134,7 @@ columns are visible together. There is no switch between the two sleep timings.
 The steps row has one recall comparison and one per formation metric, spanning
 the sleep-timing columns so identical step comparisons are not presented twice.
 
-The Main sleep & steps rows are total sleep, light, deep, REM and awake time, plus daily steps.
+The **Main sleep and steps** rows include total sleep, hours and percentages for light, deep and REM sleep, awake time, and daily steps.
 Google also has restless time, which is distinct from light sleep. A missing
 classic-sleep stage stays missing. Oura and Google are analyzed separately;
 the provider with most saved days is initially selected, or the provider from
@@ -385,7 +382,7 @@ disabled until their separate setup/approval steps are complete.
 **Export insights…** writes a separate summary CSV with all measurements and
 timings, including insufficient-data rows, the uncertainty method/version and
 thresholds, date ranges, omitted-day counts, review totals and memory metadata.
-It includes 88 individual correlations and 42 phase contrasts. Existing columns
+It includes individual correlations and 42 stage contrasts. Existing columns
 stay in order; appended fields distinguish `analysis_kind=correlation` from
 `phase_substitution`, main/nap scope, donor/receiver, ten-minute shift, effect/range
 in percentage points, donor support, VIF and phase-model thresholds. Correlation

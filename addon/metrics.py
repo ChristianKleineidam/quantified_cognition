@@ -14,7 +14,6 @@ from .statistical_math import t_critical_95, wilson_range
 class Settings:
     minimum_reviews: int = 30
     minimum_formation_outcome_days: int = 3
-    default_display_days: int = 90
 
     @classmethod
     def from_config(cls, config: dict | None) -> Settings:
@@ -23,7 +22,6 @@ class Settings:
         for key, default, upper in (
             ("minimum_reviews", 30, 100_000),
             ("minimum_formation_outcome_days", 3, 365),
-            ("default_display_days", 90, 36_500),
         ):
             value = config.get(key, default)
             values[key] = value if type(value) is int and 1 <= value <= upper else default

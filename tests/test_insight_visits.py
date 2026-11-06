@@ -319,7 +319,9 @@ def test_snapshot_contains_counts_and_hashes_not_raw_health_or_review_times(tmp_
     old["estimates"]["association/deep_sleep/recall/before"].update(low=-1, high=1)
     result.visit_changes = visits.compare_visits(result.visit_snapshot, old)
     export_path = tmp_path / "insights.csv"
-    assert insights.export_insights(result, export_path) == 172
+    assert insights.export_insights(result, export_path) == len(result.associations) + len(
+        result.phase_associations
+    )
     with export_path.open(encoding="utf-8-sig", newline="") as stream:
         row = next(
             r

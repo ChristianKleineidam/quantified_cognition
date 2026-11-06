@@ -2,7 +2,12 @@
 
 The public information website uses **Cloudflare Pages**, with the custom domain
 `quantifiedcognition.jollyjoyjourney.com`. It is a static information site;
-publishing it does not enable Oura, Google Health or research uploads.
+publishing it is separate from changing the provider or research switches.
+
+Updated **6 November 2026** for the Oura-only first release. The home page,
+Methods, privacy policy and participant information describe the Oura integration
+and the scope of the voluntary study. The published participant documents match
+research enrollment v10. All 17 public files were verified over HTTPS.
 
 Updated **5 November 2026** with Oura workout summaries in the privacy policy,
 participant information, Methods and landing page. The canonical participant
@@ -70,7 +75,7 @@ Keep this directive when changing the response headers.
 Check the homepage and policy/research/contact pages at desktop and phone widths,
 local links, downloadable source-document equality, the 404 page and the public
 HTTPS response headers. Confirm no analytics script or upload/enrollment form was
-introduced. Keep all three online feature flags false. Publishing these pages
+introduced. Check that the planned beta feature settings are in place. Publishing these pages
 does not establish provider approval, accepted study enrollment or a verified
 research backend deployment.
 

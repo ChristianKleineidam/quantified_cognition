@@ -5,7 +5,7 @@ import threading
 import pytest
 
 pytest.importorskip("aqt")
-from aqt.qt import QTimer  # noqa: E402
+from aqt.qt import QEvent, QKeyEvent, Qt, QTimer  # noqa: E402
 from test_storage import report_with_followup  # noqa: E402
 from test_threading import app as thread_app  # noqa: E402
 from test_threading import pump_until
@@ -13,6 +13,7 @@ from test_threading import runtime as thread_runtime
 
 from addon import sharing_ui, ui  # noqa: E402
 from addon.research import SharingConfig, sharing_state  # noqa: E402
+from addon.service import ServiceError  # noqa: E402
 from addon.storage import database_path, save_report  # noqa: E402
 
 app = thread_app
@@ -73,9 +74,24 @@ def test_later_opt_in_and_forced_reopen_preserve_first_decline(runtime, app, mon
     def answer(dialog):
         assert dialog.snapshot.current_choice == "declined"
         prompts.append(True)
-        QTimer.singleShot(0, lambda: dialog.choose("opt_in"))
+
+        def choose_or_close():
+            if dialog.busy:
+                QTimer.singleShot(10, choose_or_close)
+            elif dialog.snapshot.current_choice == "declined":
+                dialog.choose("opt_in")
+                QTimer.singleShot(10, choose_or_close)
+            else:
+                assert dialog.snapshot.current_choice == "opt_in"
+                dialog.close_button.click()
+
+        QTimer.singleShot(0, choose_or_close)
         return original_exec(dialog)
 
+    def closed(*_args):
+        raise ServiceError("Research enrollment is not open.")
+
+    monkeypatch.setattr(sharing_ui, "enrollment_information", closed)
     monkeypatch.setattr(sharing_ui.SharingDialog, "exec", answer)
     sharing_ui.sharing_gate(main, "addon", lambda config: finished.append(config), force=True)
     pump_until(app, lambda: bool(finished))
@@ -145,13 +161,18 @@ def test_consent_database_writes_happen_off_the_ui_thread(runtime, app, monkeypa
     assert all(worker != main.owner for worker in workers)
 
 
-def test_closing_existing_sharing_choice_does_not_withdraw_or_request_deletion(runtime, app):
+def test_enter_on_existing_sharing_choice_closes_without_changing_it(runtime, app):
     main, _ = runtime
     sharing = SharingConfig()
     snapshot = sharing_state(main.col.path, sharing, event_type="sharing_choice", choice="opt_in")
     dialog = sharing_ui.SharingDialog(main, main.col.path, snapshot)
     dialog.show()
-    dialog.reject()
+    app.processEvents()
+    assert dialog.close_button.isDefault()
+    assert not any(button.isDefault() for button in dialog.buttons)
+    app.sendEvent(
+        dialog, QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Return, Qt.KeyboardModifier.NoModifier)
+    )
     assert not dialog.isVisible()
     after = sharing_state(main.col.path, sharing)
     assert after.current_choice == "opt_in" and after.events == snapshot.events

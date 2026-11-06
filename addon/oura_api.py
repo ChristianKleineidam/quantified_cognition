@@ -11,7 +11,7 @@ from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlencode, urlsplit
 
-from .health import load_health, save_oura_import
+from .health import save_oura_import
 from .oura import OuraImport, parse_oura_records
 from .service import ServiceError, call_service, request_json
 from .storage import profile_job_lock
@@ -98,7 +98,7 @@ class Loopback:
         while self.result is None:
             check_cancelled()
             if time.monotonic() >= deadline:
-                raise ServiceError(f"Sign-in timed out. Select Connect {provider} to try again.")
+                raise ServiceError(f"Sign-in timed out. Try connecting to {provider} again.")
             self.server.handle_request()
         if self.result.get("error") or len(self.result.get("code", [])) != 1:
             raise ServiceError(f"{provider} sign-in was cancelled or denied.")
@@ -161,7 +161,7 @@ def connect_oura(source, config, sharing, check_cancelled=lambda: None, open_bro
 
 def _access(source, config, credentials, *, refresh=False):
     if credentials.get("service") != config.validated_url():
-        raise ServiceError("The connection service changed. Connect Oura again.")
+        raise ServiceError("The connection service changed. Select Change Oura permissions.")
     if refresh or credentials.get("expires_at", 0) < time.time() + 120:
         value = call_service(
             config, "/oauth/refresh", {"refresh_token": credentials["refresh_token"]}
@@ -187,12 +187,17 @@ def _collection(source, config, credentials, kind, start, end, check_cancelled):
         if cursor:
             params["next_token"] = cursor
         url = "https://api.ouraring.com/v2/usercollection/" + kind + "?" + urlencode(params)
-        try:
-            page = request_json(url, token=_access(source, config, credentials))
-        except ServiceError as error:
-            if error.status != 401:
-                raise
-            page = request_json(url, token=_access(source, config, credentials, refresh=True))
+        for refresh in (False, True):
+            token = _access(source, config, credentials, refresh=refresh)
+            try:
+                page = request_json(url, token=token)
+            except ServiceError as error:
+                if error.status == 403 and cursor is None:
+                    return None  # This dataset is unavailable to the current grant.
+                if error.status != 401 or refresh:
+                    raise
+            else:
+                break
         if not isinstance(page, dict) or not isinstance(page.get("data"), list):
             raise ServiceError("Oura returned an invalid data page. Saved data is unchanged.")
         records.extend(page["data"])
@@ -216,7 +221,7 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
             return None
         if credentials.get("reauth_required"):
             if force:
-                raise ServiceError("Oura authorization expired. Select Connect Oura again.")
+                raise ServiceError("Oura authorization expired. Select Change Oura permissions.")
             return None
         backfill = (
             credentials.get("sleep_session_version") != 1 or credentials.get("workout_version") != 1
@@ -237,20 +242,28 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
                     "Oura access has not been enabled by the operator yet.", retry_after=3600
                 )
             nights = _collection(source, config, credentials, "sleep", start, end, check_cancelled)
-            activity = _collection(
-                source, config, credentials, "daily_activity", start, end, check_cancelled
-            )
-            try:
-                workouts = _collection(
-                    source, config, credentials, "workout", start, end, check_cancelled
+            activity = (
+                _collection(
+                    source, config, credentials, "daily_activity", start, end, check_cancelled
                 )
-            except ServiceError as error:
-                if error.status != 403:
-                    raise
-                # An older/partial grant must not break sleep/steps or fabricate zeros.
-                workouts = None
+                if nights is not None
+                else None
+            )
+            workouts = _collection(
+                source, config, credentials, "workout", start, end, check_cancelled
+            )
+            daily_access = activity is not None  # Sleep and steps share the Daily permission.
+            workout_access = workouts is not None
+            if not (daily_access or workout_access):
+                raise ServiceError(
+                    "Oura could not provide sleep, steps or workouts. Check your membership "
+                    "or reconnect and allow Daily or Workout.",
+                    status=403,
+                )
             try:
-                prepared = parse_oura_records(nights, activity, workouts)
+                prepared = parse_oura_records(
+                    nights if daily_access else [], activity or [], workouts
+                )
             except ValueError:
                 raise ServiceError(
                     "Oura returned invalid measurements. Saved data is unchanged.", retry_after=3600
@@ -268,11 +281,22 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
                 prepared,
                 sharing=sharing,
                 authoritative_window=(start, end),
-                workouts_unavailable=workouts is None,
+                daily_unavailable=not daily_access,
+                workouts_unavailable=not workout_access,
                 check_cancelled=check_cancelled,
             )
+            if not full and (
+                (daily_access and credentials.get("daily_access") is False)
+                or (workout_access and credentials.get("workout_access") is False)
+            ):
+                # Restored access needs a full history on the next scheduled sync.
+                credentials["last_full_sync"] = 0
             credentials.update(
-                last_sync=now, last_error="", retry_at=0, workout_access=workouts is not None
+                last_sync=now,
+                last_error="",
+                retry_at=0,
+                daily_access=daily_access,
+                workout_access=workout_access,
             )
             if full:
                 credentials["last_full_sync"] = now
@@ -306,20 +330,25 @@ def disconnect_oura(source, config, sharing):
         return result.snapshot, message
 
 
-def connection_summary(source):
+def connection_status(source):
     credentials = read_secret(source, "oura")
     if not credentials:
-        return "Oura is not connected."
+        return "Oura is not connected.", False
     if credentials.get("last_error"):
-        return credentials["last_error"]
-    text = "Oura is connected. Sleep, steps and workouts sync automatically while Anki is open."
+        return credentials["last_error"], True
     if credentials.get("workout_access") is False:
-        text = (
-            "Sleep and steps are connected. Workout access is unavailable; "
-            "connect Oura again and allow Workout to include it."
+        return (
+            "Sleep and steps are connected. Workout access is unavailable. "
+            "Select Change Oura permissions and allow Workout.",
+            True,
         )
-    return text
-
-
-def saved_oura(source):
-    return load_health(source), connection_summary(source)
+    if credentials.get("daily_access") is False:
+        return (
+            "Workouts are connected. Sleep and step access is unavailable. "
+            "Select Change Oura permissions and allow Daily.",
+            True,
+        )
+    return (
+        "Oura is connected. Sleep, steps and workouts sync automatically while Anki is open.",
+        True,
+    )

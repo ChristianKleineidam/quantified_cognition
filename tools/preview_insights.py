@@ -24,6 +24,7 @@ from addon.insights import (  # noqa: E402
     build_series,
     correlate,
     history_coverage,
+    summarize_main_sleep,
 )
 from addon.insights_ui import InsightsDialog  # noqa: E402
 from addon.metrics import DailyResult, Metric, Settings  # noqa: E402
@@ -160,6 +161,7 @@ result = Insights(
     phase_cohorts=cohorts,
     phase_associations=phases,
     coverage=history_coverage(report, snapshot, provider, as_of=date(2026, 10, 25)),
+    main_sleep=summarize_main_sleep(snapshot, provider),
 )
 if "--returning" in sys.argv:
     current = make_snapshot(result, report, snapshot, method_version=4, as_of=date(2026, 10, 25))
@@ -183,9 +185,10 @@ if "--returning" in sys.argv:
 dialog.show_result(result)
 if "--naps" in sys.argv:
     dialog.section.setCurrentIndex(1)
-if "--all" in sys.argv:
-    dialog.all_button.setChecked(True)
+if "--stages" in sys.argv:
+    dialog.stage_button.setChecked(True)
 dialog.show()
+dialog.resize(1280, 940)
 dialog.table.setCurrentCell(0, 1)
 app.processEvents()
 destination = (

@@ -40,6 +40,8 @@ test("enrollment, retention review and the lifecycle of every registered researc
       assert.equal((await one("select public.qs_enrollment_information() result")).result,null);
       assert.ok((await db.query("select approved,enrollment_open,oura_permitted,google_permitted from qs_governance.protocols")).rows
         .every(p=>!p.approved&&!p.enrollment_open&&!p.oura_permitted&&!p.google_permitted));
+      await rejects("update qs_governance.protocols set google_permitted=true where version='research-enrollment-v10'",
+        [],/research_v10_no_google_health/);
       assert.ok((await db.query("select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='qs_governance' and c.relkind='r'")).rows.every(r=>r.relrowsecurity));
       assert.ok((await db.query("select not prosecdef as invoker from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='qs_governance'")).rows.every(r=>r.invoker));
       for(const role of ["anon","authenticated","service_role"]) {

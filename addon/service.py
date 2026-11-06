@@ -49,6 +49,21 @@ class _NoRedirect(HTTPRedirectHandler):
         return None
 
 
+def _oura_missing_scope(url, error):
+    parts = urlsplit(url)
+    if error.code != 401 or parts.hostname != "api.ouraring.com":
+        return False
+    if not parts.path.startswith("/v2/usercollection/") or error.fp is None:
+        return False
+    try:
+        problem = json.loads(error.read(4096))
+    except (OSError, ValueError, RecursionError):
+        return False
+    return isinstance(problem, dict) and (
+        problem.get("title") == "Missing Scopes" or problem.get("error") == "insufficient_scope"
+    )
+
+
 def request_json(url, data=None, *, token=None, method=None, limit=8 * 1024 * 1024):
     if urlsplit(url).scheme != "https":
         raise ServiceError("This service requires HTTPS.")
@@ -90,9 +105,10 @@ def request_json(url, data=None, *, token=None, method=None, limit=8 * 1024 * 10
             429: "The service is busy. It will be retried later.",
             503: "This online feature has not been enabled by the operator yet.",
         }
+        status = 403 if _oura_missing_scope(url, error) else error.code
         raise ServiceError(
-            messages.get(error.code, "The online request failed. Please retry."),
-            status=error.code,
+            messages.get(status, "The online request failed. Please retry."),
+            status=status,
             retry_after=retry,
         ) from None
     except (URLError, TimeoutError, OSError, ValueError):

@@ -7,8 +7,8 @@ has been connected, and no approval application has been submitted.
 
 ## Personal use
 
-Open **Tools → Quantified Cognition Health Data…**, select **Google Health**, choose
-**Import since**, then **Connect Google Health…**. First sign in to the Google
+Open **Health data…** from the Quantified Cognition memory report, select
+**Google Health**, choose **Import since**, then **Connect Google Health…**. First sign in to the Google
 Health mobile app and link the Google account there, as Google requires. Only
 data available to that account through the cloud API can be imported. This is
 not a direct desktop reader for every Android Health Connect record.

@@ -1,4 +1,4 @@
-"""Exercise the actual two-step dialog and verify that work stays off Qt's thread."""
+"""Exercise inline enrollment and verify that work stays off Qt's thread."""
 
 import threading
 
@@ -9,7 +9,7 @@ from test_threading import app as thread_app  # noqa: E402
 from test_threading import pump_until  # noqa: E402
 from test_threading import runtime as thread_runtime  # noqa: E402
 
-from addon import enrollment_ui  # noqa: E402
+from addon import sharing_ui  # noqa: E402
 from addon.research import SharingConfig, sharing_state  # noqa: E402
 from addon.service import ServiceConfig, ServiceError  # noqa: E402
 
@@ -37,23 +37,37 @@ def test_eligibility_then_explicit_consent_does_not_send_measurements(
             "own_data": True,
             "explicit_consent": True,
         }
-        calls.append(True)
+        calls.append("enroll")
         return {"receipt": {"enrollment_id": "synthetic"}}
 
-    monkeypatch.setattr(enrollment_ui, "enrollment_information", information)
-    monkeypatch.setattr(enrollment_ui, "enroll", enroll)
-    dialog = enrollment_ui.EnrollmentDialog(
-        main, source, ServiceConfig("https://example.org"), sharing
+    def prepare(*args, **kwargs):
+        assert threading.get_ident() != main.owner
+        calls.append("prepare")
+        return {"package": {"submission_id": "synthetic", "rows": [["2026-11-01"]]}}, {
+            "operator": "Synthetic study",
+            "privacy_url": "https://example.org/privacy",
+        }
+
+    def send(*args):
+        assert threading.get_ident() != main.owner
+        calls.append(args[-1])
+        return {"submission_id": "synthetic"}
+
+    monkeypatch.setattr(sharing_ui, "enrollment_information", information)
+    monkeypatch.setattr(sharing_ui, "enroll", enroll)
+    monkeypatch.setattr(sharing_ui, "prepare_submission", prepare)
+    monkeypatch.setattr(sharing_ui, "upload_submission", send)
+    dialog = sharing_ui.SharingDialog(
+        main, source, first, ServiceConfig("https://example.org"), manage=True
     )
     dialog.show()
     pump_until(app, lambda: not dialog.busy)
-    assert not dialog.next.isEnabled() and not dialog.join.isEnabled()
+    assert dialog.enrollment_form.isVisible()
+    assert not dialog.join.isEnabled() and not dialog.send.isVisible()
     assert not dialog.consent.isVisible()
     dialog.adult.setChecked(True)
-    assert not dialog.next.isEnabled()
+    assert not dialog.consent.isVisible()
     dialog.own.setChecked(True)
-    assert dialog.next.isEnabled()
-    dialog.show_consent()
     assert dialog.consent.isVisible()
     assert dialog.statement.text() == dialog.frozen["bundle"]["statement"]
     assert not dialog.join.isEnabled()
@@ -62,11 +76,16 @@ def test_eligibility_then_explicit_consent_does_not_send_measurements(
     dialog.explicit.setChecked(True)
     assert dialog.join.isEnabled() and not dialog.join.isDefault()
     dialog.agree()
-    pump_until(app, lambda: dialog.enrolled)
-    assert calls == [True]
-    assert "No measurements were uploaded" in dialog.status.text()
-    assert not dialog.join.isEnabled()
-    assert dialog.save_record.isEnabled()
+    pump_until(app, lambda: dialog.enrolled and not dialog.busy)
+    assert calls == ["enroll", "prepare"]
+    assert "Synthetic study" in dialog.preview.text()
+    assert not dialog.enrollment_form.isVisible()
+    assert dialog.save_record.isVisible()
+    assert dialog.send.isEnabled() and not dialog.send.isDefault()
+    dialog.send.click()
+    pump_until(app, lambda: not dialog.busy)
+    assert calls == ["enroll", "prepare", "synthetic"]
+    assert "Package sent" in dialog.status.text()
     assert sharing_state(source, sharing).metadata() == first.metadata()
     assert sharing_state(source, sharing).first_exposure is None
     dialog.close()
@@ -78,15 +97,16 @@ def test_closed_service_still_allows_information_copy_and_personal_use(runtime, 
     def closed(*_args):
         raise ServiceError("Research enrollment is not open.")
 
-    monkeypatch.setattr(enrollment_ui, "enrollment_information", closed)
-    monkeypatch.setattr(enrollment_ui, "enroll", lambda *_a, **_k: pytest.fail("closed enrollment"))
-    dialog = enrollment_ui.EnrollmentDialog(main, main.col.path, ServiceConfig(), SharingConfig())
+    snapshot = sharing_state(main.col.path, event_type="sharing_choice", choice="opt_in")
+    monkeypatch.setattr(sharing_ui, "enrollment_information", closed)
+    monkeypatch.setattr(sharing_ui, "enroll", lambda *_a, **_k: pytest.fail("closed enrollment"))
+    dialog = sharing_ui.SharingDialog(main, main.col.path, snapshot, manage=True)
     dialog.show()
     pump_until(app, lambda: not dialog.busy)
     assert "not open" in dialog.status.text()
-    assert "JollyJoyJourney" in dialog.documents.toPlainText()
-    dialog.adult.setChecked(True)
-    dialog.own.setChecked(True)
-    assert not dialog.next.isEnabled()
-    assert dialog.save_info.isEnabled()
+    assert "JollyJoyJourney" in dialog.details.toPlainText()
+    assert not dialog.enrollment_form.isVisible() and not dialog.send.isVisible()
+    assert not dialog.save_info.isVisible()
+    dialog.details_button.click()
+    assert dialog.save_info.isVisible() and dialog.save_info.isEnabled()
     dialog.close()

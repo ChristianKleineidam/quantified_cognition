@@ -91,30 +91,22 @@ def prepare_submission(source, config, sharing, *, reuse=True):
             ):
                 return saved, status
         with io.StringIO(newline="") as handle:
-            health = load_health(source)
-            export_csv(load_report(database_path(source)), handle, health_snapshot=health)
+            health = load_health(source, include_google_health=False)
+            export_csv(
+                load_report(database_path(source)),
+                handle,
+                health_snapshot=health,
+                include_google_health=False,
+            )
             handle.seek(0)
             rows = [[row[key] for key in PACKAGE_COLUMNS] for row in csv.DictReader(handle)]
             # The personal CSV also describes missing session matches. Those
-            # algorithm-only placeholders are not provider history: leave a
-            # provider completely blank when none of its data was imported.
-            for provider in ("oura", "google_health"):
-                present = (
-                    bool(health.sleep_windows.get(provider))
-                    or any(session.provider == provider for session in health.sessions)
-                    or any(
-                        key.startswith(provider + "_") and value is not None and value != ""
-                        for day in health.days.values()
-                        for key, value in day.values.items()
-                    )
-                )
-                if not present:
-                    indices = [
-                        i for i, key in enumerate(PACKAGE_COLUMNS) if key.startswith(provider + "_")
-                    ]
-                    for row in rows:
-                        for index in indices:
-                            row[index] = ""
+            # algorithm-only placeholders do not count as imported Oura data.
+            if not (health.days or health.sessions or health.sleep_windows):
+                indices = [i for i, key in enumerate(PACKAGE_COLUMNS) if key.startswith("oura_")]
+                for row in rows:
+                    for index in indices:
+                        row[index] = ""
         if not rows:
             raise ServiceError("There are no saved daily measurements to submit yet.")
         package = {

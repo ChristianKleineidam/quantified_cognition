@@ -38,7 +38,7 @@ def prepare(root, package, scale, dark, history, upgrade_from=None):
     anki.lang.set_lang("en_US")
     pm = ProfileManager(base)
     pm.setupMeta()
-    pm.meta.update(firstRun=False, defaultLang="en_US", updates=False)
+    pm.meta.update(firstRun=False, defaultLang="en_US", updates=False, check_for_updates=False)
     pm.setUiScale(scale)
     pm.set_theme(Theme.DARK if dark else Theme.LIGHT)
     pm.create("Desktop Beta")
@@ -228,7 +228,7 @@ def seed_health(source):
 def start_walkthrough(app, root, source, args, blocked):
     """Drive only synthetic profiles; also callable by a disposable test add-on."""
     import aqt
-    from aqt.qt import QApplication, QTimer
+    from aqt.qt import QApplication, QPushButton, QTimer
 
     results = {
         "package": args.package.name,
@@ -253,10 +253,22 @@ def start_walkthrough(app, root, source, args, blocked):
             {"name": name, "width": widget.width(), "height": widget.height()}
         )
 
-    def action(label):
-        found = [item for item in aqt.mw.form.menuTools.actions() if item.text() == label]
-        assert len(found) == 1, label
-        QTimer.singleShot(0, found[0].trigger)
+    def open_memory():
+        actions = [
+            item
+            for item in aqt.mw.form.menuTools.actions()
+            if item.text().startswith("Quantified Cognition")
+        ]
+        assert [item.text() for item in actions] == ["Quantified Cognition…"]
+        check("one Quantified Cognition Tools entry")
+        QTimer.singleShot(0, actions[0].trigger)
+
+    def report_button(label):
+        dialog = state["ui"]._dialog
+        assert dialog is not None and dialog.isVisible()
+        buttons = [button for button in dialog.findChildren(QPushButton) if button.text() == label]
+        assert len(buttons) == 1 and buttons[0].isVisible(), label
+        QTimer.singleShot(0, buttons[0].click)
 
     def finish():
         timer.stop()
@@ -303,7 +315,7 @@ def start_walkthrough(app, root, source, args, blocked):
                         check(
                             "synthetic health sessions saved locally without provider connections"
                         )
-                        action("Quantified Cognition…")
+                        open_memory()
                         state["stage"] = "memory"
 
                     run_file_job(
@@ -312,7 +324,7 @@ def start_walkthrough(app, root, source, args, blocked):
                         lambda error: results["errors"].append(str(error)),
                     )
                     return
-                action("Quantified Cognition…")
+                open_memory()
                 state["stage"] = "memory"
             elif stage == "memory":
                 dialog = state["ui"]._dialog
@@ -326,7 +338,6 @@ def start_walkthrough(app, root, source, args, blocked):
                 assert dialog.report.calculation_version == 5
                 if not args.empty:
                     assert dialog.report.reconstructed_deleted_cards == 10
-                    dialog.all_history.setChecked(True)
                     details = []
                     for i in range(4):
                         dialog.metric_selector.setCurrentIndex(i)
@@ -345,9 +356,8 @@ def start_walkthrough(app, root, source, args, blocked):
                         )
                     check("four metrics and agreed-preset deleted histories", details)
                 state["stage"] = "settings_open"
-                dialog.close()
             elif stage == "settings_open":
-                action("Quantified Cognition Daily Settings…")
+                report_button("Daily settings…")
                 state["stage"] = "settings"
             elif stage == "settings":
                 dialogs = [
@@ -383,7 +393,7 @@ def start_walkthrough(app, root, source, args, blocked):
                     # a file scan. The bounded poll retries without delaying Qt.
                     return
                 check("daily fixed CSV readable by independent file reader", {"rows": len(rows)})
-                action("Quantified Cognition Health Data…")
+                report_button("Health data…")
                 state["stage"] = "health"
             elif stage == "health":
                 dialog = state["ui"]._oura_dialog
@@ -392,12 +402,13 @@ def start_walkthrough(app, root, source, args, blocked):
                 capture(dialog, "04-health-disconnected")
                 check("health screen usable without a provider connection", dialog.status.text())
                 dialog.close()
-                action("Quantified Cognition Personal Insights…")
+                report_button("Personal insights…")
                 state["stage"] = "insights"
             elif stage == "insights":
                 dialog = state["ui"]._insights_dialog
-                if dialog is None or dialog.busy or dialog.result is None:
+                if dialog is None or dialog.busy:
                     return
+                assert dialog.result is not None, dialog.summary.text()
                 capture(dialog, "05-insights")
                 check("insights overview", dialog.summary.text())
                 state["stage"] = "insights_naps"
@@ -408,7 +419,7 @@ def start_walkthrough(app, root, source, args, blocked):
                     return
                 capture(dialog, "06-insights-naps")
                 check("nap comparisons separate from main sleep", dialog.summary.text())
-                if args.health_fixture and dialog.provider.currentData() == "oura":
+                if args.health_fixture and dialog.provider.count() > 1:
                     state["stage"] = "insights_google"
                     dialog.provider.setCurrentIndex(1)
                 else:
@@ -423,7 +434,7 @@ def start_walkthrough(app, root, source, args, blocked):
                 dialog.close()
                 state["stage"] = "sharing_later_open"
             elif stage == "sharing_later_open":
-                action("Quantified Cognition Research Sharing…")
+                report_button("Research sharing…")
                 state["stage"] = "sharing_later"
             elif stage == "sharing_later":
                 dialogs = [
@@ -431,8 +442,19 @@ def start_walkthrough(app, root, source, args, blocked):
                 ]
                 if not dialogs or dialogs[0].busy:
                     return
+                state["stage"] = "sharing_saved"
+                if dialogs[0].snapshot.current_choice != "opt_in":
+                    dialogs[0].buttons[0].click()
+            elif stage == "sharing_saved":
+                dialogs = [
+                    w for w in widgets if type(w).__name__ == "SharingDialog" and w.isVisible()
+                ]
+                if dialogs:
+                    dialog = dialogs[0]
+                    if dialog.busy or dialog.snapshot.current_choice != "opt_in":
+                        return
+                    dialog.close_button.click()
                 state["stage"] = "audit"
-                dialogs[0].buttons[0].click()
             elif stage == "audit":
                 if any(type(w).__name__ == "SharingDialog" and w.isVisible() for w in widgets):
                     return
@@ -446,7 +468,7 @@ def start_walkthrough(app, root, source, args, blocked):
                     "first-consent timing preserved after later opt-in",
                     snapshot.metadata()["research_consent_before_first_view"],
                 )
-                action("Quantified Cognition Personal Insights…")
+                report_button("Personal insights…")
                 state["stage"] = "return_visit"
             elif stage == "return_visit":
                 dialog = state["ui"]._insights_dialog

@@ -18,6 +18,7 @@ from .workouts import WORKOUT_DAILY_FIELDS, Workout, summarize
 
 HEALTH_DATABASE_NAME = "health.sqlite3"
 HEALTH_VERSION = 4
+GOOGLE_HEALTH_IN_RELEASE = False
 HEALTH_CSV_FIELDS = (
     "oura_total_sleep_seconds",
     "oura_light_sleep_seconds",
@@ -145,7 +146,7 @@ def _daily_sleep(periods: list[Sleep]) -> tuple[list[Sleep], str]:
     return periods, status
 
 
-def load_health(collection_path: str | Path) -> HealthSnapshot:
+def load_health(collection_path: str | Path, *, include_google_health=True) -> HealthSnapshot:
     path = health_database_path(collection_path)
     if not path.exists():
         return HealthSnapshot("", {})
@@ -183,7 +184,7 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
         }
         google = (
             list(connection.execute("select day,payload,synced_at from google_health_days"))
-            if version >= 2
+            if include_google_health and version >= 2
             else []
         )
         sessions = [
@@ -203,14 +204,16 @@ def load_health(collection_path: str | Path) -> HealthSnapshot:
                 workout_days[day].append(workout)
                 dates_imported[day].append(imported)
         if version >= 3:
-            sessions.extend(
-                SleepSession(**json.loads(payload))
-                for (payload,) in connection.execute("select payload from google_health_sleep")
-            )
+            if include_google_health:
+                sessions.extend(
+                    SleepSession(**json.loads(payload))
+                    for (payload,) in connection.execute("select payload from google_health_sleep")
+                )
             for provider, lower, upper in connection.execute(
                 "select provider,start_day,end_day from sleep_windows"
             ):
-                windows[provider].append((lower, upper))
+                if include_google_health or provider != "google_health":
+                    windows[provider].append((lower, upper))
     daily = {}
     for day in sorted(grouped.keys() | activities.keys() | workout_days.keys()):
         values = dict.fromkeys((*HEALTH_CSV_FIELDS, *WORKOUT_DAILY_FIELDS))
@@ -454,6 +457,7 @@ def save_oura_import(
     check_cancelled: Callable[[], None] = lambda: None,
     authoritative_window: tuple[str, str] | None = None,
     clear: bool = False,
+    daily_unavailable: bool = False,
     workouts_unavailable: bool = False,
 ) -> ImportResult:
     """Commit selected fields atomically, then retry the CSV without FSRS replay."""
@@ -480,22 +484,26 @@ def save_oura_import(
             _initialize(connection)
             connection.commit()
             connection.execute("begin immediate")
-            if clear or authoritative_window:
+            if clear or daily_unavailable:
+                changed += connection.execute("delete from oura_sleep").rowcount
+                changed += connection.execute("delete from oura_activity").rowcount
+                connection.execute("delete from oura_raw_days")
+            elif authoritative_window:
                 # Compare selected records rather than delete/reinsert unchanged
                 # data: a daily poll must not invalidate an identical fixed CSV.
-                lower, upper = authoritative_window or ("0001-01-01", "9999-12-31")
+                lower, upper = authoritative_window
                 wanted_sleep = {row.key for row in prepared.sleep}
                 wanted_activity = {row.day for row in prepared.activity}
                 for (key,) in connection.execute(
                     "select key from oura_sleep where day >= ? and day < ?", (lower, upper)
                 ).fetchall():
-                    if clear or key not in wanted_sleep:
+                    if key not in wanted_sleep:
                         connection.execute("delete from oura_sleep where key=?", (key,))
                         changed += 1
                 for (day,) in connection.execute(
                     "select day from oura_activity where day >= ? and day < ?", (lower, upper)
                 ).fetchall():
-                    if clear or day not in wanted_activity:
+                    if day not in wanted_activity:
                         connection.execute("delete from oura_activity where day=?", (day,))
                         changed += 1
                 connection.execute(
@@ -566,10 +574,11 @@ def save_oura_import(
                     metadata_changed = _save_window(
                         connection, "oura_workout", lower, upper, clear or workouts_unavailable
                     )
-            if clear or authoritative_window:
+            if clear or daily_unavailable or authoritative_window:
                 lower, upper = authoritative_window or (None, None)
                 metadata_changed = (
-                    _save_window(connection, "oura", lower, upper, clear) or metadata_changed
+                    _save_window(connection, "oura", lower, upper, clear or daily_unavailable)
+                    or metadata_changed
                 )
             if changed or metadata_changed:
                 connection.execute(

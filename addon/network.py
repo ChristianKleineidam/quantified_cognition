@@ -5,6 +5,7 @@ import threading
 from aqt import gui_hooks
 from aqt.qt import QTimer
 
+from . import health
 from .backend import UpdateCancelled
 from .background import run_file_job
 from .google_health_api import sync_google_health
@@ -62,7 +63,12 @@ class NetworkUpdater:
             services = ServiceConfig.from_config(config)
             changed = False
             if services.base_url:
-                for sync in (sync_oura, sync_google_health):
+                sync_jobs = (
+                    (sync_oura, sync_google_health)
+                    if health.GOOGLE_HEALTH_IN_RELEASE
+                    else (sync_oura,)
+                )
+                for sync in sync_jobs:
                     check_cancelled()
                     try:
                         result = sync(

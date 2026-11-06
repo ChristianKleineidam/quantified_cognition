@@ -51,7 +51,6 @@ report = Report(
     "CEST",
 )
 dialog.accept_report(report)
-dialog.all_history.setChecked(True)
 dialog.show()
 app.processEvents()
 destination = Path(__file__).resolve().parents[1] / ".reference" / "report-preview.png"
@@ -59,7 +58,7 @@ dialog.grab().save(str(destination))
 print(destination)
 dialog.start_date.setDate(date(2026, 8, 15))
 dialog.end_date.setDate(date(2026, 8, 24))
-dialog.all_history.setChecked(False)
+dialog.filter_dates.setChecked(True)
 for index, prefix in ((1, "formation"), (2, "short"), (3, "long")):
     dialog.metric_selector.setCurrentIndex(index)
     dialog.select_day(date(2026, 8, 20))
@@ -75,7 +74,7 @@ dialog.grab().save(str(table_destination))
 print(table_destination)
 
 dialog.inspect_button.setChecked(False)
-dialog.all_history.setChecked(True)
+dialog.filter_dates.setChecked(False)
 dialog.metric_selector.setCurrentIndex(1)
 dialog.select_day(date(2026, 9, 25))
 app.processEvents()

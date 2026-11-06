@@ -121,11 +121,10 @@ sleep at fixed total sleep and remaining phase. A positive substitution estimate
 does not prove one stage is biologically more important. Other suitable
 compositional or nonlinear methods can be explored within the same purpose.
 
-Keep Oura and Google measurements separate, preserve missing versus zero, and
+Use Oura as the study's health data source. Preserve missing versus zero and
 account for sleep-type, stage availability, algorithm changes, overlaps and
-matching status. Google classic sleep does not supply staged sleep and
-whole-minute stage summaries are not second-precision measurements. Compare
-results across providers only with explicit harmonization and sensitivity checks.
+matching status. Describe the makeup of the Oura cohort and limit how far
+results from that cohort are generalized.
 
 Report formation completeness and distinguish pending from excluded outcomes.
 The initial ready-cohort reference is study days at least 30 days old with at
@@ -195,8 +194,6 @@ unrelated use merely by calling it research. On this review date, the EDPB's
 2026 scientific-research guidance is listed as public consultation closed;
 do not describe that draft as a final adopted legal rule.
 
-Google's separate [health research policy](https://developers.google.com/health/policies/health-api-user-data-and-research-policy)
-requires its own intake, review-board approval/waiver, eligibility and consent
-arrangements. [Oura's agreement](https://cloud.ouraring.com/legal/api-agreement)
-also governs storage, onward access and deletion. The operating plan tracks
-these permissions separately from the scientific design and GDPR consent.
+[Oura's agreement](https://cloud.ouraring.com/legal/api-agreement) governs
+storage, onward access and deletion. The operating plan tracks these permissions
+separately from the scientific design and GDPR consent.

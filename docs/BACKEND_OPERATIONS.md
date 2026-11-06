@@ -95,8 +95,10 @@ a small set of current alert states for:
 The job uses `pg_net` to request public status without credentials. The next run
 collects the response, so a change normally appears within about ten minutes.
 No OAuth token, health record or research package is requested by the monitor.
-It expects all three flags to be false and operations version 1. Update that
-expectation only as part of a separately authorized online launch.
+Both monitors read the expected Oura state from `qs_private.ops_state.oura_expected_enabled`.
+Update it when the operator changes `OURA_ENABLED`. Both monitors expect Google
+Health and research uploads to be disabled. The scheduled probe also checks
+operations version 1.
 
 Private PostgreSQL alerts are now also checked by the independent Silentworker
 monitor and reported through the existing Home Assistant notification channel.

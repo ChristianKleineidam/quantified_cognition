@@ -1,12 +1,11 @@
 {
   "minimum_reviews": 30,
   "minimum_formation_outcome_days": 3,
-  "default_display_days": 90,
   "services": {
     "base_url": "https://wfjlzecckihsgcvauqwt.supabase.co/functions/v1/qs-service"
   },
   "research_sharing": {
-    "notice_version": "research-sharing-v9",
+    "notice_version": "research-sharing-v10",
     "notice_text": ""
   }
 }

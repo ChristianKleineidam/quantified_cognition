@@ -1,6 +1,7 @@
 import threading
 import time
-from datetime import date
+from datetime import date, timedelta
+from io import BytesIO
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import urlopen
@@ -248,6 +249,23 @@ def test_https_redirects_are_denied_and_errors_never_include_credentials(monkeyp
     assert "private" not in str(error.value) and error.value.status == 401
 
 
+@pytest.mark.parametrize(
+    ("title", "status"), [("Missing Scopes", 403), ("Invalid Access Token", 401)]
+)
+def test_oura_distinguishes_missing_scopes_from_expired_credentials(monkeypatch, title, status):
+    url = "https://api.ouraring.com/v2/usercollection/sleep"
+
+    class Failing:
+        def open(self, *args, **kwargs):
+            body = BytesIO(f'{{"title":"{title}","detail":"private"}}'.encode())
+            raise HTTPError(url, 401, "Unauthorized", {}, body)
+
+    monkeypatch.setattr(service, "build_opener", lambda *a: Failing())
+    with pytest.raises(ServiceError) as error:
+        service.request_json(url, token="private")
+    assert error.value.status == status and "private" not in str(error.value)
+
+
 def test_disabled_operator_switch_blocks_direct_reads_with_cached_credentials(
     connection, monkeypatch
 ):
@@ -286,10 +304,79 @@ def test_denied_workout_scope_preserves_sleep_steps_without_reusing_workout_cove
     assert result.snapshot.days[date(2026, 9, 7)].values["oura_steps"] == 4000
     assert result.snapshot.days[date(2026, 9, 7)].values["oura_workout_count"] is None
     assert saved["oura"]["workout_access"] is False
-    assert "Workout access is unavailable" in oura_api.connection_summary(source)
+    message, connected = oura_api.connection_status(source)
+    assert connected and "Workout access is unavailable" in message
+    assert "Change Oura permissions" in message
 
 
-def test_failed_or_invalid_workout_page_does_not_commit_sleep_deletions(connection, monkeypatch):
+@pytest.mark.parametrize("denied_endpoint", ["sleep", "daily_activity"])
+def test_workout_only_grant_clears_daily_coverage_and_syncs_workouts(
+    connection, monkeypatch, denied_endpoint
+):
+    from test_workouts import workout
+
+    source, saved = connection
+    day = date.today()
+    old_day = day - timedelta(days=90)
+    records = {
+        "sleep": [sleep()],
+        "daily_activity": [{"day": day.isoformat(), "steps": 4000}],
+        "workout": [
+            workout(
+                day=day.isoformat(),
+                start_datetime=f"{day}T08:00:00+00:00",
+                end_datetime=f"{day}T09:00:00+00:00",
+            )
+        ],
+    }
+    health.save_oura_import(
+        source,
+        parse_oura_records(records["sleep"], [{"day": old_day.isoformat(), "steps": 1000}], []),
+        authoritative_window=("2025-01-01", "2027-01-01"),
+    )
+    saved["oura"].update(sleep_session_version=1, workout_version=1, last_full_sync=time.time())
+    calls = []
+
+    def request(url, **kwargs):
+        endpoint = urlsplit(url).path.rsplit("/", 1)[-1]
+        calls.append(endpoint)
+        if endpoint == denied_endpoint:
+            raise ServiceError("Forbidden", status=403)
+        return {"data": records[endpoint], "next_token": None}
+
+    monkeypatch.setattr(oura_api, "request_json", request)
+    result = oura_api.sync_oura(source, CONFIG, SharingConfig(), force=True)
+    assert not result.snapshot.sessions and "oura" not in result.snapshot.sleep_windows
+    assert old_day not in result.snapshot.days
+    assert saved["oura"]["daily_access"] is False and saved["oura"]["workout_access"] is True
+    message, connected = oura_api.connection_status(source)
+    assert connected and "Workouts are connected" in message
+    assert "Change Oura permissions and allow Daily" in message
+    assert calls[-1] == "workout"
+    assert len(result.snapshot.workouts) == 1 and result.snapshot.workout_windows
+    values = result.snapshot.days[day].values
+    assert values["oura_workout_count"] == 1
+    assert values["oura_steps"] is None and values["oura_total_sleep_seconds"] is None
+
+
+def test_oura_entirely_forbidden_preserves_existing_history(connection, monkeypatch):
+    source, saved = connection
+    before = health.save_oura_import(source, parse_oura_records([sleep()], [])).snapshot
+
+    def denied(*args, **kwargs):
+        raise ServiceError("Forbidden", status=403)
+
+    monkeypatch.setattr(oura_api, "request_json", denied)
+    with pytest.raises(ServiceError, match="allow Daily or Workout"):
+        oura_api.sync_oura(source, CONFIG, SharingConfig())
+    assert health.load_health(source) == before
+    assert not saved["oura"].get("reauth_required")
+
+
+@pytest.mark.parametrize("failure_status", [403, 429])
+def test_failed_or_invalid_workout_page_does_not_commit_sleep_deletions(
+    connection, monkeypatch, failure_status
+):
     from test_workouts import workout
 
     source, saved = connection
@@ -301,7 +388,9 @@ def test_failed_or_invalid_workout_page_does_not_commit_sleep_deletions(connecti
 
     def request(url, **kwargs):
         if "/workout?" in url:
-            raise ServiceError("Rate limited", status=429, retry_after=1800)
+            if "next_token" not in parse_qs(urlsplit(url).query):
+                return {"data": [workout()], "next_token": "next"}
+            raise ServiceError("Page failed", status=failure_status, retry_after=1800)
         return {"data": [], "next_token": None}
 
     monkeypatch.setattr(oura_api, "request_json", request)

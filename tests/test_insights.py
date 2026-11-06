@@ -110,6 +110,45 @@ def inputs(days=360, start=date(2024, 1, 1)):
     return report, HealthSnapshot("synthetic", health, tuple(sessions), coverage)
 
 
+def test_main_sleep_averages_and_share_correlations_use_complete_staged_nights():
+    report, health = inputs(4)
+    stages = ("light_sleep", "deep_sleep", "rem_sleep")
+    sessions = tuple(
+        replace(
+            session,
+            values={"total_sleep": total, "awake": 7200, **dict(zip(stages, values, strict=True))},
+        )
+        for session, (total, values) in zip(
+            health.sessions[:4],
+            (
+                (6 * 3600 + 60, (10800, 7200, 3600)),  # Allow provider rounding.
+                (8 * 3600, (14400, 3600, 10800)),
+                (7 * 3600, (10800, 3600, None)),
+                (8 * 3600, (10800, 7200, 3600)),  # Inconsistent total.
+            ),
+            strict=True,
+        )
+    )
+    health = replace(health, sessions=sessions)
+    summary = insights.summarize_main_sleep(health, "oura")
+    assert summary.nights == 2
+    assert summary.average_total_seconds == 7 * 3600 + 30
+    assert summary.average_stage_seconds == (12600, 5400, 7200)
+    assert sum(summary.average_stage_percent) == pytest.approx(100)
+    assert summary.average_stage_percent[0] == 50
+    assert insights.summarize_main_sleep(health, "google_health") is None
+    filtered = insights.summarize_main_sleep(health, "oura", start=report.days[1].day)
+    assert filtered.nights == 1 and filtered.average_total_seconds == 8 * 3600
+
+    series = build_series(
+        report, health, "oura", as_of=AS_OF, settings=replace(FAST, adjust_month=False)
+    )
+    rem_share = series["rem_sleep_share/recall/before"]
+    assert [point.x for point in rem_share.points] == pytest.approx([100 / 6, 37.5])
+    assert rem_share.omitted["complete sleep staging unavailable"] == 2
+    assert [point.x for point in series["light_sleep/recall/before"].points] == [3, 4, 3, 3]
+
+
 def series_for(xs, ys, *, gap=1, start=date(2024, 1, 1)):
     return Series(
         "deep_sleep",
@@ -403,12 +442,16 @@ def test_personal_summary_export_both_nights_and_failure_preserves_previous_file
     source, _, _ = cached
     result = insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
     destination = tmp_path / "insights.csv"
-    assert insights.export_insights(result, destination) == 172
+    assert insights.export_insights(result, destination) == 193
     with destination.open(encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
-    assert {
-        r["timing"] for r in rows if r["metric"] == "formation" and r["factor"] == "deep_sleep"
-    } == {"before", "after"}
+    for factor in ("deep_sleep", "deep_sleep_share"):
+        timings = {
+            row["timing"]
+            for row in rows
+            if row["metric"] == "formation" and row["factor"] == factor
+        }
+        assert timings == {"before", "after"}
     assert not any(r["timing"] == "after" for r in rows if r["metric"] == "recall")
     assert rows[0]["bootstrap_replicates"] == "199"
     before = destination.read_bytes()

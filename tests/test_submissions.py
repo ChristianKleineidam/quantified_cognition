@@ -121,6 +121,40 @@ def test_upload_requires_current_consent_and_uses_separate_capability_and_same_p
     assert secrets["research"]["secret"] not in received[0]
 
 
+def test_research_excludes_google_fields_and_google_only_dates(setup):
+    from datetime import date
+
+    from test_google_health import DAY, night, parsed, steps
+    from test_oura import sleep
+
+    from addon import health
+    from addon.oura import parse_oura_records
+
+    source, sharing, _, _ = setup
+    mixed_day = DAY
+    google_only_day = date(2026, 9, 8)
+    health.save_oura_import(
+        source, parse_oura_records([sleep(day=mixed_day.isoformat())], [])
+    )
+    health.save_google_health_import(
+        source, parsed([night()], [steps(mixed_day), steps(google_only_day)]),
+        start="2026-09-01", end="2026-10-01",
+    )
+    assert health.load_health(source).days[mixed_day].values["google_health_steps"] > 0
+    saved, _ = submissions.prepare_submission(source, CONFIG, sharing)
+    package = saved["package"]
+    assert saved["envelope"]["providers"] == ["oura"]
+    rows = {row[0]: dict(zip(package["columns"], row, strict=True)) for row in package["rows"]}
+    assert google_only_day.isoformat() not in rows
+    assert rows[mixed_day.isoformat()]["oura_total_sleep_seconds"]
+    assert all(
+        value == ""
+        for row in rows.values()
+        for column, value in row.items()
+        if column.startswith("google_health_")
+    )
+
+
 def test_withdrawal_queues_deletion_blocks_old_upload_and_keeps_original_timing(setup, monkeypatch):
     source, sharing, secrets, _ = setup
     submissions.prepare_submission(source, CONFIG, sharing)
@@ -206,36 +240,17 @@ def test_service_allowlist_matches_export_and_real_packages(setup):
     shutil.which("node") is None, reason="Cross-runtime server validation needs Node"
 )
 def test_real_python_package_passes_the_deployed_server_validator(setup, monkeypatch):
-    from dataclasses import replace
-
-    from test_google_health import night, parsed, steps
     from test_sleep_sessions import session, snapshot, stamp
 
-    from addon.health import save_google_health_import
-
     source, sharing, _, _ = setup
-    imported = save_google_health_import(
-        source,
-        parsed([night()], [steps(count="0")]),
-        start="2026-09-01",
-        end="2026-10-01",
-        sharing=sharing,
-    )
     report = storage.load_report(storage.database_path(source))
     storage.save_report(
         replace(report, study_windows={"2026-09-07": [stamp(10), stamp(18)]}),
         storage.database_path(source),
     )
     naps = snapshot(session("local-nap-only", 8, 9))
-    combined = replace(
-        imported.snapshot,
-        sessions=(*imported.snapshot.sessions, *naps.sessions),
-        sleep_windows={**imported.snapshot.sleep_windows, **naps.sleep_windows},
-    )
-    monkeypatch.setattr(submissions, "load_health", lambda source: combined)
+    monkeypatch.setattr(submissions, "load_health", lambda source, **kwargs: naps)
     packet = submissions.prepare_submission(source, CONFIG, sharing)[0]["package"]
-    google_index = packet["columns"].index("google_health_total_sleep_seconds")
-    assert any(row[google_index] == "25200" for row in packet["rows"])
     nap_index = packet["columns"].index("oura_nap_before_duration_seconds")
     assert any(float(row[nap_index]) == 3600 for row in packet["rows"] if row[nap_index])
     deep_index = packet["columns"].index("oura_nap_before_deep_sleep_seconds")

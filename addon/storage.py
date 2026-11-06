@@ -11,7 +11,7 @@ import time
 import uuid
 from collections.abc import Callable
 from contextlib import closing, contextmanager
-from dataclasses import asdict, dataclass, fields, replace
+from dataclasses import asdict, dataclass, fields
 from datetime import date
 from functools import wraps
 from pathlib import Path
@@ -576,18 +576,6 @@ def update_results(
             )
         else:
             report = build_report(collection, settings)
-        if check_cancelled is not None:
-            check_cancelled()
-        save_report(
-            report,
-            path,
-            fingerprint=fingerprint,
-            snapshot_sequence=snapshot_sequence,
-            scheduled_day=scheduled_day,
-        )
-    elif report.settings != settings:
-        # Display-window preferences do not require native history replay.
-        report = replace(report, settings=settings)
         if check_cancelled is not None:
             check_cancelled()
         save_report(

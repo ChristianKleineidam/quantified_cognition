@@ -150,7 +150,7 @@ def test_day_boundary_with_local_wall_clock_offsets():
 
 
 def test_settings_reject_invalid_types_and_ranges():
-    settings = Settings.from_config({"minimum_reviews": True, "default_display_days": -1})
+    settings = Settings.from_config({"minimum_reviews": True, "minimum_formation_outcome_days": -1})
     assert settings == Settings()
 
 

@@ -6,7 +6,7 @@ formation and recall. Sharing those measurements can help us investigate how
 learning relates to sleep, activity and study patterns, and improve the methods
 used to measure it.
 
-Updated **5 November 2026**. Research enrollment and uploads are currently closed.
+Updated **6 November 2026**. Research enrollment and uploads are currently closed.
 
 ## What your contribution helps us learn
 
@@ -30,10 +30,10 @@ Participation is voluntary and unpaid. Your personal results and insights
 remain available whether you participate or not.
 
 Each submission is a package of available daily Anki scores, review counts,
-uncertainty, follow-up information, sleep stages, nap and step summaries,
-Oura workout duration, intensity and timing summaries, and
-calculation and sharing metadata. You can contribute Anki data alone. The
-[privacy policy](PRIVACY.md) describes the included fields in detail.
+uncertainty, follow-up information, and calculation and sharing metadata.
+If you have synced Oura history, the package includes sleep stages, naps, steps
+and workout duration, intensity and timing summaries. You can contribute Anki
+data alone. The [privacy policy](PRIVACY.md) describes the included fields in detail.
 
 Card content, individual reviews and review pairs, exact sleep, workout or review times,
 workout labels and activity names,
@@ -78,8 +78,8 @@ and you can save a copy. The consent statement is:
 
 > I confirm that I am at least 18 and am contributing my own data. I have read
 > the research information and privacy policy. I explicitly consent to
-> JollyJoyJourney processing my submitted daily learning, recall, sleep and
-> activity measurements, including health-related data, for this research
+> JollyJoyJourney processing my submitted daily Anki measurements and any Oura
+> sleep and activity summaries, including health-related data, for this research
 > programme, with controlled access by approved research collaborators as
 > described. I understand the retention criteria, that each upload requires my
 > confirmation, and that I can withdraw without losing personal use.

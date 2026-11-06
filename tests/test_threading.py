@@ -228,7 +228,6 @@ def test_manual_csv_export_uses_file_worker(runtime, app, tmp_path, monkeypatch)
     monkeypatch.setattr(ui, "export_csv_atomic", export)
     dialog = ui.MemoryReportDialog(main, "addon")
     dialog.accept_report(report_with_followup())
-    dialog.all_history.setChecked(True)
     dialog.export()
     pump_until(app, lambda: not dialog.busy)
     assert work_threads and work_threads[0] != main.owner
@@ -723,6 +722,8 @@ def test_saved_report_load_cannot_cross_profiles(runtime, app, tmp_path, monkeyp
 def test_oura_api_sync_and_combined_export_use_only_file_workers(
     runtime, app, tmp_path, monkeypatch
 ):
+    from datetime import date, timedelta
+
     from test_oura import sleep
 
     from addon import health, oura_ui
@@ -737,17 +738,29 @@ def test_oura_api_sync_and_combined_export_use_only_file_workers(
     save_daily_settings(source, DailySettings(True, str(destination)))
     save_report(report_with_followup(), database_path(source))
     threads = []
+    latest = date(2026, 9, 7)
+    activity = [
+        {"day": (latest - timedelta(days=offset)).isoformat(), "steps": 0}
+        for offset in range(121)
+    ]
 
     def synced(source, services, sharing, *, force, check_cancelled):
         threads.append(threading.get_ident())
         check_cancelled()
         return health.save_oura_import(
             source,
-            parse_oura_records([sleep()], [{"day": "2026-09-07", "steps": 0}]),
+            parse_oura_records([sleep()], activity),
             sharing=sharing,
         )
 
     monkeypatch.setattr(oura_ui, "sync_oura", synced)
+
+    def connection_status(source):
+        if not threads:
+            return "Oura is not connected.", False
+        return "Workout access is unavailable. Select Change Oura permissions.", True
+
+    monkeypatch.setattr(oura_ui, "connection_status", connection_status)
     exported = tmp_path / "manual.csv"
     monkeypatch.setattr(
         oura_ui.QFileDialog, "getSaveFileName", lambda *a, **kw: (str(exported), "")
@@ -773,19 +786,28 @@ def test_oura_api_sync_and_combined_export_use_only_file_workers(
     try:
         dialog.load()
         pump_until(app, lambda: not dialog.busy)
+        assert dialog.choose_button.text() == "Connect Oura…"
         dialog.sync()
         pump_until(app, lambda: not dialog.busy)
-        assert dialog.table.rowCount() == 1
+        assert dialog.choose_button.text() == "Change Oura permissions…"
+        assert dialog.table.rowCount() == len(activity)
+        assert dialog.table.item(0, 0).text() == activity[0]["day"]
+        assert dialog.table.item(len(activity) - 1, 0).text() == activity[-1]["day"]
         assert dialog.table.item(0, 1).text() == "7h 00m"
         assert dialog.table.item(0, 7).text() == "0"
+        assert "Workout access is unavailable" in dialog.status.text()
+        dialog.load()
+        pump_until(app, lambda: not dialog.busy)
+        assert dialog.choose_button.text() == "Change Oura permissions…"
         assert destination.is_file()
         assert main._background_op_count == 1
         assert sharing_state(source).metadata()["research_consent_before_first_view"] is True
         dialog.export()
         pump_until(app, lambda: not dialog.busy)
         with exported.open(encoding="utf-8-sig", newline="") as handle:
-            rows = list(csv.DictReader(handle))
-        assert rows[0]["oura_total_sleep_seconds"] == "25200"
+            rows = {row["date"]: row for row in csv.DictReader(handle)}
+        assert rows[activity[0]["day"]]["oura_total_sleep_seconds"] == "25200"
+        assert rows[activity[-1]["day"]]["oura_steps"] == "0"
         assert all(thread != main.owner for thread in threads) and len(threads) == 2
         assert not notices
     finally:
@@ -878,8 +900,8 @@ def test_network_sync_leaves_qt_and_real_reviews_available(runtime, app, monkeyp
 
 
 def test_research_preview_and_explicit_send_run_off_qt(runtime, app, monkeypatch):
-    from addon import submission_ui
-    from addon.research import SharingConfig
+    from addon import sharing_ui
+    from addon.research import sharing_state
     from addon.service import ServiceConfig
 
     main, _ = runtime
@@ -898,17 +920,19 @@ def test_research_preview_and_explicit_send_run_off_qt(runtime, app, monkeypatch
         sent.append(args[-1])
         return {"submission_id": "synthetic"}
 
-    monkeypatch.setattr(submission_ui, "prepare_submission", prepare)
-    monkeypatch.setattr(submission_ui, "upload_submission", send)
-    dialog = submission_ui.SubmissionDialog(
-        main, main.col.path, ServiceConfig("https://example.org/service"), SharingConfig()
+    snapshot = sharing_state(main.col.path, event_type="sharing_choice", choice="opt_in")
+    monkeypatch.setattr(sharing_ui, "enrollment_information", lambda *_: {})
+    monkeypatch.setattr(sharing_ui, "require_enrollment", lambda *_: {})
+    monkeypatch.setattr(sharing_ui, "prepare_submission", prepare)
+    monkeypatch.setattr(sharing_ui, "upload_submission", send)
+    dialog = sharing_ui.SharingDialog(
+        main, main.col.path, snapshot, ServiceConfig("https://example.org/service"), manage=True
     )
     dialog.show()
     try:
-        dialog.prepare()
         pump_until(app, lambda: not dialog.busy)
         assert not sent and dialog.send.isEnabled()
-        assert "2 days" in dialog.summary.text() and "Synthetic study" in dialog.summary.text()
+        assert "2 days" in dialog.preview.text() and "Synthetic study" in dialog.preview.text()
         dialog.send.click()
         pump_until(app, lambda: not dialog.busy)
         assert sent == ["synthetic"] and not dialog.send.isEnabled()
@@ -928,6 +952,7 @@ def test_google_health_selector_and_background_sync_export_leave_collection_avai
     from addon.oura import parse_oura_records
     from addon.research import SharingConfig, sharing_state
 
+    monkeypatch.setattr(health, "GOOGLE_HEALTH_IN_RELEASE", True)
     main, notices = runtime
     source = main.col.path
     health.save_oura_import(source, parse_oura_records([sleep(day="2026-08-01")], []))
@@ -986,7 +1011,10 @@ def test_google_health_selector_and_background_sync_export_leave_collection_avai
         dialog.close()
 
 
-def test_network_oura_failure_does_not_suppress_google_health(runtime, app, monkeypatch):
+@pytest.mark.parametrize("google_available", [False, True])
+def test_network_only_checks_available_health_providers(
+    runtime, app, monkeypatch, google_available
+):
     from addon import network
 
     main, _ = runtime
@@ -1005,11 +1033,12 @@ def test_network_oura_failure_does_not_suppress_google_health(runtime, app, monk
 
     monkeypatch.setattr(network, "sync_oura", failed)
     monkeypatch.setattr(network, "sync_google_health", google)
+    monkeypatch.setattr(network.health, "GOOGLE_HEALTH_IN_RELEASE", google_available)
     updater = network.NetworkUpdater(main, "addon")
     try:
         updater.check()
         pump_until(app, lambda: not updater.busy)
-        assert calls == ["oura", "google"]
+        assert calls == (["oura", "google"] if google_available else ["oura"])
     finally:
         updater.stop()
         gui_hooks.profile_did_open.remove(updater.start)
@@ -1026,10 +1055,15 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
     from addon import insights_ui
     from addon.research import SharingConfig, sharing_state
 
+    monkeypatch.setattr(insights_ui.health, "GOOGLE_HEALTH_IN_RELEASE", True)
     main, notices = runtime
     source = main.col.path
     sharing_state(source, event_type="sharing_choice", choice="opt_in")
     report, health = inputs(180)
+    for session in health.sessions:
+        session.values["total_sleep"] = sum(
+            session.values[stage] for stage in ("light_sleep", "deep_sleep", "rem_sleep")
+        )
     storage.save_report(report, storage.database_path(source))
     monkeypatch.setattr("addon.health.load_health", lambda path: health)
     monkeypatch.setattr(storage, "build_report", lambda *a, **k: pytest.fail("FSRS replay"))
@@ -1076,21 +1110,27 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         assert main._background_op_count == 0 and threads[0] != main.owner
         release.set()
         pump_until(app, lambda: not dialog.busy)
-        assert dialog.table.columnCount() == 8 and dialog.table.rowCount() == 3
-        assert dialog.table.item(0, 0).text() == "Light → deep"
-        assert not dialog.chart.isVisible()
+        assert dialog.table.columnCount() == 8 and dialog.table.rowCount() == 9
+        assert dialog.table.item(1, 0).text() == "Light sleep (hours)"
+        assert dialog.table.item(4, 0).text() == "Light sleep (%)"
+        assert dialog.sleep_summary.isVisible()
+        assert "Average main sleep" in dialog.sleep_summary.text()
         assert "completed study days" in dialog.summary.text()
         result = dialog.result
-        dialog.all_button.setChecked(True)
+        dialog.stage_button.setChecked(True)
         assert dialog.result is result and not dialog.busy
-        assert dialog.table.rowCount() == 6
+        assert dialog.table.rowCount() == 3
+        assert dialog.table.item(0, 0).text() == "Light → deep"
+        assert not dialog.chart.isVisible()
+        dialog.stage_button.setChecked(False)
+        assert dialog.table.rowCount() == 9
         assert not dialog.table.isColumnHidden(2) and not dialog.table.isColumnHidden(3)
         assert dialog.result.associations["deep_sleep/recall/before"].days == 180
         dialog.table.setCurrentCell(2, 2)
         assert "Main sleep before" in dialog.detail.text()
         dialog.table.setCurrentCell(2, 3)
         assert "Main sleep after" in dialog.detail.text()
-        assert dialog.table.columnSpan(5, 2) == 2
+        assert dialog.table.columnSpan(8, 2) == 2
         result = dialog.result
         dialog.section.setCurrentIndex(1)
         assert dialog.result is result and not dialog.busy
@@ -1102,7 +1142,6 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         dialog.table.setCurrentCell(1, 3)
         assert "insufficient data" in dialog.detail.text().lower()
         assert "nap days only" in dialog.note.text()
-        dialog.all_button.setChecked(False)
         dialog.section.setCurrentIndex(2)
         assert dialog.result is result and not dialog.busy
         assert dialog.table.rowCount() == 6
@@ -1111,7 +1150,7 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         assert "24 hours" in dialog.note.text()
         assert "insufficient data" in dialog.detail.text().lower()
         assert "individual associations" in dialog.summary.text()
-        assert dialog.chart.isVisible() and not dialog.all_button.isVisible()
+        assert dialog.chart.isVisible() and not dialog.stage_button.isVisible()
         assert sharing_state(source).metadata()["research_consent_before_first_view"] is True
         dialog.export()
         pump_until(app, lambda: not dialog.busy)
@@ -1188,7 +1227,7 @@ def test_returning_insights_show_changes_from_previous_visit_not_previous_refres
     pump_until(app, lambda: not first.busy)
     assert "First visit" in first.changes.text()
     assert first.visit_futures[-1].result(5)
-    first.all_button.setChecked(True)
+    first.stage_button.setChecked(True)
     assert not first.changes.isVisible()
     assert first.visit_revision == 1  # Rendering a different view is still this visit.
     first.close()

@@ -12,7 +12,6 @@ from aqt.qt import (
     QCheckBox,
     QColor,
     QComboBox,
-    QDate,
     QDateEdit,
     QDialog,
     QFileDialog,
@@ -72,6 +71,7 @@ class ScoreChart(QWidget):
         super().__init__(parent)
         self.days: list[DailyResult] = []
         self.metric = "recall"
+        self.filtered = False
         self.selected_day: date | None = None
         self.on_day_selected = None
         self.setMinimumHeight(210)
@@ -103,7 +103,7 @@ class ScoreChart(QWidget):
         ]
         if not measured:
             painter.drawText(
-                area, Qt.AlignmentFlag.AlignCenter, "No evaluated scores in this range"
+                area, Qt.AlignmentFlag.AlignCenter, "No evaluated scores yet"
             )
             return
         span = min(100.0, max(10.0, max(abs(metric.score_pp) for _, metric in measured) * 1.1))
@@ -128,21 +128,15 @@ class ScoreChart(QWidget):
             )
         color = QColor("#1683b5" if self.metric == "recall" else "#c27118")
         painter.setPen(QPen(color, 2))
-        painter.drawText(58, 18, "Daily scores (pp) · click a day to inspect")
-        previous = None
-        for day in self.days:
-            metric = getattr(day, self.metric)
-            if metric is None or metric.score_pp is None:
-                previous = None
-                continue
+        painter.drawText(
+            58, 18, "Daily scores (pp)" if self.filtered else "Full history · daily scores (pp)"
+        )
+        for day, metric in measured:
             current = point(day.day, metric.score_pp)
-            if previous is not None:
-                painter.drawLine(previous, current)
             provisional = self.metric != "recall" and day.formation.pending_count > 0
             painter.setBrush(self.palette().brush(self.backgroundRole()) if provisional else color)
             radius = 5 if day.day == self.selected_day else 3
             painter.drawEllipse(current, radius, radius)
-            previous = current
         painter.setPen(text_color)
         painter.drawText(QRectF(area.left(), area.bottom() + 8, 140, 24), first_day.isoformat())
         painter.drawText(
@@ -295,10 +289,8 @@ class MemoryReportDialog(QDialog):
             self, 960, 710, "Memory report content"
         )
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
-        self.visible_days: list[DailyResult] = []
+        self.days: list[DailyResult] = []
         self.csv_error: str | None = None
-        self.range_user_changed = False
-        self.default_range_applied = False
         layout.setSpacing(12)
         title = QLabel("Your memory")
         font = title.font()
@@ -326,6 +318,9 @@ class MemoryReportDialog(QDialog):
             self.metric_selector.addItem(label, key)
         self.metric_selector.setAccessibleName("Memory metric")
         controls.addWidget(self.metric_selector)
+        self.filter_dates = QCheckBox("Filter dates")
+        self.filter_dates.setEnabled(False)
+        controls.addWidget(self.filter_dates)
         controls.addStretch()
         self.refresh_button = QPushButton("Update")
         self.refresh_button.setToolTip(
@@ -334,31 +329,34 @@ class MemoryReportDialog(QDialog):
         self.refresh_button.clicked.connect(self.refresh)
         controls.addWidget(self.refresh_button)
         self.export_button = QPushButton("Export CSV…")
-        self.export_button.setToolTip("Export all metrics for the selected source-date range.")
+        self.export_button.setToolTip("Export all metrics for the dates shown.")
         self.export_button.clicked.connect(self.export)
         self.export_button.setEnabled(False)
         controls.addWidget(self.export_button)
         layout.addLayout(controls)
 
-        dates = QHBoxLayout()
+        self.date_fields = QWidget()
+        dates = QHBoxLayout(self.date_fields)
+        dates.setContentsMargins(0, 0, 0, 0)
         self.start_date, self.end_date = QDateEdit(), QDateEdit()
-        for label, editor in (("From", self.start_date), ("to", self.end_date)):
+        for label, name, editor in (
+            ("From", "Start date", self.start_date),
+            ("to", "End date", self.end_date),
+        ):
             date_label = QLabel(label)
             date_label.setBuddy(editor)
             dates.addWidget(date_label)
-            editor.setAccessibleName("Start date" if editor is self.start_date else "End date")
+            editor.setAccessibleName(name)
             editor.setCalendarPopup(True)
             editor.setDisplayFormat("yyyy-MM-dd")
             dates.addWidget(editor)
-            editor.dateChanged.connect(self.mark_range_changed)
-        self.all_history = QCheckBox("All history")
-        self.all_history.toggled.connect(self.mark_range_changed)
-        dates.addWidget(self.all_history)
+            editor.dateChanged.connect(self.render_report)
         dates.addStretch()
-        self.default_range_button = QPushButton("Suggested range")
-        self.default_range_button.clicked.connect(self.apply_default_range)
-        dates.addWidget(self.default_range_button)
-        layout.addLayout(dates)
+        self.date_fields.hide()
+        layout.addWidget(self.date_fields)
+        self.filter_dates.toggled.connect(self.date_fields.setVisible)
+        self.filter_dates.toggled.connect(self.render_report)
+
         self.context = QLabel()
         self.context.setWordWrap(True)
         layout.addWidget(self.context)
@@ -420,7 +418,7 @@ class MemoryReportDialog(QDialog):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.setMinimumHeight(210)
         self.table.cellClicked.connect(
-            lambda row, _col: self.select_day(self.visible_days[-1 - row].day)
+            lambda row, _col: self.select_day(self.days[-1 - row].day)
         )
         self.table.hide()
         layout.addWidget(self.table, 1)
@@ -458,39 +456,10 @@ class MemoryReportDialog(QDialog):
         close_button.clicked.connect(self.close)
         close_row.addWidget(close_button)
         outer.addLayout(close_row)
-        self.metric_selector.currentIndexChanged.connect(self.metric_changed)
-        self.apply_default_range()
+        self.metric_selector.currentIndexChanged.connect(self.render_report)
 
     def metric_key(self) -> str:
         return self.metric_selector.currentData()
-
-    def mark_range_changed(self, *_args) -> None:
-        self.range_user_changed = True
-        self.render_report()
-
-    def metric_changed(self, *_args) -> None:
-        # Keep custom ranges and all-history choices across metric changes.
-        if not self.range_user_changed:
-            self.apply_default_range()
-        else:
-            self.render_report()
-
-    def apply_default_range(self, *_args) -> None:
-        settings = self.report.settings if self.report is not None else Settings()
-        rollover = self.report.rollover_hour if self.report is not None else 4
-        today = anki_day(time.time(), rollover)
-        formation = self.metric_key() != "recall"
-        end = today - timedelta(days=SHORT_TERM_MAX_DAYS) if formation else today
-        length = settings.default_display_days if formation else 30
-        for widget in (self.start_date, self.end_date, self.all_history):
-            widget.blockSignals(True)
-        self.start_date.setDate(QDate(end - timedelta(days=length - 1)))
-        self.end_date.setDate(QDate(end))
-        self.all_history.setChecked(False)
-        for widget in (self.start_date, self.end_date, self.all_history):
-            widget.blockSignals(False)
-        self.range_user_changed = False
-        self.render_report()
 
     def toggle_table(self, checked: bool) -> None:
         self.chart.setVisible(not checked)
@@ -594,11 +563,11 @@ class MemoryReportDialog(QDialog):
                 self.failed,
             )
             return
+        if report.days and not self.filter_dates.isEnabled():
+            self.start_date.setDate(report.days[0].day)
+            self.end_date.setDate(report.days[-1].day)
+            self.filter_dates.setEnabled(True)
         self.report = report
-        if not self.default_range_applied:
-            self.default_range_applied = True
-            if not self.range_user_changed:
-                self.apply_default_range()
         self.refresh_button.setEnabled(True)
         self.export_button.setEnabled(True)
         self.render_report()
@@ -646,36 +615,30 @@ class MemoryReportDialog(QDialog):
         super().reject()
 
     def date_range(self) -> tuple[date | None, date | None]:
-        if self.all_history.isChecked():
+        if not self.filter_dates.isChecked():
             return None, None
         return self.start_date.date().toPyDate(), self.end_date.date().toPyDate()
 
     def render_report(self, *_args) -> None:
         if self.report is None:
             return
-        self.start_date.setEnabled(not self.all_history.isChecked())
-        self.end_date.setEnabled(not self.all_history.isChecked())
-        start, end = self.date_range()
         previous_day = self.day_selector.currentData()
-        days = [
-            day
-            for day in self.report.days
-            if (start is None or day.day >= start) and (end is None or day.day <= end)
-        ]
-        self.visible_days = days
+        start, end = self.date_range()
+        days = self.report.days
+        if start is not None and end is not None:
+            days = [day for day in days if start <= day.day <= end]
+        self.days = days
         formation = self.metric_key() != "recall"
         self.day_label.setText("Study day" if formation else "Review day")
         self.context.setText(
             "Formation belongs to the study day and is measured at the next review. "
-            "The suggested range ends 30 days ago; "
-            "check follow-up availability for older days too. "
-            "Short/long term refers to the actual delay until the next review."
+            "Short and long term refer to the time until that review."
             if formation
-            else "Recall uses the first attempt on each card per Anki day. "
-            "The suggested range shows the most recent 30 days."
+            else "Recall uses the first attempt on each card per Anki day."
         )
         self.chart.days = days
         self.chart.metric = self.metric_key()
+        self.chart.filtered = self.filter_dates.isChecked()
         self.day_selector.blockSignals(True)
         self.day_selector.clear()
         for day in reversed(days):
@@ -736,12 +699,16 @@ class MemoryReportDialog(QDialog):
 
     def render_selection(self, *_args) -> None:
         selected = next(
-            (day for day in self.visible_days if day.day == self.day_selector.currentData()), None
+            (day for day in self.days if day.day == self.day_selector.currentData()), None
         )
         self.chart.selected_day = selected.day if selected else None
         self.chart.update()
         if selected is None:
-            self.summary.setText("No eligible reviews in this date range.")
+            self.summary.setText(
+                "No eligible reviews in this date range."
+                if self.filter_dates.isChecked()
+                else "No eligible reviews in your study history."
+            )
             self.details.clear()
             self.completeness.clear()
             return
@@ -797,8 +764,8 @@ class MemoryReportDialog(QDialog):
             )
 
     def render_table(self) -> None:
-        self.table.setRowCount(len(self.visible_days))
-        for row, day in enumerate(reversed(self.visible_days)):
+        self.table.setRowCount(len(self.days))
+        for row, day in enumerate(reversed(self.days)):
             metric = getattr(day, self.metric_key())
             cohort = day.formation
             availability = (
@@ -872,7 +839,6 @@ class MemoryReportDialog(QDialog):
     def export(self) -> None:
         if self.busy or self.report is None:
             return
-        start, end = self.date_range()
         path, _ = QFileDialog.getSaveFileName(
             self, "Export daily memory scores", "anki-memory-scores.csv", "CSV files (*.csv)"
         )
@@ -881,6 +847,7 @@ class MemoryReportDialog(QDialog):
         if not path.lower().endswith(".csv"):
             path += ".csv"
         report = self.report
+        start, end = self.date_range()
         self.busy = True
         self.refresh_button.setEnabled(False)
         self.export_button.setEnabled(False)
@@ -1071,18 +1038,6 @@ def register(addon_name: str) -> None:
     action = QAction("Quantified Cognition…", mw)
     action.triggered.connect(open_report)
     mw.form.menuTools.addAction(action)
-    settings_action = QAction("Quantified Cognition Daily Settings…", mw)
-    settings_action.triggered.connect(lambda _checked=False: open_daily_settings(addon_name))
-    mw.form.menuTools.addAction(settings_action)
-    sharing_action = QAction("Quantified Cognition Research Sharing…", mw)
-    sharing_action.triggered.connect(lambda _checked=False: open_research_sharing(addon_name))
-    mw.form.menuTools.addAction(sharing_action)
-    oura_action = QAction("Quantified Cognition Health Data…", mw)
-    oura_action.triggered.connect(lambda _checked=False: open_oura_data(addon_name))
-    mw.form.menuTools.addAction(oura_action)
-    insights_action = QAction("Quantified Cognition Personal Insights…", mw)
-    insights_action.triggered.connect(lambda _checked=False: open_personal_insights(addon_name))
-    mw.form.menuTools.addAction(insights_action)
 
     def daily_report_updated(result: UpdateResult) -> None:
         delivered = False

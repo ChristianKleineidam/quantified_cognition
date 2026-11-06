@@ -28,11 +28,14 @@ def preflight(root: Path, node: str, pglite: Path) -> dict:
         raise RuntimeError("PGLITE_TEST_MODULE must point to PGlite's dist/index.js")
     deployment = root / "supabase/deployment.json"
     if deployment.is_file():
-        flags = json.loads(deployment.read_text(encoding="utf-8"))["environment"]
-        if any(flags.get(key) != "false" for key in (
-            "OURA_ENABLED", "GOOGLE_HEALTH_ENABLED", "RESEARCH_ENABLED"
-        )):
-            raise RuntimeError("Online beta features must remain disabled")
+        state = json.loads(deployment.read_text(encoding="utf-8"))
+        flags = state["environment"]
+        if any(flags.get(key) != "false" for key in ("GOOGLE_HEALTH_ENABLED", "RESEARCH_ENABLED")):
+            raise RuntimeError("Google Health and research uploads must remain disabled")
+        if state.get("production_access_enabled") is not False or flags.get("OURA_ENABLED") not in (
+            "true", "false"
+        ):
+            raise RuntimeError("Oura may only be enabled for the developer beta")
     workflows = root / ".github" / "workflows"
     if workflows.exists() and any(p.suffix in (".yml", ".yaml") for p in workflows.iterdir()):
         raise RuntimeError("GitHub Actions are not used for this project")

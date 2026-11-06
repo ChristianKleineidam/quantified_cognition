@@ -339,14 +339,20 @@ def test_native_history_split_uses_actual_delay_and_is_saved_and_exported(collec
 
 
 def test_unchanged_inputs_reuse_saved_analysis_without_snapshot_or_write(collection, monkeypatch):
-    from dataclasses import replace
+    import json
+    import sqlite3
+    from contextlib import closing
 
     from addon import storage
-    from addon.metrics import Settings
 
     add_card(collection, [(date(2026, 9, 7), 3, 0, 2500)])
     first = storage.update_results(collection)
     assert first.recalculated
+    with closing(sqlite3.connect(storage.database_path(collection.path))) as db, db:
+        (raw_report,) = db.execute("select value from metadata where key = 'report'").fetchone()
+        metadata = json.loads(raw_report)
+        metadata["settings"]["default_display_days"] = 180
+        db.execute("update metadata set value = ? where key = 'report'", (json.dumps(metadata),))
 
     def unexpected(*args, **kwargs):
         pytest.fail("Unchanged inputs must not rebuild or rewrite the analysis")
@@ -357,11 +363,6 @@ def test_unchanged_inputs_reuse_saved_analysis_without_snapshot_or_write(collect
         cached = storage.update_results(collection)
     assert not cached.recalculated
     assert cached.report == first.report
-    # A display-only preference can update without reconstructing FSRS states.
-    monkeypatch.setattr(storage, "build_report", unexpected)
-    display = replace(Settings(), default_display_days=180)
-    result = storage.update_results(collection, display)
-    assert not result.recalculated and result.report.settings == display
 
 
 @pytest.mark.parametrize(

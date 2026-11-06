@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 STATEMENT = (
     "I confirm that I am at least 18 and am contributing my own data. I have read "
     "the research information and privacy policy. I explicitly consent to "
-    "JollyJoyJourney processing my submitted daily learning, recall, sleep and "
-    "activity measurements, including health-related data, for this research "
+    "JollyJoyJourney processing my submitted daily Anki measurements and any Oura "
+    "sleep and activity summaries, including health-related data, for this research "
     "programme, with controlled access by approved research collaborators as "
     "described. I understand the retention criteria, that each upload requires my "
     "confirmation, and that I can withdraw without losing personal use."
@@ -23,7 +23,7 @@ STATEMENT = (
 
 def bundle():
     return {
-        "version": "research-enrollment-v9",
+        "version": "research-enrollment-v10",
         "operator": "JollyJoyJourney",
         "signature_method": "explicit_consent",
         "statement": STATEMENT,

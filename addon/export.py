@@ -68,6 +68,7 @@ def export_csv(
     research_metadata: dict | None = None,
     health_data: dict[date, DailyHealth] | None = None,
     health_snapshot=None,
+    include_google_health=True,
 ) -> int:
     count = 0
     context = (
@@ -83,7 +84,7 @@ def export_csv(
         session_data = (
             {
                 provider: study_features(report, health_snapshot, provider)
-                for provider in ("oura", "google_health")
+                for provider in (("oura", "google_health") if include_google_health else ("oura",))
             }
             if health_snapshot is not None
             else {}

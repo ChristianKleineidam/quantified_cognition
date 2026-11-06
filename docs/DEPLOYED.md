@@ -1,7 +1,16 @@
 # Backend deployment state
 
-Latest hosted verification: **5 November 2026**. This is a deployed prelaunch backend;
-Oura, Google Health and research uploads remain disabled.
+**6 November 2026, Oura-only research scope.** Protocol v10 and its matching
+sharing notice are staged. The protocol's database constraint prevents enabling
+Google Health data for this version. Protocol approval, enrollment and Oura
+research permission are all false. The status endpoint reports Oura enabled
+for the developer beta, Google Health disabled and research uploads disabled.
+The enrollment-information endpoint returned HTTP 503.
+
+**6 November 2026.** Oura is enabled under the provider's developer limit.
+A full Oura history import completed in the operator's regular Anki profile.
+The Supabase and Silentworker monitors verified the new setting. Google Health
+and research uploads are disabled.
 
 **5 November live Oura developer pilot:** authorization/browser return,
 paginated sleep/activity/workout imports, encrypted caching, persisted refresh
@@ -152,13 +161,13 @@ authorized online pilot.
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
 | Function | `qs-service`, deployed version 17 |
-| Latest migration | `20261105113158_research_protocol_v8.sql` |
+| Latest migration | `20261106143209_monitor_oura_expectation.sql` |
 | Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |
 | Monitor | Active, every five minutes; private alerts |
 | Independent monitor | Silentworker; existing Home Assistant notification channel |
 | Recovery | Encrypted daily copies; independent deletion ledger; 7 days / 1 GiB |
-| Oura access | **Disabled** (`OURA_ENABLED=false`) |
+| Oura access | **Enabled** under the developer limit (`OURA_ENABLED=true`) |
 | Google Health access | **Disabled** (`GOOGLE_HEALTH_ENABLED=false`) |
 | Research registration/uploads | **Disabled** (`RESEARCH_ENABLED=false`) |
 | Real participant/research data | **None** |

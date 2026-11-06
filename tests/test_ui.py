@@ -31,32 +31,41 @@ def dialog(app):
     app.processEvents()
 
 
-def test_native_report_empty_populated_and_date_filter(dialog, app):
-    monday, friday = date(2026, 9, 7), date(2026, 9, 11)
+def test_native_report_opens_on_full_history_with_optional_date_filter(dialog, app):
+    monday, friday = date(2015, 9, 7), date(2026, 9, 11)
     days = daily_results(
         [Attempt(1, 1, monday, 3, None, True), Attempt(2, 1, friday, 1, 0.7, True)]
     )
     report = Report(
         days, "2026-10-07T00:00:00+00:00", "26.9.3", "abc123", 4, Settings(), 1, 0, 0, "CEST"
     )
-    dialog.all_history.setChecked(True)
     dialog.accept_report(report)
     dialog.show()
     app.processEvents()
+    assert not dialog.date_fields.isVisible()
+    assert dialog.date_range() == (None, None)
     assert dialog.table.rowCount() == 0  # Details are lazy, collapsed by default.
     dialog.metric_selector.setCurrentIndex(1)
+    assert [day.day for day in dialog.chart.days] == [monday, friday]
     dialog.inspect_button.setChecked(True)
     assert dialog.table.rowCount() == 2
     assert dialog.table.item(1, 1).text() == "-70.00 pp"
-    dialog.select_day(date(2026, 9, 7))  # A new date instance, not QVariant identity.
+    dialog.select_day(date.fromisoformat(monday.isoformat()))  # A new date instance.
     assert dialog.day_selector.currentData() == monday
     assert "-70.00 pp" in dialog.summary.text()
     assert "No pending follow-ups" in dialog.completeness.text()
     assert dialog.export_button.isEnabled()
+    dialog.filter_dates.setChecked(True)
+    assert dialog.date_fields.isVisible()
+    assert dialog.date_range() == (monday, friday)
     dialog.start_date.setDate(friday)
-    dialog.end_date.setDate(friday)
-    dialog.all_history.setChecked(False)
     assert dialog.table.rowCount() == 1
+    dialog.metric_selector.setCurrentIndex(0)
+    assert dialog.date_range() == (friday, friday)
+    dialog.filter_dates.setChecked(False)
+    assert not dialog.date_fields.isVisible()
+    assert [day.day for day in dialog.chart.days] == [monday, friday]
+    assert dialog.table.rowCount() == 2
     dialog.accept_report(
         Report(
             [],
@@ -171,7 +180,6 @@ def test_one_metric_selector_shows_band_scores_and_overall_followup_availability
         0,
         "CEST",
     )
-    dialog.all_history.setChecked(True)
     dialog.accept_report(report)
     dialog.metric_selector.setCurrentIndex(1)
     dialog.inspect_button.setChecked(True)
@@ -196,7 +204,6 @@ def test_legacy_saved_report_shows_uncalculated_bands(dialog):
     legacy = replace(
         report, days=[DailyResult(day.day, day.recall, day.formation) for day in report.days]
     )
-    dialog.all_history.setChecked(True)
     dialog.accept_report(legacy)
     dialog.metric_selector.setCurrentIndex(2)
     dialog.inspect_button.setChecked(True)
@@ -205,15 +212,12 @@ def test_legacy_saved_report_shows_uncalculated_bands(dialog):
     assert dialog.table.item(1, 5).text() == "not calculated"
 
 
-def test_formation_default_window_uses_calendar_days_and_does_not_hide_pending(dialog, monkeypatch):
+def test_formation_shows_pending_followups_for_selected_day(dialog):
     from datetime import timedelta
 
-    from addon import ui
     from addon.metrics import Sample, summarize
 
-    today = date(2026, 10, 22)
-    monkeypatch.setattr(ui, "anki_day", lambda *args: today)
-    source = today - timedelta(days=35)
+    source = date(2026, 9, 17)
     samples = [Sample(0.8, 1, source + timedelta(days=i + 1)) for i in range(30)]
     overall = summarize(samples, cohort_count=1000, pending_count=970, formation=True)
     short = summarize(samples, cohort_count=30, formation=True)
@@ -232,8 +236,6 @@ def test_formation_default_window_uses_calendar_days_and_does_not_hide_pending(d
     )
     dialog.accept_report(report)
     dialog.metric_selector.setCurrentIndex(2)
-    assert dialog.end_date.date().toPyDate() == today - timedelta(days=30)
-    assert dialog.start_date.date().toPyDate() == today - timedelta(days=119)
     assert dialog.day_selector.currentData() == source
     assert "better" in dialog.summary.text()
     assert "Provisional" in dialog.completeness.text()
@@ -241,9 +243,6 @@ def test_formation_default_window_uses_calendar_days_and_does_not_hide_pending(d
     assert "3%" in dialog.completeness.text()
     assert "970 pending" in dialog.completeness.text()
     assert "100%" not in dialog.completeness.text()
-    dialog.metric_selector.setCurrentIndex(0)
-    assert dialog.end_date.date().toPyDate() == today
-    assert dialog.start_date.date().toPyDate() == today - timedelta(days=29)
 
 
 def test_daily_settings_dialog_restores_and_saves_profile_preferences(app, tmp_path, monkeypatch):

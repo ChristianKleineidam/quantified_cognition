@@ -63,8 +63,7 @@ month when selected, but do not adjust for sleep or other lifestyle factors.
 Comparisons between light, deep and REM sleep use the same eligible days and
 account for total sleep duration. For example, an estimate for ten more minutes
 of deep sleep replacing light sleep compares a change in sleep composition
-while holding total sleep and REM sleep constant. Oura and Google Health
-measurements are analyzed separately.
+while holding total sleep and REM sleep constant.
 
 ## Uncertainty and interpreting changes
 
