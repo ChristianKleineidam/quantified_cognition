@@ -35,7 +35,9 @@ def primitives():
             raise OSError("The bundled encryption library is damaged. Reinstall the add-on.")
         base = folder.parent / ".crypto-runtime"
         base.mkdir(mode=0o700, exist_ok=True)
-        destination = base / spec["sha256"]
+        # Keep DLL paths within the legacy Windows loader limit on older Anki builds.
+        cache_key = spec["sha256"][:20] if sys.platform == "win32" else spec["sha256"]
+        destination = base / cache_key
         if not (destination / ".complete").exists():
             temporary = Path(tempfile.mkdtemp(dir=base))
             try:
