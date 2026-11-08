@@ -8,7 +8,6 @@ The release listing text is saved in [ANKIWEB_DESCRIPTION.txt](docs/ANKIWEB_DESC
 The public information website is hosted on Cloudflare Pages at
 [quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/);
 see [website publishing](docs/WEBSITE.md).
-The public desktop beta includes Oura integration and voluntary research participation.
 **Oura integration and voluntary research uploads are available.**
 
 Version 0.18.0 renames the add-on from Quantified Self Memory to Quantified Cognition.
@@ -97,8 +96,7 @@ confirmation records. There is no fixed research measurement expiry.
 The backend migrations are deployed and their closed-state checks passed;
 research enrollment and uploads are available with explicit consent and per-package confirmation. Oura's API application is
 approved, its ten-user limit has been lifted, and the account pilot is complete.
-Remaining research data-handling checks and an operator launch decision precede
-research activation. See
+The focused hosted research rehearsal and guarded analysis workspace are complete. See
 [research controls](docs/RESEARCH_CONTROLS.md) for the flow and operator procedures.
 
 Before opening the first personal report, including cached results, the add-on asks **Yes, I’m interested / Not now / No, keep it private**. It also asks before a new user enables automatic CSV output. **Not now** is the default, and every choice allows personal use. Use **Research sharing…** in the memory report to change your preference later. Study enrollment is a separate step.

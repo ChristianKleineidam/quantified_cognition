@@ -57,8 +57,8 @@ make room, and failed research uploads never retry automatically.
 
 The private `quota_policy` and `storage_budget` tables contain the limits. Only
 an authorized operator should change them, after reviewing capacity. No key,
-secret or administrative setting belongs in Anki's configuration. Keep all three
-enable flags false during ordinary deployments.
+secret or administrative setting belongs in Anki's configuration. Preserve the operator-selected feature state during ordinary deployments;
+Google Health remains disabled. Use the documented launch/closure procedure for changes.
 
 These are application work/storage limits, **not a billing ceiling**. Requests
 rejected at the function can still consume invocations, logs and database work.
