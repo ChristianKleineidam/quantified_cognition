@@ -39,10 +39,21 @@ test("offline Oura authorization loss holds research and follows the complete de
     await isolated("outages stop existing-copy use without deleting measurements or assuming withdrawal",async()=>{
       const generation=await authorizeOura(db,id,hash);await submit();const extract=await copy();
       assert.equal((await one("select qs_governance.check_extract_use($1) ok",[extract])).ok,true);
+      await db.exec("savepoint guard_role;set local role service_role");
+      assert.equal((await one("select public.qs_research_use_allowed($1) ok",[extract])).ok,true);
+      await db.exec("rollback to guard_role");
+      for(const role of ["anon","authenticated"]) {
+        await db.exec("savepoint guard_role;set local role "+role);
+        await rejects("select public.qs_research_use_allowed($1)",[extract],/permission denied/);
+        await db.exec("rollback to guard_role");
+      }
       await db.exec("update qs_governance.protocols set oura_permitted=false");
       assert.equal((await one("select qs_governance.check_extract_use($1) ok",[extract])).ok,false);
       await db.exec("update qs_governance.protocols set oura_permitted=true");
       await result(generation,"unavailable");
+      await db.exec("savepoint guard_role;set local role service_role");
+      assert.equal((await one("select public.qs_research_use_allowed($1) ok",[extract])).ok,false);
+      await db.exec("rollback to guard_role");
       assert.equal((await one("select qs_governance.check_extract_use($1) ok",[extract])).ok,false);
       assert.equal((await one("select state from qs_governance.extracts where id=$1",[extract])).state,"held");
       assert.equal((await one("select count(*)::int n from qs_private.submissions")).n,1);

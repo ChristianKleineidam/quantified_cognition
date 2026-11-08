@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-08",
+  "synthetic_only": true,
+  "namespace": "qst_e91a4c72_",
+  "production_research_enabled": false,
+  "google_health_enabled": false,
+  "checks": [
+    "before-results choice preserved",
+    "explicit enrollment receipt",
+    "OS-protected local health/tokens",
+    "v7 encrypted upload",
+    "lost-response retry: same receipt, row and byte budgets unchanged",
+    "registered extract and encrypted recovery copy",
+    "off-server decryption under live authorization guard",
+    "daily and pseudonymous per-review CSV",
+    "synthetic Brier score 0.49; missing predictions excluded",
+    "recovery copies forbidden for analysis",
+    "scheduled Oura revocation detected with client closed",
+    "live analysis stopped; new analysis denied",
+    "active submissions and monitor credentials erased",
+    "old upload capability rejected",
+    "receipt remains incomplete until both real files removed",
+    "encrypted recovery and analysis copies physically deleted then confirmed",
+    "client deletion retry works after automatic capability invalidation"
+  ],
+  "brier_expected": 0.49,
+  "brier_observed": 0.48999999999999994,
+  "limits": [
+    "Provider responses simulated; no real Oura account touched",
+    "Recovery copy used the actual age format and inventory; independent production backup timer covered separately"
+  ],
+  "cleanup": {
+    "temporary_endpoint": 0,
+    "temporary_schemas": 0,
+    "temporary_functions": 0,
+    "temporary_roles": 0,
+    "temporary_jobs": 0,
+    "temporary_vault_secrets": 0,
+    "edge_test_secret_removed": true
+  },
+  "production_checks": {
+    "authenticated_boolean_use_check": 200,
+    "unregistered_extract_allowed": false,
+    "unauthenticated_use_check": 401,
+    "enrollment_and_uploads": 503,
+    "open_protocols": 0
+  },
+  "tests": {
+    "backend": 61,
+    "focused_python": 67,
+    "ruff": "passed"
+  },
+  "source_sha256": {
+    "supabase/functions/qs-service/service.mjs": "e0e4cf92f309b8a5fc0e97f0a3b9cc5085f1b178b819fea97a301f07ad85f529",
+    "supabase/migrations/20261108210106_research_workspace_guard.sql": "6e963f2b254e2cc90722067c830ba0101b28667aae8cb5714108fa3de6df45e9",
+    "supabase/migrations/20261108210725_research_workspace_api.sql": "92a805dfe627cb9456f749b6cd428fe89d366cb0b0c04f6250a52b72a122187b",
+    "tools/research_guard.py": "545ed8ab4797235620f54c8cbccec06eed3a60b91625c590ac218eaaa79484a1"
+  }
+}

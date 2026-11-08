@@ -75,6 +75,27 @@ test("OAuth code + PKCE, exact redirect, state integrity and denial", async () =
   }
 });
 
+test("hosted void authorization RPC responses still reach the provider verification", async () => {
+  const e={...env,OURA_RESEARCH_TOKEN_KEY:Buffer.alloc(32,7).toString("base64")};
+  const rpcCalls=[];
+  const handler=createHandler({env:e,fetch:async(url)=>{
+    if(url==="https://api.ouraring.com/oauth/token") return response({access_token:"access",refresh_token:"refresh",expires_in:86400});
+    if(url.startsWith("https://api.ouraring.com/v2/")) return response({data:[]});
+    rpcCalls.push(url.split("/").at(-1));
+    if(url.endsWith("qs_oura_authorization_bind")) return new Response(null,{status:204});
+    if(url.endsWith("qs_oura_authorization_result")) return response({state:"active"});
+    assert.fail("Unexpected RPC");
+  }});
+  const verifier="v".repeat(64),challenge=createHash("sha256").update(verifier).digest("base64url");
+  const start=await (await handler(request("/oauth/start",{return_uri:"http://127.0.0.1:12345/"+"p".repeat(43),
+    state:"s".repeat(43),code_challenge:challenge}))).json();
+  const tokens=await (await handler(request("/oauth/exchange",{code:"synthetic",code_verifier:verifier,flow:start.flow}))).json();
+  const bound=await handler(request("/research/oura-authorization",{access_token:tokens.access_token,
+    authorization_proof:tokens.authorization_proof,receipt_secret:"r".repeat(43)},auth));
+  assert.equal(bound.status,200);assert.deepEqual(await bound.json(),{state:"active"});
+  assert.deepEqual(rpcCalls,["qs_oura_authorization_bind","qs_oura_authorization_result"]);
+});
+
 test("refresh rotates tokens, provider errors are sanitized, disabled features stay off", async () => {
   let calls = 0;
   const handler = createHandler({ env, fetch: async (url, options) => {

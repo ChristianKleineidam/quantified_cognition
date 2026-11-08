@@ -53,7 +53,12 @@ research revocation/copy-deletion handling are implemented in version 0.23.0;
 see [OURA_RESEARCH_REVOCATION.md](OURA_RESEARCH_REVOCATION.md) for deployment
 evidence, operating requirements and detection limits. An explicit operator
 launch decision remains outstanding; recording API approval does not enable
-enrollment or uploads.
+enrollment or uploads. The focused hosted rehearsal is now complete and the
+operator's [analysis workspace](RESEARCH_WORKSPACE.md) is configured. It used
+synthetic records only; [the result](research-e2e-2026-11-08.json) records the
+tested lifecycle and its limits. The intended public launch includes research
+participation once the remaining release checks pass; a separate later research
+release is not required.
 
 Review extracts contain probabilities reconstructed with current FSRS settings,
 not necessarily the original scheduler predictions. Use only non-missing

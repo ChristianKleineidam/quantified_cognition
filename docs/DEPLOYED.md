@@ -1,5 +1,26 @@
 # Backend deployment state
 
+**8 November 2026, focused research rehearsal and operator workspace.** The
+synthetic hosted lifecycle passed with separate schemas and an authenticated
+temporary endpoint. Actual client enrollment, encrypted v7 uploads, lost-response
+retry without duplication, off-server daily/per-review decryption and a known
+Brier score passed. With the client closed, a scheduled invalid-token response
+withdrew the contribution and stopped a guarded analysis. Final acknowledgment
+waited for physical deletion and confirmation of both inventoried copies.
+All temporary hosted resources were removed; no production participant data
+was used. See [the evidence](research-e2e-2026-11-08.json).
+
+The real [analysis workspace](RESEARCH_WORKSPACE.md) is configured on M: with
+an OS-protected boolean-only HTTPS authorization token and the existing off-server
+decryption key. The unused preparation database role was removed. Both workspace
+migrations are applied. Edge source bundle SHA-256 is
+`7837f22527866312c9a457a8d68d04d051abb914ccc1a06509962b73c59156b5`
+(version 39 after secret cleanup). Empty successful PostgREST void responses
+are now handled correctly; the hosted rehearsal uncovered that bug.
+Verification passed 61 backend tests and 67 focused Python tests. Research
+protocols remain closed/unapproved; Oura is enabled, Google Health and research
+uploads remain disabled. The existing release-candidate tag is unchanged.
+
 **8 November 2026, independent Oura research authorization.** The scheduled
 authorization monitor runs while Anki is closed. Explicitly submitted Oura
 contributions use encrypted access tokens, normally checked every five minutes,

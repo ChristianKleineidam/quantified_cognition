@@ -51,16 +51,17 @@ purges affected encrypted recovery archives and records confirmations. Restores
 replay the current external ledger before any use. Monitoring tokens are never
 restored: Oura-derived research remains unavailable until newly verified.
 
-Every operator/workspace/collaborator copy must remain inventoried. Run
-decryption and analyses under the use guard, with an operator-controlled libpq
-service configured through `PGSERVICE` and verified TLS:
+Every operator/workspace/collaborator copy must remain inventoried. The
+[operator workspace](RESEARCH_WORKSPACE.md) is configured on M: with a
+DPAPI-protected token for the boolean-only HTTPS authorization endpoint. Run
+decryption and analyses through its launcher:
 
 ```powershell
-python tools/research_guard.py --extract <registered-extract-UUID> -- python analysis.py
+M:/QuantifiedCognition/Research/Run-Research.ps1 -ExtractId <registered-extract-UUID> python analysis.py
 ```
 
 The guard checks current authorization before starting and every five seconds.
-Unavailable authorization or database connectivity stops the managed process
+Unavailable authorization or service connectivity stops the managed process
 tree. It never claims to erase files or confirm someone else's deletion.
 Do not use an already-open notebook, an offline job or an unregistered copy to
 bypass the guard. Paused copies require a fresh use decision before resuming.
@@ -82,7 +83,12 @@ native PostgreSQL tests include actual encrypted backup omission and restore
 holds; 59 backend tests cover revocation and partial grants. No real participant
 was enrolled or contributed a research package. See the sanitized
 [verification record](OURA_RESEARCH_REVOCATION_RESULT.json). Actual research
-workspaces still require the guard and copy inventory before use.
+workspaces require the guard and copy inventory before use. The operator's
+workspace is now configured; the complete synthetic hosted lifecycle passed on
+8 November, including scheduled revocation with the client closed and actual
+removal of inventoried analysis/recovery files before acknowledgment. See
+[the focused result](research-e2e-2026-11-08.json). Its hosted test also uncovered
+and fixed parsing of PostgREST's empty successful responses for void RPCs.
 
 The 0.23.0 package passed source/crypto-wheel checks and installation in a clean
 Anki 26.9.3 profile. The sharing prompt was rendered with synthetic local state.

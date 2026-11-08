@@ -206,7 +206,10 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
       if (error.code === "P0001" && error.message === "quota_exceeded") fail(429, 86400);
       fail(error.code === "23505" ? 409 : error.code === "28000" ? 401 : error.code === "42501" ? 403 : 502);
     }
-    return response.json();
+    // PostgREST returns an empty body for void RPCs, including authorization
+    // binding. Successful binding must not fail before the verification probe.
+    const raw = await response.text();
+    return raw.trim() ? JSON.parse(raw) : null;
   }
   const ops = operations ?? createOperations({ rpc, secret: env.OAUTH_STATE_SECRET, now, fail });
   const admitted = new WeakSet();
@@ -222,6 +225,15 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
       const route = url.pathname.replace(/^.*\/qs-service/, "");
       if (route === "/internal/oura-authorization" && request.method === "POST")
         return json(await ouraMonitor.job(request.headers.get("authorization")));
+      if (route === "/internal/research-use" && request.method === "POST") {
+        if (!SECRET.test(env.RESEARCH_USE_KEY || "") ||
+            await sha256(request.headers.get("authorization") || "") !==
+            await sha256("Bearer " + env.RESEARCH_USE_KEY)) fail(401);
+        const value = await body(request, 1024);
+        exact(value, ["extract_id"]);
+        if (!UUID.test(value.extract_id)) fail(400);
+        return json({ allowed: await rpc("qs_research_use_allowed", { p_extract: value.extract_id }) === true });
+      }
       if (request.method === "GET" && route === "/status") return json({
         oura_enabled: enabled("OURA"), google_health_enabled: enabled("GOOGLE_HEALTH"), research_enabled: enabled("RESEARCH"),
         operations_version: 1,
