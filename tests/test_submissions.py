@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from test_storage import report_with_followup
 
-from addon import enrollment, storage, submissions
+from addon import enrollment, storage, submissions, vault
 from addon.research import SharingConfig, sharing_state
 from addon.service import ServiceConfig, ServiceError
 
@@ -29,6 +29,10 @@ def setup(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(enrollment, "read_secret", lambda path, slot: secrets.get(slot))
     monkeypatch.setattr(enrollment, "write_secret", submissions.write_secret)
+    # Review pseudonyms share this synthetic vault. Unit tests must not depend
+    # on an unlocked host keyring or write synthetic keys into a real OS vault.
+    monkeypatch.setattr(vault, "read_secret", submissions.read_secret)
+    monkeypatch.setattr(vault, "write_secret", submissions.write_secret)
     status = {
         "research_enabled": True,
         "operator": "Synthetic study",
