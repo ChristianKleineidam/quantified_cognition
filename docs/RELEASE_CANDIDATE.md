@@ -20,7 +20,8 @@ checksum without changing the tested commit.
 
 ## Privacy publication gate
 
-Reachable history was cleaned earlier. The latest check found that GitHub still
+Reachable history excludes the private email address, benchmark counts and the
+unwanted middle name from old document drafts. The latest check found that GitHub still
 returns private author metadata from an old rewritten, unreferenced commit.
 Keep the repository private until the retained GitHub objects/cache are removed
 or a clean publication route is chosen. Passing a local source/history scan does
