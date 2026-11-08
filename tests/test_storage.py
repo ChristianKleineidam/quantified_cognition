@@ -10,8 +10,9 @@ import pytest
 
 from addon.backend import Report
 from addon.export import METRIC_FIELDS
-from addon.metrics import Attempt, DailyResult, Settings, daily_results
+from addon.metrics import FORMATION_METRICS, Attempt, DailyResult, Settings, daily_results
 from addon.storage import (
+    SCHEMA_VERSION,
     DailySettings,
     daily_update_due,
     database_path,
@@ -46,6 +47,18 @@ def report_with_followup(followup=True):
         0,
         0,
         "CEST",
+        review_records=[
+            {
+                "card_id": 1, "ordinal": index, "date": attempt.day.isoformat(),
+                "rating": attempt.rating, "success": attempt.success,
+                "prediction": attempt.prediction,
+                "elapsed_seconds": None if index == 1 else 4 * 86400,
+                "review_type": 0 if index == 1 else 1, "episode": 0,
+                "first_on_day": True, "last_on_day": True, "has_post_state": True,
+                "formation_blocked": False,
+            }
+            for index, attempt in enumerate(attempts, 1)
+        ],
     )
 
 
@@ -150,13 +163,12 @@ def test_manual_calculation_persists_when_daily_mode_is_disabled(tmp_path, monke
     assert not list(tmp_path.glob("*.csv"))
 
 
-def make_legacy_database(path):
+def make_legacy_database(path, version=1):
     """Construct the previous release's table shape and successful-day metadata."""
     report = report_with_followup()
     save_report(report, path)
-    columns = ["date"] + [
-        f"{prefix}_{field}" for prefix in ("recall", "formation") for field in METRIC_FIELDS
-    ]
+    prefixes = ("recall", "formation") if version == 1 else ("recall", *FORMATION_METRICS)
+    columns = ["date"] + [f"{prefix}_{field}" for prefix in prefixes for field in METRIC_FIELDS]
     with closing(sqlite3.connect(path)) as connection, connection:
         types = {row[1]: row[2] for row in connection.execute("pragma table_info(daily_results)")}
         definitions = [
@@ -180,24 +192,28 @@ def make_legacy_database(path):
                 ("last_daily_csv", str(path.parent / "scores.csv")),
             ],
         )
-        connection.execute("pragma user_version=1")
+        connection.execute(f"pragma user_version={version}")
     return report
 
 
-def test_schema_upgrade_preserves_legacy_report_and_recalculates_same_day(tmp_path):
+@pytest.mark.parametrize("version", [1, 2])
+def test_schema_upgrade_preserves_legacy_report_and_recalculates_same_day(tmp_path, version):
     db = tmp_path / "results.sqlite3"
-    updated = make_legacy_database(db)
+    updated = make_legacy_database(db, version)
     legacy = load_report(db)
     assert legacy.days[0].formation == updated.days[0].formation
-    assert legacy.days[0].formation_short_term is None
-    assert legacy.days[0].formation_long_term is None
+    assert (legacy.days[0].formation_short_term is None) == (version == 1)
+    assert (legacy.days[0].formation_long_term is None) == (version == 1)
+    assert legacy.days[1].recall == updated.days[1].recall
+    assert legacy.days[1].recall_short_term is None
+    assert legacy.days[1].recall_long_term is None
     assert daily_update_due(db, date(2026, 10, 8), tmp_path / "scores.csv")
     save_report(updated, db)
     assert load_report(db) == updated
     # Database migration alone is not proof that the upgraded CSV was written.
     assert daily_update_due(db, date(2026, 10, 8), tmp_path / "scores.csv")
     with closing(sqlite3.connect(db)) as connection:
-        assert connection.execute("pragma user_version").fetchone()[0] == 2
+        assert connection.execute("pragma user_version").fetchone()[0] == SCHEMA_VERSION
         count, score = connection.execute(
             "select formation_short_term_count, "
             "formation_short_term_score_pp from daily_results where date='2026-09-07'"

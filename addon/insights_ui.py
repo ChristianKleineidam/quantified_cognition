@@ -1,4 +1,4 @@
-"""One historical overview: both sleep timings, four outcomes, no daily check-in."""
+"""Historical overview of memory outcomes and health measurements."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ from .insights import (
     load_insights,
     plotted_points,
 )
-from .metrics import Settings, anki_day
+from .metrics import FORMATION_METRICS, SHORT_TERM_MAX_DAYS, Settings, anki_day
 from .phase_comparisons import CONTRASTS, SHIFT_MINUTES
 from .phase_comparisons import LABELS as PHASE_LABELS
 from .research import finish_csv_exposure, prepare_csv_exposure, sharing_state
@@ -59,6 +59,8 @@ from .update_job import UpdateJob, UpdateRequest
 
 COLUMNS = (
     ("Recall\nMain sleep before", "recall", "before"),
+    (f"Recall · ≤{SHORT_TERM_MAX_DAYS} days\nMain sleep before", "recall_short_term", "before"),
+    (f"Recall · >{SHORT_TERM_MAX_DAYS} days\nMain sleep before", "recall_long_term", "before"),
     ("Formation · overall\nMain sleep before", "formation", "before"),
     ("Formation · overall\nMain sleep after", "formation", "after"),
     ("Formation · ≤30 days\nMain sleep before", "formation_short_term", "before"),
@@ -241,7 +243,7 @@ class InsightsDialog(QDialog):
             "for this provider."
         )
         layout.addWidget(self.changes)
-        self.table = QTableWidget(0, 8)
+        self.table = QTableWidget(0, 1 + len(COLUMNS))
         self.table.setHorizontalHeaderLabels(["Measurement", *(item[0] for item in COLUMNS)])
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
@@ -545,7 +547,7 @@ class InsightsDialog(QDialog):
             self.table.setRowHeight(row, max(54, 3 * self.table.fontMetrics().height() + 6))
             self.table.setItem(row, 0, QTableWidgetItem(FACTOR_LABELS[FACTORS.index(factor)]))
             for column, (_label, metric, timing) in enumerate(COLUMNS, 1):
-                if factor == "steps" and column in (3, 5, 7):
+                if factor == "steps" and timing == "after":
                     continue
                 key = self.cell_key(factor, metric, timing)
                 value = result.associations[key]
@@ -562,7 +564,7 @@ class InsightsDialog(QDialog):
                     or "Approximate 95% range; exploratory correlation, not a causal effect."
                 )
                 self.table.setItem(row, column, item)
-                if factor == "steps" and column in (2, 4, 6):
+                if factor == "steps" and metric in FORMATION_METRICS:
                     self.table.setSpan(row, column, 1, 2)
         content_height = (
             self.table.horizontalHeader().sizeHint().height()
@@ -662,7 +664,9 @@ class InsightsDialog(QDialog):
             available = sum(value.status == "exploratory estimate" for value in individual)
             text += f"{available} of {len(individual)} individual associations have enough data."
         else:
-            text += f"Phase comparisons ready for {ready} of 7 memory/timing combinations."
+            text += (
+                f"Phase comparisons ready for {ready} of {len(COLUMNS)} memory/timing combinations."
+            )
         if coverage.get("first_study_day"):
             text += (
                 f"\nStudy history {coverage['first_study_day']} to {coverage['last_study_day']}. "
@@ -788,7 +792,7 @@ class InsightsDialog(QDialog):
     @staticmethod
     def cell_key(factor, metric, timing):
         if factor == "steps":
-            timing = "previous_day" if metric == "recall" else "study_day"
+            timing = "study_day" if metric in FORMATION_METRICS else "previous_day"
         return f"{factor}/{metric}/{timing}"
 
     def associations_view(self):
@@ -813,7 +817,7 @@ class InsightsDialog(QDialog):
             )
         if factor == "steps":
             context = label.split("\n")[0] + (
-                " · previous day’s steps" if metric == "recall" else " · study day’s steps"
+                " · study day’s steps" if metric in FORMATION_METRICS else " · previous day’s steps"
             )
         omitted = "; ".join(
             f"{count:,} {reason}" for reason, count in series.omitted.items() if count

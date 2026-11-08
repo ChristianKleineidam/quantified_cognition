@@ -72,7 +72,9 @@ def load_private(path, *, age=None, identity=None):
     raise ValueError("Use a protected .dpapi key or .age with --age and --identity")
 
 
-def decrypt_download(source, destination, key_path, *, age=None, identity=None):
+def decrypt_download(
+    source, destination, key_path, *, age=None, identity=None, reviews_destination=None
+):
     from addon.research_crypto import validate_package
 
     private = load_private(key_path, age=age, identity=identity)
@@ -81,6 +83,7 @@ def decrypt_download(source, destination, key_path, *, age=None, identity=None):
     if not isinstance(records, list):
         raise ValueError("Download must be a JSON array or a Supabase query result")
     daily = {}
+    review_snapshots = {}
     for item in records:
         envelope = item.get("package", item.get("qs_release_extract", item))
         # Support CLI SELECT ... AS record JSON results without accepting
@@ -92,13 +95,17 @@ def decrypt_download(source, destination, key_path, *, age=None, identity=None):
         validate_package(package)
         if item.get("submission_id", package["submission_id"]) != package["submission_id"]:
             raise ValueError("Download receipt identity mismatch")
+        received = item.get("received_at", package["created_at"])
+        order = (
+            datetime.fromisoformat(received.replace("Z", "+00:00")),
+            package["submission_id"],
+        )
+        participant = package["metadata"]["research_participant_id"]
+        previous_snapshot = review_snapshots.get(participant)
+        if previous_snapshot is None or order > previous_snapshot[0]:
+            review_snapshots[participant] = (order, package, item)
         for row in package["rows"]:
-            identifier = package["metadata"]["research_participant_id"], row[0]
-            received = item.get("received_at", package["created_at"])
-            order = (
-                datetime.fromisoformat(received.replace("Z", "+00:00")),
-                package["submission_id"],
-            )
+            identifier = participant, row[0]
             previous = daily.get(identifier)
             if previous is None or order > previous[0]:
                 daily[identifier] = (
@@ -111,17 +118,58 @@ def decrypt_download(source, destination, key_path, *, age=None, identity=None):
                         "received_at": item.get("received_at", ""),
                     },
                 )
-    if destination.exists():
-        raise ValueError("Refusing to overwrite an existing analysis export")
     keys = list(dict.fromkeys(key for _, values in daily.values() for key in values))
-    # Validate every envelope before creating a plaintext, explicitly requested
-    # local analysis export. No intermediate plaintext package is written.
-    with destination.open("x", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=keys)
-        writer.writeheader()
-        for identifier in sorted(daily):
-            writer.writerow(daily[identifier][1])
-    print(json.dumps({"decrypted_packages": len(records), "daily_records": len(daily)}))
+    outputs = [(destination, keys, (daily[key][1] for key in sorted(daily)))]
+    review_count = 0
+    review_records = []
+    has_reviews = any("reviews" in entry[1] for entry in review_snapshots.values())
+    for participant in sorted(review_snapshots):
+        _, package, item = review_snapshots[participant]
+        if "reviews" not in package:
+            continue
+        snapshot = package["reviews"]
+        for row in snapshot["rows"]:
+            review_records.append({
+                **package["metadata"], **snapshot["context"],
+                **dict(zip(snapshot["columns"], row, strict=True)),
+                **item.get("consent_timing", {}),
+                "submission_id": package["submission_id"],
+                "received_at": item.get("received_at", ""),
+            })
+    if has_reviews:
+        reviews_destination = reviews_destination or destination.with_name(
+            destination.stem + "-reviews.csv"
+        )
+        review_count = len(review_records)
+        review_keys = list(dict.fromkeys(
+            key for values in review_records for key in values
+        ))
+        if not review_keys:
+            from addon.review_data import REVIEW_COLUMNS
+
+            review_keys = ["research_participant_id", *REVIEW_COLUMNS]
+        outputs.append((reviews_destination, review_keys, review_records))
+    paths = [path.resolve() for path, _, _ in outputs]
+    if len(set(paths)) != len(paths) or any(path.exists() for path in paths):
+        raise ValueError("Refusing to overwrite an existing analysis export")
+    # Every package validates before either file is created. Roll back files
+    # created by this invocation if either exclusive write fails.
+    created = []
+    try:
+        for path, columns, rows in outputs:
+            with path.open("x", encoding="utf-8-sig", newline="") as handle:
+                created.append(path)
+                writer = csv.DictWriter(handle, fieldnames=columns)
+                writer.writeheader()
+                writer.writerows(rows)
+    except Exception:
+        for path in created:
+            path.unlink(missing_ok=True)
+        raise
+    print(json.dumps({
+        "decrypted_packages": len(records), "daily_records": len(daily),
+        "review_records": review_count,
+    }))
 
 
 def main():
@@ -134,6 +182,7 @@ def main():
     decrypt = commands.add_parser("decrypt")
     decrypt.add_argument("--input", type=Path, required=True)
     decrypt.add_argument("--output", type=Path, required=True)
+    decrypt.add_argument("--reviews-output", type=Path)
     decrypt.add_argument("--private-key", type=Path, required=True)
     decrypt.add_argument("--age", type=Path)
     decrypt.add_argument("--identity", type=Path)
@@ -142,7 +191,8 @@ def main():
         generate(args.private_key, args.age, args.recipient)
     else:
         decrypt_download(
-            args.input, args.output, args.private_key, age=args.age, identity=args.identity
+            args.input, args.output, args.private_key, age=args.age, identity=args.identity,
+            reviews_destination=args.reviews_output,
         )
 
 

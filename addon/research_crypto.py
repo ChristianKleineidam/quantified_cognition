@@ -41,8 +41,9 @@ def canonical(value):
 
 
 def validate_package(package):
-    """Apply the aggregate allowlist before encryption and after decryption."""
+    """Check daily/review allowlists before encryption and after decryption."""
     schema = json.loads(Path(__file__).with_name("research_schema.json").read_text())
+    legacy = isinstance(package, dict) and package.get("schema_version") == 6
     expected = {
         "schema_version",
         "enrollment_id",
@@ -52,11 +53,13 @@ def validate_package(package):
         "columns",
         "rows",
     }
+    if not legacy:
+        expected.add("reviews")
     if not isinstance(package, dict) or set(package) != expected:
         raise ValueError("Unexpected research package fields")
     if (
-        package["schema_version"] != schema["package_version"]
-        or package["columns"] != schema["columns"]
+        package["schema_version"] != (6 if legacy else schema["package_version"])
+        or package["columns"] != (schema["legacy_columns"] if legacy else schema["columns"])
         or not isinstance(package["metadata"], dict)
         or set(package["metadata"]) != set(schema["metadata"])
     ):
@@ -95,7 +98,7 @@ def validate_package(package):
         raise ValueError("Invalid research date count")
     previous = ""
     for row in rows:
-        if not isinstance(row, list) or len(row) != len(schema["columns"]):
+        if not isinstance(row, list) or len(row) != len(package["columns"]):
             raise ValueError("Invalid daily record length")
         if (
             not isinstance(row[0], str)
@@ -104,7 +107,7 @@ def validate_package(package):
         ):
             raise ValueError("Research dates must be valid, unique and ordered")
         previous = row[0]
-        for name, cell in zip(schema["columns"], row, strict=True):
+        for name, cell in zip(package["columns"], row, strict=True):
             if not isinstance(cell, str) or len(cell) > 160:
                 raise ValueError("Invalid research cell")
             if (
@@ -117,6 +120,60 @@ def validate_package(package):
                 raise ValueError("Invalid research category")
             if name == "parameters_hash" and cell and not re.fullmatch(r"[0-9a-f]{64}", cell):
                 raise ValueError("Invalid parameter fingerprint")
+    if not legacy:
+        validate_reviews(package["reviews"], schema, {row[0] for row in rows})
+
+
+def validate_reviews(reviews, schema, days):
+    if (
+        not isinstance(reviews, dict) or set(reviews) != {"columns", "rows", "context"}
+        or reviews["columns"] != schema["review_columns"]
+        or not isinstance(reviews["rows"], list)
+        or len(reviews["rows"]) > schema["max_review_rows"]
+    ):
+        raise ValueError("Invalid review snapshot")
+    context = reviews["context"]
+    if (
+        not isinstance(context, dict) or set(context) != set(schema["review_context_fields"])
+        or context["prediction_basis"] != "reconstructed_current_fsrs"
+        or type(context["calculation_version"]) is not int or context["calculation_version"] < 7
+        or not isinstance(context["parameters_hash"], str)
+        or not re.fullmatch(r"[0-9a-f]{64}", context["parameters_hash"])
+        or any(not isinstance(context[name], str) or len(context[name]) > 256 for name in (
+            "anki_version", "generated_at", "deleted_history_status"
+        ))
+        or datetime.fromisoformat(context["generated_at"].replace("Z", "+00:00")).tzinfo is None
+    ):
+        raise ValueError("Invalid review prediction context")
+    previous_card, previous_ordinal = "", 0
+    for row in reviews["rows"]:
+        if not isinstance(row, list) or len(row) != len(reviews["columns"]):
+            raise ValueError("Invalid review record length")
+        record = dict(zip(reviews["columns"], row, strict=True))
+        card, ordinal = record["card_id"], record["ordinal"]
+        if (
+            not isinstance(card, str) or not re.fullmatch(r"[A-Za-z0-9_-]{22}", card)
+            or type(ordinal) is not int or card < previous_card
+            or ordinal != (previous_ordinal + 1 if card == previous_card else 1)
+            or not isinstance(record["date"], str) or record["date"] not in days
+            or type(record["rating"]) is not int or record["rating"] not in (1, 2, 3, 4)
+            or type(record["success"]) is not int or record["success"] != int(record["rating"] > 1)
+            or type(record["review_type"]) is not int or record["review_type"] not in (0, 1, 2, 3)
+            or type(record["episode"]) is not int or record["episode"] < 0
+        ):
+            raise ValueError("Invalid review identity or outcome")
+        previous_card, previous_ordinal = card, ordinal
+        for name, upper in (("prediction", 1), ("elapsed_seconds", 100 * 366 * 86400)):
+            value = record[name]
+            if value is not None and (
+                type(value) not in (int, float) or not math.isfinite(value)
+                or not 0 <= value <= upper
+            ):
+                raise ValueError("Invalid review prediction or elapsed time")
+        if any(type(record[name]) is not bool for name in (
+            "first_on_day", "last_on_day", "has_post_state", "formation_blocked"
+        )):
+            raise ValueError("Invalid review eligibility flags")
 
 
 def public_configuration():
@@ -166,7 +223,7 @@ def seal_package(package):
     encoded = canonical(package)
     if len(encoded) > MAX_PLAINTEXT:
         raise ValueError("This research package exceeds the upload size limit.")
-    encoded = zlib.compress(encoded)
+    encoded = zlib.compress(encoded, level=9)
     if len(encoded) > MAX_COMPRESSED:
         raise ValueError("This compressed research package exceeds the upload size limit.")
     cipher = HPKE.new(

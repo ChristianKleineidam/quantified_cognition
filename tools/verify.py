@@ -7,12 +7,15 @@ import hashlib
 import importlib.metadata
 import json
 import os
+import re
 import subprocess
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from zipfile import ZipFile
+
+from packaging.version import Version
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,7 +38,7 @@ def preflight(root: Path, node: str, pglite: Path) -> dict:
         if state.get("production_access_enabled") is not False or flags.get("OURA_ENABLED") not in (
             "true", "false"
         ):
-            raise RuntimeError("Oura may only be enabled for the developer beta")
+            raise RuntimeError("Unexpected release state or Oura feature configuration")
     workflows = root / ".github" / "workflows"
     if workflows.exists() and any(p.suffix in (".yml", ".yaml") for p in workflows.iterdir()):
         raise RuntimeError("GitHub Actions are not used for this project")
@@ -88,6 +91,16 @@ def inspect_package(root: Path) -> dict:
             raise RuntimeError("Wrong product name")
         if manifest["package"] != "quantified_self_memory":
             raise RuntimeError("The stable Anki package identity changed")
+        project_version = re.search(
+            r'^version\s*=\s*"([^"]+)"\s*$',
+            (root / "pyproject.toml").read_text(encoding="utf-8"), re.MULTILINE,
+        )
+        if not project_version or Version(project_version[1]) != Version(manifest["human_version"]):
+            raise RuntimeError("Project and add-on release versions differ")
+        if packages[0].name != f"quantified-cognition-{manifest['human_version']}.ankiaddon":
+            raise RuntimeError("Package filename does not identify its release version")
+        if any(info.date_time != (1980, 1, 1, 0, 0, 0) for info in archive.infolist()):
+            raise RuntimeError("Package contains variable ZIP timestamps")
         if archive.read("docs/ANKIWEB_DESCRIPTION.txt") != (
             root / "docs" / "ANKIWEB_DESCRIPTION.txt"
         ).read_bytes():
@@ -95,7 +108,8 @@ def inspect_package(root: Path) -> dict:
         for name in names:
             if name.endswith(".py"):
                 compile(archive.read(name), name, "exec")
-    return {"file": packages[0].name, "entries": len(names), "manifest": manifest}
+    return {"file": packages[0].name, "entries": len(names), "manifest": manifest,
+            "sha256": hashlib.sha256(packages[0].read_bytes()).hexdigest()}
 
 
 def run_checks(root: Path, node: str, pglite: Path, report: Path,

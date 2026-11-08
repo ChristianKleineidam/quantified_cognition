@@ -93,7 +93,11 @@ test("Google daily fields are allowlisted and research contract changes reject o
   Object.assign(metadata, { research_participant_id: crypto.randomUUID(), research_consent_active: true,
     sharing_current_choice: "opt_in", sharing_notice_version: "v3", sharing_notice_hash: "a".repeat(64) });
   const packet = { schema_version: schema.package_version, enrollment_id: crypto.randomUUID(), submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
-    metadata, columns: schema.columns, rows: [schema.columns.map(name => ({ date: "2026-09-07",
+    metadata, columns: schema.columns, reviews: {columns:schema.review_columns,rows:[],context:{
+      prediction_basis:"reconstructed_current_fsrs",anki_version:"26.9.3",
+      calculation_version:7,parameters_hash:"a".repeat(64),
+      generated_at:"2026-11-07T00:00:00Z",deleted_history_status:"synthetic"}},
+    rows: [schema.columns.map(name => ({ date: "2026-09-07",
       google_health_sleep_status: "durations available", google_health_sleep_types: "STAGES",
       google_health_day_basis: "sleep_end_local_date_steps_civil_date", google_health_steps: "0",
       google_health_total_sleep_seconds: "25200" })[name] || "")] };

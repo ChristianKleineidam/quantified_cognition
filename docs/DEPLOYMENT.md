@@ -1,10 +1,11 @@
 # Deploy health OAuth services and research storage
 
 The dedicated **Quantified Cognition** project is deployed in Tempo's Frankfurt
-region (`eu-central-1`), with **Oura access, Google Health access and research uploads explicitly
+region (`eu-central-1`), with **Oura access enabled and Google Health access and research uploads
 disabled**. See [DEPLOYED.md](DEPLOYED.md) for the verified endpoints and state.
-The information website and policy are published; provider and research approvals
-are still pending. No email/password accounts are
+The information website and policy are published. Oura approved the API application
+and lifted the ten-user limit on 6 November; research enrollment remains closed.
+No email/password accounts are
 required from Anki users. Supabase Auth is not used as a health provider.
 
 JollyJoyJourney is the company named in the privacy policy. Its registered
@@ -15,7 +16,8 @@ forwarded through Cloudflare Email Routing to the operator's verified Gmail inbo
 The published policy URL is
 `https://quantifiedcognition.jollyjoyjourney.com/privacy/`; see [WEBSITE.md](WEBSITE.md).
 The local environment example and hosted operator/policy settings use that URL.
-The three enable flags remain false.
+Ordinary deployment preserves the configured switches: Oura true, Google Health
+false and research false. The new-project examples below start closed.
 
 ## Components
 
@@ -112,8 +114,7 @@ Oura accounts still need a deployment pilot. No test sends real health data.
    operator retention and backup restore/deletion procedures. Keep tokens,
    payloads, authorization headers and callback query strings out of logs;
    hosting access logs may otherwise retain URL/IP metadata.
-7. Keep all three enable flags false for the current desktop beta. Only after a
-   separate launch decision, set `OURA_ENABLED=true` for the permitted pilot. The Oura app
+7. Preserve `OURA_ENABLED=true` for the approved Oura integration. The Oura app
    needs `daily` and `workout`; old/partial Daily-only grants leave workouts unknown.
    Set the desktop add-on
    `services.base_url` to this function root. Verify the complete live flow with
@@ -123,7 +124,7 @@ Oura accounts still need a deployment pilot. No test sends real health data.
    Google access has an independent `GOOGLE_HEALTH_ENABLED` switch; keep it false
    until its policy, verification/research requirements and permitted pilot are ready.
    Update the closed-state monitor expectation only as part of that launch.
-8. Complete [OURA_APPROVAL.md](OURA_APPROVAL.md) before broad distribution.
+8. Use the approved Oura registration recorded in [OURA_APPROVAL.md](OURA_APPROVAL.md).
    Publish a configured add-on only with the intended public service URL.
 
 Track desktop checks and the separate online launch gates in
@@ -178,17 +179,17 @@ project pausing, logs and pricing change—check the current Supabase dashboard.
 [changelog](https://supabase.com/changelog).
 The October 2026 TLS notice affects old CBC-only clients; the add-on uses modern
 Python/OpenSSL HTTPS defaults and does not weaken certificate/TLS validation.
-# Verified closed enrollment/lifecycle deployment (0.19.4)
+# Historical deployment: 4 November, closed enrollment/lifecycle (0.19.4)
 
-The backend now uses package schema v5, separate enrollment and sharing notice
+That deployment used package schema v5, separate enrollment and sharing notice
 v7. All migrations through protocol v7, including participant-ID consent, were
 applied on 4 November 2026. Function version 11 matches the five prepared source
 files. All three feature flags remain false and every protocol is unapproved
 and closed. The live verifier passed, including `research_controls_version=1`,
 disabled routes, private deletion, anonymous-access denial and the HTTP quota.
 Both maintenance jobs ran successfully. `supabase/deployment.json` records this
-deployment. See [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md) for operator
-procedures and remaining provider/research acceptance requirements.
+historical deployment. See [DEPLOYED.md](DEPLOYED.md) for the current state and
+[RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md) for operator procedures.
 
 The follow-up `20261104203715_maintenance_lock_order.sql` migration is also
 deployed (14 migrations total). It fixes the native-test-reproduced deadline

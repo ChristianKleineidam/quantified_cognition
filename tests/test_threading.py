@@ -285,7 +285,7 @@ def test_csv_failure_shows_fresh_scores_and_retry_uses_only_file_worker(
     assert main._background_op_count == 0
     assert destination.is_file() and dialog.report == report
     assert not dialog.retry_button.isVisible()
-    assert dialog.export_status.text() == "Fixed CSV updated."
+    assert not dialog.export_status.text()
     assert not notices
     dialog.close()
 
@@ -650,14 +650,15 @@ def test_profile_preferences_read_and_write_use_file_workers(runtime, app, tmp_p
             return _original(*args, **kwargs)
 
         monkeypatch.setattr(ui, name, wrapped)
-    dialog = ui.DailySettingsDialog(main, main.col.path)
+    saved = []
+    dialog = ui.CsvExportOptions(main, main.col.path, lambda: saved.append(True))
     dialog.show()
     pump_until(app, lambda: not dialog.file_busy)
+    monkeypatch.setattr(dialog, "choose_location", lambda: str(tmp_path / "configured.csv"))
     dialog.enabled.setChecked(True)
-    dialog.csv_input.setText(str(tmp_path / "configured.csv"))
-    dialog.save()
     pump_until(app, lambda: not dialog.file_busy)
-    assert dialog.result() == dialog.DialogCode.Accepted
+    assert saved == [True]
+    assert storage.load_daily_settings(main.col.path).csv_path == str(tmp_path / "configured.csv")
     assert {name for name, _ in observed} == {"load_daily_settings", "save_daily_settings"}
     assert all(thread != main.owner for _, thread in observed)
     assert not notices
@@ -906,7 +907,10 @@ def test_research_preview_and_explicit_send_run_off_qt(runtime, app, monkeypatch
 
     main, _ = runtime
     threads, sent = [], []
-    package = {"submission_id": "synthetic", "rows": [["2026-10-01"], ["2026-10-02"]]}
+    package = {
+        "submission_id": "synthetic", "rows": [["2026-10-01"], ["2026-10-02"]],
+        "reviews": {"rows": []},
+    }
 
     def prepare(*args, **kwargs):
         threads.append(threading.get_ident())
@@ -1110,7 +1114,7 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         assert main._background_op_count == 0 and threads[0] != main.owner
         release.set()
         pump_until(app, lambda: not dialog.busy)
-        assert dialog.table.columnCount() == 8 and dialog.table.rowCount() == 9
+        assert dialog.table.columnCount() == 10 and dialog.table.rowCount() == 9
         assert dialog.table.item(1, 0).text() == "Light sleep (hours)"
         assert dialog.table.item(4, 0).text() == "Light sleep (%)"
         assert dialog.sleep_summary.isVisible()
@@ -1124,22 +1128,22 @@ def test_insights_show_both_nights_use_full_history_and_do_not_block_reviews(
         assert not dialog.chart.isVisible()
         dialog.stage_button.setChecked(False)
         assert dialog.table.rowCount() == 9
-        assert not dialog.table.isColumnHidden(2) and not dialog.table.isColumnHidden(3)
+        assert not dialog.table.isColumnHidden(4) and not dialog.table.isColumnHidden(5)
         assert dialog.result.associations["deep_sleep/recall/before"].days == 180
-        dialog.table.setCurrentCell(2, 2)
+        dialog.table.setCurrentCell(2, 4)
         assert "Main sleep before" in dialog.detail.text()
-        dialog.table.setCurrentCell(2, 3)
+        dialog.table.setCurrentCell(2, 5)
         assert "Main sleep after" in dialog.detail.text()
-        assert dialog.table.columnSpan(8, 2) == 2
+        assert dialog.table.columnSpan(8, 4) == 2
         result = dialog.result
         dialog.section.setCurrentIndex(1)
         assert dialog.result is result and not dialog.busy
-        assert dialog.table.rowCount() == 6 and dialog.table.columnCount() == 8
+        assert dialog.table.rowCount() == 6 and dialog.table.columnCount() == 10
         assert dialog.table.item(1, 0).text() == "Nap duration"
         assert dialog.table.item(3, 0).text() == "Deep sleep in naps"
         assert dialog.table.item(4, 0).text() == "REM sleep in naps"
-        assert "After studying" in dialog.table.horizontalHeaderItem(3).text()
-        dialog.table.setCurrentCell(1, 3)
+        assert "After studying" in dialog.table.horizontalHeaderItem(5).text()
+        dialog.table.setCurrentCell(1, 5)
         assert "insufficient data" in dialog.detail.text().lower()
         assert "nap days only" in dialog.note.text()
         dialog.section.setCurrentIndex(2)
@@ -1312,7 +1316,7 @@ def test_insights_entry_checks_native_memory_history_without_extra_user_action(r
         pump_until(app, lambda: opened.result is not None and not opened.busy)
         assert opened.result.memory_generated_at
         assert opened.period.currentData() is None
-        assert opened.table.columnCount() == 8
+        assert opened.table.columnCount() == 10
         assert all(
             result.status == "insufficient data" for result in opened.result.associations.values()
         )

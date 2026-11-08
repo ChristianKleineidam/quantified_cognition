@@ -176,7 +176,7 @@ def formation_pair(card, elapsed_ms, probability=0.8, rating=3):
 
 @pytest.mark.parametrize(("offset", "short"), [(-1, True), (0, True), (1, False)])
 def test_30_day_boundary_uses_actual_elapsed_time(offset, short):
-    result = daily_results(formation_pair(1, SHORT_TERM_MAX_MILLISECONDS + offset))[0]
+    result, outcome = daily_results(formation_pair(1, SHORT_TERM_MAX_MILLISECONDS + offset))
     assert result.formation.count == 1
     assert result.formation_short_term.count == int(short)
     assert result.formation_long_term.count == int(not short)
@@ -185,6 +185,12 @@ def test_30_day_boundary_uses_actual_elapsed_time(offset, short):
     assert selected.score_pp == result.formation.score_pp
     assert empty.score_pp is None
     assert empty.status == "insufficient data"
+    assert result.recall_short_term.count == result.recall_long_term.count == 0
+    assert outcome.recall.count == 1
+    assert outcome.recall_short_term.count == int(short)
+    assert outcome.recall_long_term.count == int(not short)
+    recall = outcome.recall_short_term if short else outcome.recall_long_term
+    assert recall == outcome.recall
 
 
 def test_overall_is_weighted_by_pairs_not_average_of_subgroup_scores():
@@ -223,10 +229,12 @@ def test_split_uses_source_days_last_and_next_review_days_first_attempt():
     first, following = formation_pair(1, SHORT_TERM_MAX_MILLISECONDS)
     earlier = Attempt(first.review_id - 6 * 3_600_000, 1, first.day, 1, 0.9, True)
     later = Attempt(following.review_id + 6 * 3_600_000, 1, following.day, 1, 0.99, True)
-    result = daily_results([earlier, first, following, later])[0]
+    result, outcome = daily_results([earlier, first, following, later])
     assert result.formation_short_term.count == 1
     assert result.formation_short_term.score_pp == pytest.approx(20)
     assert result.formation_long_term.count == 0
+    assert outcome.recall_short_term.score_pp == pytest.approx(20)
+    assert outcome.recall_long_term.count == 0
 
 
 def test_pending_and_excluded_pairs_are_not_guessed_into_delay_groups():
@@ -238,9 +246,10 @@ def test_pending_and_excluded_pairs_are_not_guessed_into_delay_groups():
         Attempt(first.review_id + 2, 3, first.day, 3, None, True),
         Attempt(pair[1].review_id, 3, pair[1].day, 3, 0.7, True, episode=1),
     ]
-    result = daily_results(attempts)[0]
+    result, outcome = daily_results(attempts)
     assert result.formation.pending_count == 1
     assert result.formation.excluded_count == 2
     assert result.formation_short_term.count == result.formation_long_term.count == 0
     assert result.formation_short_term.score_pp is None
     assert result.formation_long_term.score_pp is None
+    assert outcome.recall_short_term.count == outcome.recall_long_term.count == 0

@@ -6,7 +6,7 @@ import { createHandler as realHandler, sha256, validatePackage } from "../functi
 const createHandler = options => realHandler({ ...options,
   operations: { admit: async () => {}, record: async () => {} } });
 import schema from "../functions/qs-service/schema.json" with { type: "json" };
-import { envelope } from "./encrypted-fixtures.mjs";
+import { envelope, reviews } from "./encrypted-fixtures.mjs";
 
 const env = {
   OURA_ENABLED: "true", RESEARCH_ENABLED: "true", OAUTH_STATE_SECRET: "s".repeat(48),
@@ -30,7 +30,7 @@ function packet() {
     sharing_current_choice: "opt_in", sharing_notice_version: env.RESEARCH_NOTICE_VERSION,
     sharing_notice_hash: env.RESEARCH_NOTICE_HASH });
   return { schema_version: schema.package_version, enrollment_id: id, submission_id: crypto.randomUUID(), created_at: new Date().toISOString(),
-    metadata, columns: schema.columns,
+    metadata, columns: schema.columns, reviews: reviews(),
     rows: [schema.columns.map(k => k === "date" ? "2026-10-01" : "")] };
 }
 
@@ -99,6 +99,25 @@ test("strict aggregate schema refuses raw records, missing consent, bad columns 
     p => { p.rows.push(p.rows[0]); }, p => { p.metadata.access_token = "secret"; }]) {
     const value = packet(); mutate(value); assert.throws(() => validatePackage(value, env));
   }
+});
+
+test("review snapshots allow pseudonymous predictions and reject raw identifiers or invalid fields", () => {
+  const value = packet();
+  value.reviews.rows = [["P".repeat(22), 1, value.rows[0][0], 3, 1, 0.8,
+    86400, 1, 0, true, true, true, false]];
+  validatePackage(value, env);
+  for (const [name, invalid] of [["card_id", "1234567890123"], ["ordinal", 2],
+    ["prediction", NaN], ["prediction", 1.1], ["success", 0],
+    ["elapsed_seconds", -1], ["last_on_day", 1]]) {
+    const bad = structuredClone(value);
+    bad.reviews.rows[0][schema.review_columns.indexOf(name)] = invalid;
+    assert.throws(() => validatePackage(bad, env));
+  }
+  const missing = structuredClone(value);
+  missing.reviews.rows[0][schema.review_columns.indexOf("prediction")] = null;
+  validatePackage(missing, env);
+  value.reviews.context.original_card_id = 1234567890123;
+  assert.throws(() => validatePackage(value, env));
 });
 
 test("private research requests authenticate a separate capability; deletion works with uploads off", async () => {

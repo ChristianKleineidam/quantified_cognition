@@ -25,7 +25,9 @@ same saved nights with all three stages and consistent sleep totals. This summar
 includes nights without matched Anki reviews. Awake time is outside the share.
 
 The default table shows correlations for sleep duration and stage percentages
-with recall and all six formation and timing combinations. Select a cell for
+with overall recall, both recall delay bands and all six formation and timing
+combinations. Recall bands use the actual elapsed time since the previous review.
+Select a cell for
 matched-day counts, uncertainty and a scatter plot. The table labels comparisons
 with insufficient data. **Naps** and **Workouts** have their own tabs.
 

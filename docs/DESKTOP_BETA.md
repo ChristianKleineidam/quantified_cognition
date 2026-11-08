@@ -187,7 +187,10 @@ beta sharing-notice text/hash and disabled deployment settings are unchanged
 from v0.18.1; this update does not open research enrollment. Research-document
 links, source/archive identity, compilation, exclusions and Ruff were checked.
 
-macOS desktop/Keychain and independent user feedback still need direct testing.
+The first release will rely on macOS feedback through
+[GitHub Issues](https://github.com/ChristianKleineidam/quantified_cognition/issues)
+after launch. The macOS desktop, Keychain and export-on-quit paths remain unverified.
+
 Version **0.19.0** adds the enrollment and research lifecycle implementation.
 Offline verification on 2 November passed **388 Python tests** on Anki 26.09.3,
 **31 focused enrollment/sharing tests** on Anki 25.09.2, and **41 backend tests**,
@@ -197,12 +200,10 @@ signatures. These checks do not establish accepted study/provider approvals or
 a live deployment; all online features remain closed. See
 [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md).
 
-Actual AnkiWeb synchronization remains pending because there is no empty test
-account. A separate Windows profile on M: is prepared for interactive sign-in;
-it has no personal collection or copied account credentials. Native synced-history
-edits and shutdown/export lifecycle regressions passed offline. Months of
-real-world follow-up cannot be replaced by visit simulations. These distinctions
-remain visible in the [beta checklist](BETA_CHECKLIST.md).
+On 6 November, a dedicated AnkiWeb test account synced synthetic reviews between
+two disposable Windows profiles. The v0.21.0-rc.3 receiver picked up two new
+reviews and refreshed its saved recall and formation scores and fixed CSV
+without a manual update. Both profiles' saved test sessions were cleared.
 
 On 4 November, version **0.19.1** removed the separate pseudonym field. Explicit
 consent is linked to the existing participant ID. All **38 focused Python/Qt

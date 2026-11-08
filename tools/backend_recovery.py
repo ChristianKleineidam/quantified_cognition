@@ -17,6 +17,7 @@ PROJECT = "wfjlzecckihsgcvauqwt"
 FORMAT = "quantified-cognition-recovery-v1"
 MAX_BYTES = 512 * 1024 * 1024
 MAX_LINE = 32 * 1024 * 1024
+EPHEMERAL_TABLES = ("qs_private.oura_research_authorizations",)
 TABLES = (
     "qs_private.participants",
     "qs_governance.protocols",
@@ -45,7 +46,7 @@ PARTICIPANT_TABLES = {
 
 
 def identifier(table):
-    if table not in TABLES:
+    if table not in TABLES + EPHEMERAL_TABLES:
         raise ValueError("Unexpected recovery table")
     return sql.Identifier(*table.split("."))
 
@@ -163,9 +164,13 @@ def restore(dsn, source, ledger):
             raise ValueError("Recovery target is not a marked disposable cluster")
         target.execute("set statement_timeout='120s'")
         expected_versions = versions(target)
+        # Credentials are deliberately not backed up or restored. Clear their
+        # FK rows and suspend only the Oura admission trigger inside this isolated
+        # recovery transaction; closure and fresh verification follow below.
+        target.execute("alter table qs_private.submissions disable trigger oura_research_upload")
         target.execute(
             sql.SQL("truncate {} restart identity").format(
-                sql.SQL(",").join(identifier(table) for table in TABLES),
+                sql.SQL(",").join(identifier(table) for table in TABLES + EPHEMERAL_TABLES),
             )
         )
         digest, counts, total, last_table = hashlib.sha256(), dict.fromkeys(TABLES, 0), 0, -1
@@ -226,6 +231,7 @@ def restore(dsn, source, ledger):
                 (person, when),
             )
         removed = target.execute("select qs_governance.replay_deletions()").fetchone()[0]
+        target.execute("alter table qs_private.submissions enable trigger oura_research_upload")
         target.execute("""update qs_governance.protocols set approved=false,enrollment_open=false,
             oura_permitted=false,google_permitted=false""")
         target.execute("update qs_governance.retention set state='held' where state='active'")

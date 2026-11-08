@@ -14,6 +14,7 @@ import psycopg
 import pytest
 from psycopg import sql
 from psycopg.conninfo import make_conninfo
+from psycopg.types.json import Jsonb
 from test_concurrency import HASH, RECEIPT
 from test_concurrency import cluster as cluster
 from test_concurrency import db as db
@@ -70,9 +71,18 @@ def test_encrypted_copy_is_tracked_removed_and_cannot_restore_a_withdrawn_partic
     tmp_path,
 ):
     person, other = db.participant(), db.participant()
+    db.admin.execute("update qs_governance.protocols set oura_permitted=true")
     with db.session() as actor:
+        generation = str(uuid.uuid4())
+        actor.execute(
+            "select public.qs_oura_authorization_bind(%s,%s,%s,%s,now()+interval '1 day',%s,true)",
+            (other, HASH, generation,
+             Jsonb({"nonce": "synthetic", "body": "monitor-token-sentinel"}), RECEIPT),
+        )
+        actor.execute("select public.qs_oura_authorization_result(%s,%s,'verified')",
+                      (other, generation))
         db.submit(actor, db.packet(person))
-        db.submit(actor, db.packet(other))
+        db.submit(actor, db.packet(other, oura=True))
     key = subprocess.run(["age-keygen"], capture_output=True, check=True).stdout
     recipient = re.search(rb"# public key: (age1\S+)", key)[1].decode()
     key_file = tmp_path / "synthetic-identity.txt"
@@ -99,6 +109,9 @@ def test_encrypted_copy_is_tracked_removed_and_cannot_restore_a_withdrawn_partic
         capture_output=True,
         check=True,
     ).stdout
+    assert b"monitor-token-sentinel" not in gzip.decompress(decrypted)
+    records = [json.loads(line) for line in gzip.decompress(decrypted).splitlines()]
+    assert all(row.get("table") != "qs_private.oura_research_authorizations" for row in records)
     admin, settings, template = cluster
     name = "qc_test_" + uuid.uuid4().hex
     admin.execute(
@@ -114,6 +127,12 @@ def test_encrypted_copy_is_tracked_removed_and_cannot_restore_a_withdrawn_partic
         assert result["resurrected_submissions_removed"] == 1
         with psycopg.connect(**{**settings, "dbname": name}) as target:
             assert target.execute("select count(*) from qs_private.submissions").fetchone()[0] == 1
+            assert target.execute(
+                "select count(*) from qs_private.oura_research_authorizations"
+            ).fetchone()[0] == 0
+            assert target.execute(
+                "select qs_governance.oura_authorized(%s)", (other,)
+            ).fetchone()[0] is False
             assert (
                 target.execute("select public.qs_register(%s,%s)", (person, HASH)).fetchone()[0]
                 is False

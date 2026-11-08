@@ -71,7 +71,7 @@ def setup(tmp_path, monkeypatch):
     return source, sharing, secrets, status
 
 
-def test_package_is_immutable_reused_aggregate_only_and_does_not_mark_first_view(setup):
+def test_package_is_immutable_reused_pseudonymous_and_does_not_mark_first_view(setup):
     source, sharing, _, _ = setup
     saved, _ = submissions.prepare_submission(source, CONFIG, sharing)
     assert sharing_state(source, sharing).first_exposure is None
@@ -93,6 +93,12 @@ def test_package_is_immutable_reused_aggregate_only_and_does_not_mark_first_view
     assert submissions.prepare_submission(source, CONFIG, sharing)[0] == saved
     fresh = submissions.prepare_submission(source, CONFIG, sharing, reuse=False)[0]
     assert fresh["package"]["submission_id"] != packet["submission_id"]
+    assert fresh["package"]["reviews"] == packet["reviews"]
+    reviews = packet["reviews"]
+    assert len(reviews["rows"]) == 2 and len(reviews["rows"][0][0]) == 22
+    assert reviews["rows"][0][0] == reviews["rows"][1][0]
+    assert "review_id" not in reviews["columns"] and "deck_id" not in reviews["columns"]
+    assert "reviews" not in saved["envelope"]
 
 
 def test_upload_requires_current_consent_and_uses_separate_capability_and_same_packet_on_retry(
@@ -190,6 +196,33 @@ def test_withdrawal_queues_deletion_blocks_old_upload_and_keeps_original_timing(
     assert submissions.retry_deletion(source) is True and secrets["research"] is None
 
 
+@pytest.mark.parametrize("invalidated_status", [401, 410])
+def test_automatic_withdrawal_uses_saved_receipt_after_upload_capability_is_invalidated(
+    setup, monkeypatch, invalidated_status
+):
+    source, sharing, secrets, _ = setup
+    secrets["research"]["deletion_secret"] = "r" * 43
+    secrets["research"]["oura_monitoring"] = True
+    submissions.queue_deletion(source)
+    calls = []
+
+    def server(config, route, data=None, *, token, method="POST"):
+        calls.append((route, method))
+        if method == "DELETE":
+            raise ServiceError("Automatically withdrawn", status=invalidated_status)
+        assert route == "/research/deletion-status" and token.endswith(":" + "r" * 43)
+        return {"active_storage_deleted": True, "complete": len(calls) == 3}
+
+    monkeypatch.setattr(submissions, "call_service", server)
+    assert submissions.retry_deletion(source) is False
+    assert secrets["research"]["active_storage_deleted"]
+    assert "secret" not in secrets["research"]
+    assert submissions.retry_deletion(source) is True
+    assert secrets["research"] is None
+    assert [method for _, method in calls] == ["DELETE", "POST", "POST"]
+    assert sharing_state(source, sharing).current_choice == "opt_in"
+
+
 def test_changed_consent_event_invalidates_preview_even_after_opt_in_again(setup):
     source, sharing, _, _ = setup
     saved, _ = submissions.prepare_submission(source, CONFIG, sharing)
@@ -245,7 +278,10 @@ def test_real_python_package_passes_the_deployed_server_validator(setup, monkeyp
     source, sharing, _, _ = setup
     report = storage.load_report(storage.database_path(source))
     storage.save_report(
-        replace(report, study_windows={"2026-09-07": [stamp(10), stamp(18)]}),
+        replace(
+            report, study_windows={"2026-09-07": [stamp(10), stamp(18)]},
+            review_records=storage.load_review_records(storage.database_path(source)),
+        ),
         storage.database_path(source),
     )
     naps = snapshot(session("local-nap-only", 8, 9))

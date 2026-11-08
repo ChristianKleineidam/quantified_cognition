@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 STATEMENT = (
     "I confirm that I am at least 18 and am contributing my own data. I have read "
     "the research information and privacy policy. I explicitly consent to "
-    "JollyJoyJourney processing my submitted daily Anki measurements and any Oura "
+    "JollyJoyJourney processing my submitted daily Anki measurements, pseudonymous "
+    "individual review records and any Oura "
     "sleep and activity summaries, including health-related data, for this research "
     "programme, with controlled access by approved research collaborators as "
     "described. I understand the retention criteria, that each upload requires my "
@@ -23,7 +24,8 @@ STATEMENT = (
 
 def bundle():
     return {
-        "version": "research-enrollment-v10",
+        "version": "research-enrollment-v13",
+        "oura_authorization_monitoring": "access-token-v1",
         "operator": "JollyJoyJourney",
         "signature_method": "explicit_consent",
         "statement": STATEMENT,
@@ -80,7 +82,11 @@ if __name__ == "__main__":
                     value["signature_method"],
                 )
             )
-            + ");\n"
+            + ");\n\n"
+            + "-- This protocol permits only Anki and, if separately approved, Oura.\n"
+            + "alter table qs_governance.protocols\n"
+            + "    add constraint research_v13_no_google_health\n"
+            + "    check (version <> 'research-enrollment-v13' or not google_permitted);\n"
         )
         args.migration.write_text(sql, encoding="utf-8")
     print(frozen["sha256"])

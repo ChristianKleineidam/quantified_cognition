@@ -1,6 +1,12 @@
 // Structurally valid opaque envelopes for server admission tests. Real HPKE
 // encryption/decryption and tampering are tested by the Python crypto tests.
 import schema from '../functions/qs-service/schema.json' with {type:'json'};
+export function reviews() {
+  return {columns:schema.review_columns,rows:[],context:{
+    prediction_basis:"reconstructed_current_fsrs",anki_version:"26.9.3",
+    calculation_version:7,parameters_hash:"a".repeat(64),
+    generated_at:"2026-11-07T00:00:00Z",deleted_history_status:"synthetic"}};
+}
 export function envelope(packet, extra={}) {
   const providers=['oura','google_health'].filter(provider=>
     packet.columns.some((name,index)=>name.startsWith(provider+'_')&&packet.rows.some(row=>row[index]!=='')));

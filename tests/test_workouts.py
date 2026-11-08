@@ -147,7 +147,7 @@ def test_24_hour_windows_use_instants_not_dates_and_recall_never_looks_ahead(tmp
     )
     assert "workout_duration/recall/after" not in series
     assert series["workout_duration/recall/before"].points[0].x == 45
-    for metric in insights.METRICS[1:]:
+    for metric in insights.FORMATION_METRICS:
         assert series[f"workout_duration/{metric}/before"].points[0].x == 45
         assert series[f"workout_duration/{metric}/after"].points[0].x == 60
     google = insights.build_series(report, snapshot, "google_health", as_of=AS_OF, settings=FAST)
@@ -189,9 +189,9 @@ def test_daily_and_study_csvs_append_fields_but_exclude_exact_times_and_labels(t
     row = next(row for row in csv.DictReader(io.StringIO(text)) if row["date"] == DAY.isoformat())
     assert float(row["oura_workout_before_duration_seconds"]) == 2700
     assert float(row["oura_workout_duration_seconds"]) == 2700
-    assert CSV_FIELDS[-len(WORKOUT_DAILY_FIELDS + WORKOUT_STUDY_FIELDS) :] == list(
-        WORKOUT_DAILY_FIELDS + WORKOUT_STUDY_FIELDS
-    )
+    workout_fields = WORKOUT_DAILY_FIELDS + WORKOUT_STUDY_FIELDS
+    start = CSV_FIELDS.index(workout_fields[0])
+    assert CSV_FIELDS[start : start + len(workout_fields)] == list(workout_fields)
 
 
 def test_workout_indicator_has_group_threshold_and_block_uncertainty():

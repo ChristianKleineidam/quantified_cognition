@@ -56,7 +56,14 @@ use valid envelopes with the current key ID. Historical plaintext fixtures can
 still be read by a database operator; no real plaintext research submissions
 existed when encryption was introduced. Existing release/withdrawal inventory
 continues to cover encrypted downloads, recovery copies and decrypted extracts.
-All three feature flags remain false and prepared protocols remain unapproved.
+Oura connections are enabled with an approved API application. Google Health and
+research uploads remain disabled; prepared research protocols remain closed.
+
+Research contributions containing Oura data also register a separately encrypted
+access token for authorization monitoring. The Edge-held AES-GCM key is separate
+from the research decryption key. Refresh tokens are not stored on the server.
+The monitoring table is excluded from both extracts and recovery archives;
+restore requires fresh verification. See [revocation handling](OURA_RESEARCH_REVOCATION.md).
 
 ## Operator keys and analysis
 
@@ -84,13 +91,44 @@ python tools/research_crypto.py decrypt --input research-download.json --output 
 For recovery on another computer, supply the `.age` copy plus `--age <age executable>`
 and `--identity <SSH private-key path>`. Decryption runs locally, authenticates
 every package, checks its allowlist and header declarations, and selects the
-latest received snapshot per participant/day. It preserves submission and
-consent provenance. All packages must validate before a plaintext analysis file
+latest received snapshot per participant/day. Package v7 also writes
+`analysis-reviews.csv` with the newest complete review snapshot per participant.
+Use `--reviews-output` to choose a different review CSV path. Older review snapshots
+are replaced as a whole, so corrected or deleted reviews cannot reappear through
+row-by-row merging. The files preserve participant, submission and consent
+provenance. All packages must validate before a plaintext analysis file
 is created; an existing output is not overwritten. The resulting file is a
 research extract covered by the registered inventory and deletion process.
 Decompression is limited to 64 MiB before JSON parsing; encrypted compressed
-content must fit the existing 8 MiB upload body limit. This accommodates long
-daily histories without expanding the accepted scientific fields.
+content must fit the existing 8 MiB upload body limit. Review snapshots are
+limited to one million rows, and both byte limits also apply. Oversized packages
+fail preparation with an explicit error; reviews are never silently truncated.
+Compression uses zlib level 9 and runs on the background worker.
+
+Review rows use keyed, profile-specific card pseudonyms and within-card order.
+They include day, rating, binary success, reconstructed probability, elapsed seconds,
+review type and eligibility flags. Missing probabilities remain null. The original
+card IDs are retained only in the local Anki-derived results cache, separate from
+the main collection. No original review IDs or review clock times are stored there.
+The pseudonym key stays in the OS credential store and is excluded from packages.
+Prediction context records that current FSRS parameters were used. Version 6
+encrypted daily-only packages remain readable by the download tool.
+
+For analysis, `prediction` is a probability from 0 to 1 and `success` is 0 for
+Again or 1 for Hard/Good/Easy. The Brier score is the mean of
+`(success - prediction) ** 2` over the selected records with a prediction.
+Null predictions must not be replaced with zero. The values retain the native
+probability precision.
+
+`ordinal` orders the included attempts within a card; it is not a permanent
+review ID. `review_type` follows Anki's 0 learning / 1 review / 2 relearning /
+3 rescheduling-filtered codes. Non-rescheduling previews and administrative
+entries are excluded. `episode` separates reset or unmodelled-exposure
+boundaries. `first_on_day` selects recall attempts; `last_on_day` identifies
+potential formation sources. `has_post_state` and `formation_blocked` identify
+missing reconstructed states and blocked formation follow-ups. Elapsed seconds
+describe the preceding answer, including an intervening preview exposure when
+present; these relative gaps contain no absolute review timestamp.
 
 Encryption does not remove provider approval, research consent, retention review
 or copy-deletion obligations. No private key is sent to a hosted API or used in

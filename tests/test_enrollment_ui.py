@@ -43,7 +43,9 @@ def test_eligibility_then_explicit_consent_does_not_send_measurements(
     def prepare(*args, **kwargs):
         assert threading.get_ident() != main.owner
         calls.append("prepare")
-        return {"package": {"submission_id": "synthetic", "rows": [["2026-11-01"]]}}, {
+        return {"package": {
+            "submission_id": "synthetic", "rows": [["2026-11-01"]], "reviews": {"rows": []}
+        }}, {
             "operator": "Synthetic study",
             "privacy_url": "https://example.org/privacy",
         }
@@ -79,6 +81,8 @@ def test_eligibility_then_explicit_consent_does_not_send_measurements(
     pump_until(app, lambda: dialog.enrolled and not dialog.busy)
     assert calls == ["enroll", "prepare"]
     assert "Synthetic study" in dialog.preview.text()
+    assert 'href="https://example.org/privacy"' in dialog.privacy.text()
+    assert "Research information" in dialog.privacy.text()
     assert not dialog.enrollment_form.isVisible()
     assert dialog.save_record.isVisible()
     assert dialog.send.isEnabled() and not dialog.send.isDefault()
@@ -104,9 +108,10 @@ def test_closed_service_still_allows_information_copy_and_personal_use(runtime, 
     dialog.show()
     pump_until(app, lambda: not dialog.busy)
     assert "not open" in dialog.status.text()
-    assert "JollyJoyJourney" in dialog.details.toPlainText()
+    assert "JollyJoyJourney" in dialog.study_information()
     assert not dialog.enrollment_form.isVisible() and not dialog.send.isVisible()
-    assert not dialog.save_info.isVisible()
-    dialog.details_button.click()
     assert dialog.save_info.isVisible() and dialog.save_info.isEnabled()
+    assert dialog.privacy.isVisible()
+    assert "Privacy policy" in dialog.privacy.text()
+    assert "Research information" in dialog.privacy.text()
     dialog.close()

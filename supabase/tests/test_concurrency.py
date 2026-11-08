@@ -80,7 +80,8 @@ def cluster():
                 source.execute("""insert into qs_governance.protocols
                     (version,bundle_hash,bundle,notice_version,notice_hash,signature_method,
                      approved,approval_reference,enrollment_open)
-                    values ('synthetic-v1',%s,'{}','test-v1',%s,'explicit_consent',
+                    values ('synthetic-v1',%s,'{"oura_authorization_monitoring":"access-token-v1"}',
+                            'test-v1',%s,'explicit_consent',
                             true,'isolated synthetic test',true)""", ("b" * 64, HASH))
             created_roles.extend(role for role in ("qs_monitor_reader", "qs_backup_agent")
                                  if role not in previous_roles)
@@ -123,7 +124,7 @@ class Database:
                                (participant, HASH, Jsonb(evidence)))
         return participant
 
-    def packet(self, participant, *, value="2026-10-01", submission=None):
+    def packet(self, participant, *, value="2026-10-01", submission=None, oura=False):
         schema = json.loads((ROOT / "addon/research_schema.json").read_text())
         metadata = dict.fromkeys(schema["metadata"], "")
         metadata.update(
@@ -144,7 +145,14 @@ class Database:
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": metadata,
                 "columns": schema["columns"],
-                "rows": [[value if name == "date" else "" for name in schema["columns"]]],
+                "rows": [[value if name == "date" else "100" if oura and name == "oura_steps"
+                          else "" for name in schema["columns"]]],
+                "reviews": {"columns": schema["review_columns"], "rows": [], "context": {
+                    "prediction_basis": "reconstructed_current_fsrs", "anki_version": "synthetic",
+                    "calculation_version": 7, "parameters_hash": HASH,
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "deleted_history_status": "synthetic",
+                }},
             }
         )
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -267,6 +275,33 @@ def test_simultaneous_duplicate_uploads_store_one_package_and_one_receipt(db, co
                for _, _, error in results)
     budget = db.accounting()
     assert budget["submissions"] == budget["daily_submissions"] == 1
+
+
+@pytest.mark.parametrize("revoke_first", [False, True])
+def test_oura_revocation_and_upload_cannot_resurrect_measurements(db, revoke_first):
+    db.admin.execute("update qs_governance.protocols set oura_permitted=true")
+    person = db.participant()
+    generation = str(uuid.uuid4())
+    with db.session() as connection:
+        connection.execute(
+            "select public.qs_oura_authorization_bind(%s,%s,%s,%s,now()+interval '1 day',%s,true)",
+            (person, HASH, generation, Jsonb({"nonce": "synthetic", "body": "encrypted"}), RECEIPT),
+        )
+        connection.execute("select public.qs_oura_authorization_result(%s,%s,'verified')",
+                           (person, generation))
+    packet = db.packet(person, oura=True)
+    def upload(connection):
+        return db.submit(connection, packet)
+    def revoke(connection):
+        return connection.execute("select public.qs_oura_authorization_result(%s,%s,'revoked')",
+                                  (person, generation)).fetchone()
+    _, _, error = ordered_race(db, revoke if revoke_first else upload,
+                              upload if revoke_first else revoke)
+    assert error == ("unauthorized" if revoke_first else None)
+    assert db.one("select count(*)::int n from qs_private.submissions")["n"] == 0
+    assert db.one("select deleted_at is not null deleted from qs_private.participants "
+                  "where id=%s", (person,))["deleted"]
+    db.accounting()
 
 
 def ordered_race(db, first, second):

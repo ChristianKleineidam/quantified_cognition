@@ -335,11 +335,13 @@ def start_walkthrough(app, root, source, args, blocked):
                     "packaged memory screen loaded",
                     {"days": len(dialog.report.days), "summary": dialog.summary.text()},
                 )
-                assert dialog.report.calculation_version == 5
+                from quantified_self_memory.backend import CALCULATION_VERSION
+
+                assert dialog.report.calculation_version == CALCULATION_VERSION
                 if not args.empty:
                     assert dialog.report.reconstructed_deleted_cards == 10
                     details = []
-                    for i in range(4):
+                    for i in range(dialog.metric_selector.count()):
                         dialog.metric_selector.setCurrentIndex(i)
                         metric_key = dialog.metric_key()
                         eligible = [d for d in dialog.report.days if getattr(d, metric_key).count]
@@ -354,30 +356,25 @@ def start_walkthrough(app, root, source, args, blocked):
                                 "completeness": dialog.completeness.text(),
                             }
                         )
-                    check("four metrics and agreed-preset deleted histories", details)
+                    check("six memory metrics and agreed-preset deleted histories", details)
                 state["stage"] = "settings_open"
             elif stage == "settings_open":
-                report_button("Daily settings…")
+                report_button("Export CSV…")
                 state["stage"] = "settings"
             elif stage == "settings":
-                dialogs = [
-                    w
-                    for w in widgets
-                    if type(w).__name__ == "DailySettingsDialog" and w.isVisible()
-                ]
-                if not dialogs or dialogs[0].file_busy:
+                options = state["ui"]._dialog.export_options
+                if options is None or not options.isVisible() or options.file_busy:
                     return
-                dialog = dialogs[0]
-                capture(dialog, "03-daily-settings")
-                dialog.enabled.setChecked(True)
-                dialog.csv_input.setText(str(root / "scores.csv"))
+                options.choose_location = lambda: str(root / "scores.csv")
+                options.enabled.setChecked(True)
                 state["stage"] = "export_wait"
-                dialog.save_button.click()
             elif stage == "export_wait":
-                if any(
-                    type(w).__name__ == "DailySettingsDialog" and w.isVisible() for w in widgets
-                ):
+                report = state["ui"]._dialog
+                if report.export_options.file_busy:
                     return
+                assert report.export_options.enabled.isChecked()
+                capture(report.export_options, "03-csv-options")
+                report.export_button.setChecked(False)
                 state["ui"]._daily_updater.check(force=True)
                 state["stage"] = "export"
             elif stage == "export":

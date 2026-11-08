@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile,readdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { protocol,enroll,evidence,payload } from "./research-fixtures.mjs";
+import { protocol,enroll,evidence,payload,authorizeOura } from "./research-fixtures.mjs";
 
 test("enrollment, retention review and the lifecycle of every registered research copy",async t=>{
   const {PGlite}=await import(pathToFileURL(process.env.PGLITE_TEST_MODULE).href);
@@ -113,6 +113,7 @@ test("enrollment, retention review and the lifecycle of every registered researc
       await rejects("select public.qs_submit($1,$2,$3,$4,$5)",[id,hash,crypto.randomUUID(),p,hash],/provider_permission_required/);
       p.rows[0][1]="";await submit(p);
       await db.exec("update qs_governance.protocols set oura_permitted=true");
+      await authorizeOura(db,id,hash);
       p.rows[0][1]="100";await submit(p);
       await db.exec("update qs_governance.protocols set oura_permitted=false");
       const uuid=await extract();

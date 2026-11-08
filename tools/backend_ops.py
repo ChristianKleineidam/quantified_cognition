@@ -105,6 +105,10 @@ def assess(status, database, backup, now, *, backup_required=True):
             seconds = age_seconds(database.get(field), now)
             if seconds > 720 or seconds < -120:
                 issues.append(field + "_stale")
+        if database.get("oura_authorization_monitor_required") and age_seconds(
+            database.get("oura_authorization_monitor_at"), now
+        ) > 600:
+            issues.append("oura_authorization_monitor_stale")
         if database.get("probe_ok") is not True:
             issues.append("database_probe_failed")
         issues.extend(
@@ -150,7 +154,8 @@ def monitor(config):
     try:
         with connection(config) as db:
             row = db.execute("""select clock_timestamp(),maintenance_at,probe_checked_at,
-                research_maintenance_at,probe_ok,oura_expected_enabled
+                research_maintenance_at,probe_ok,oura_expected_enabled,
+                oura_authorization_monitor_at,oura_authorization_monitor_required
                 from qs_private.ops_state where singleton""").fetchone()
             database = dict(
                 zip(
@@ -161,6 +166,8 @@ def monitor(config):
                         "research_maintenance_at",
                         "probe_ok",
                         "oura_expected_enabled",
+                        "oura_authorization_monitor_at",
+                        "oura_authorization_monitor_required",
                     ),
                     row,
                     strict=True,

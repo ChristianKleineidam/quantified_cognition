@@ -31,6 +31,8 @@ class Settings:
 DEFAULT_SETTINGS = Settings()
 SHORT_TERM_MAX_DAYS = 30
 SHORT_TERM_MAX_MILLISECONDS = SHORT_TERM_MAX_DAYS * 86_400 * 1000
+RECALL_METRICS = ("recall", "recall_short_term", "recall_long_term")
+FORMATION_METRICS = ("formation", "formation_short_term", "formation_long_term")
 
 
 def anki_day(timestamp: float, rollover_hour: int, timezone: tzinfo | None = None) -> date:
@@ -60,6 +62,8 @@ class Attempt:
     # Incremented at resets or unmodelled preview/cram exposures.
     episode: int = 0
     formation_blocked: bool = False
+    previous_review_id: int | None = None
+    review_type: int = 1
 
     @property
     def success(self) -> int:
@@ -230,6 +234,8 @@ class DailyResult:
     # None denotes a legacy saved report whose split has not been calculated.
     formation_short_term: Metric | None = None
     formation_long_term: Metric | None = None
+    recall_short_term: Metric | None = None
+    recall_long_term: Metric | None = None
 
 
 @dataclass
@@ -238,6 +244,8 @@ class _DayBucket:
     formation_samples: list[Sample] = field(default_factory=list)
     short_term_samples: list[Sample] = field(default_factory=list)
     long_term_samples: list[Sample] = field(default_factory=list)
+    recall_short_samples: list[Sample] = field(default_factory=list)
+    recall_long_samples: list[Sample] = field(default_factory=list)
     cohort_count: int = 0
     recall_excluded: int = 0
     formation_pending: int = 0
@@ -254,17 +262,31 @@ def daily_results(
     buckets: dict[date, _DayBucket] = defaultdict(_DayBucket)
     for card_attempts in by_card.values():
         by_day: dict[date, list[Attempt]] = defaultdict(list)
+        previous = None
         for attempt in sorted(card_attempts, key=lambda a: a.review_id):
-            by_day[attempt.day].append(attempt)
+            day_attempts = by_day[attempt.day]
+            if not day_attempts:
+                bucket = buckets[attempt.day]
+                if attempt.prediction is None:
+                    bucket.recall_excluded += 1
+                else:
+                    sample = Sample(attempt.prediction, attempt.success, attempt.day)
+                    bucket.recall_samples.append(sample)
+                    if previous is not None and previous.episode == attempt.episode:
+                        elapsed = attempt.review_id - previous.review_id
+                        group = (
+                            bucket.recall_short_samples
+                            if elapsed <= SHORT_TERM_MAX_MILLISECONDS
+                            else bucket.recall_long_samples
+                        )
+                        group.append(sample)
+            day_attempts.append(attempt)
+            previous = attempt
         days = sorted(by_day)
         for index, day in enumerate(days):
-            first, last = by_day[day][0], by_day[day][-1]
+            last = by_day[day][-1]
             bucket = buckets[day]
             bucket.cohort_count += 1
-            if first.prediction is None:
-                bucket.recall_excluded += 1
-            else:
-                bucket.recall_samples.append(Sample(first.prediction, first.success, day))
             if not last.has_post_state or last.formation_blocked:
                 bucket.formation_excluded += 1
             elif index + 1 == len(days):
@@ -313,6 +335,16 @@ def daily_results(
                 bucket.long_term_samples,
                 cohort_count=len(bucket.long_term_samples),
                 formation=True,
+                settings=settings,
+            ),
+            recall_short_term=summarize(
+                bucket.recall_short_samples,
+                cohort_count=len(bucket.recall_short_samples),
+                settings=settings,
+            ),
+            recall_long_term=summarize(
+                bucket.recall_long_samples,
+                cohort_count=len(bucket.recall_long_samples),
                 settings=settings,
             ),
         )

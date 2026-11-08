@@ -15,7 +15,7 @@ from addon import insights, private_storage, storage
 from addon.backend import UpdateCancelled
 from addon.health import DailyHealth, HealthSnapshot
 from addon.insights import InsightSettings, Point, Series, build_series, correlate
-from addon.metrics import DailyResult, Metric, Settings
+from addon.metrics import FORMATION_METRICS, RECALL_METRICS, DailyResult, Metric, Settings
 from addon.sleep_sessions import SleepSession
 
 AS_OF = date(2026, 10, 25)
@@ -166,7 +166,13 @@ def test_both_formation_nights_are_joined_to_source_days_and_recall_never_looks_
     first = datetime(2026, 1, 10, 10, tzinfo=timezone.utc).timestamp()
     report = replace(
         report_with_followup(),
-        days=[daily(day)],
+        days=[
+            replace(
+                daily(day),
+                recall_short_term=metric(12, count=60, cohort=60, pending=0, outcome_days=1),
+                recall_long_term=metric(-8, count=40, cohort=40, pending=0, outcome_days=1),
+            )
+        ],
         study_windows={day.isoformat(): [first, first + 3600]},
     )
     records = {}
@@ -211,14 +217,20 @@ def test_both_formation_nights_are_joined_to_source_days_and_recall_never_looks_
     )
     assert "total_sleep/recall/after" not in data
     assert data["total_sleep/recall/before"].points[0].x == 7
-    for name in insights.METRICS[1:]:
+    for name in FORMATION_METRICS:
         before, after = data[f"total_sleep/{name}/before"], data[f"total_sleep/{name}/after"]
         assert before.points[0].x == 7 and after.points[0].x == 8
         assert before.points[0].day == after.points[0].day == day
         assert (
             after.points[0].health_day is None
         )  # Physical session match, not a provider-date join.
-    assert data["steps/recall/previous_day"].points[0].x == 1000
+    for name in RECALL_METRICS:
+        assert f"total_sleep/{name}/after" not in data
+        assert data[f"total_sleep/{name}/before"].points[0].x == 7
+        assert data[f"steps/{name}/previous_day"].points[0].x == 1000
+        assert f"steps/{name}/study_day" not in data
+    assert data["total_sleep/recall_short_term/before"].points[0].y == 12
+    assert data["total_sleep/recall_long_term/before"].points[0].y == -8
     assert data["steps/formation/study_day"].points[0].x == 2000
 
 
@@ -442,7 +454,7 @@ def test_personal_summary_export_both_nights_and_failure_preserves_previous_file
     source, _, _ = cached
     result = insights.load_insights(source, "oura", settings=FAST, as_of=AS_OF)
     destination = tmp_path / "insights.csv"
-    assert insights.export_insights(result, destination) == 193
+    assert insights.export_insights(result, destination) == 249
     with destination.open(encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
     for factor in ("deep_sleep", "deep_sleep_share"):
@@ -452,7 +464,8 @@ def test_personal_summary_export_both_nights_and_failure_preserves_previous_file
             if row["metric"] == "formation" and row["factor"] == factor
         }
         assert timings == {"before", "after"}
-    assert not any(r["timing"] == "after" for r in rows if r["metric"] == "recall")
+    for name in RECALL_METRICS:
+        assert {r["timing"] for r in rows if r["metric"] == name} == {"before", "previous_day"}
     assert rows[0]["bootstrap_replicates"] == "199"
     before = destination.read_bytes()
 

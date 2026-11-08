@@ -34,22 +34,36 @@ account is not routine permission to analyze every dataset.
 
 On 4 November the Frankfurt Supabase project wfjlzecckihsgcvauqwt was restored
 and the prepared backend updates were deployed. It reports **ACTIVE_HEALTHY**.
-The live configuration and checked-in examples keep Oura, Google Health and
-research uploads false. Verification used synthetic identities only; no real
-participant measurements were uploaded. See [DEPLOYED.md](DEPLOYED.md) for the
-current live checks and their limits.
+As recorded on 8 November, Oura connections are enabled with an approved API
+application and its ten-user limit lifted. Google Health, research enrollment
+and research uploads remain disabled. Hosted research verification used synthetic
+identities only; no real participant measurements were uploaded.
+See [DEPLOYED.md](DEPLOYED.md) for the current checks and their limits.
 
-The code implements a strict daily-package allowlist, explicit preview/send,
+The code implements strict daily and pseudonymous-review allowlists, explicit preview/send,
 private storage, separate upload/deletion capabilities, idempotency, atomic live
 deletion, anti-resurrection tombstones, and local pre-view preference/exposure
 history. Version 0.19.1 source implements separate eligibility/explicit-consent
 enrollment linked to the existing participant ID, server-side enrollment enforcement,
 retention reviews and tracked extract/collaborator deletion. See
 [RESEARCH_CONTROLS.md](RESEARCH_CONTROLS.md). The migrations are deployed, all
-prepared protocols remain closed/unapproved, and acceptance of the consent
-process must be confirmed. Provider revocation/backup handling and the permitted
-live-account pilot remain outstanding. Implementation is not study/provider
-approval or feature activation.
+prepared research protocols remain closed/unapproved. The initial Oura account
+pilot is complete. Server-side authorization checks, fail-closed use leases and
+research revocation/copy-deletion handling are implemented in version 0.23.0;
+see [OURA_RESEARCH_REVOCATION.md](OURA_RESEARCH_REVOCATION.md) for deployment
+evidence, operating requirements and detection limits. An explicit operator
+launch decision remains outstanding; recording API approval does not enable
+enrollment or uploads.
+
+Review extracts contain probabilities reconstructed with current FSRS settings,
+not necessarily the original scheduler predictions. Use only non-missing
+predictions for Brier scores and document the chosen review subset. For example,
+`first_on_day` selects the recall metric's first attempts. Account for repeated
+cards and days in uncertainty estimates. Keep only the newest complete review
+snapshot per participant so edits/deletions do not survive in older rows.
+Register review CSVs and derived datasets in the same extract inventory and
+withdrawal/deletion process as daily data; encryption does not exempt an extract
+or collaborator copy from those controls.
 
 The independent monitor, encrypted recovery copies, external minimal deletion
 ledger and operator withdrawal procedure are now implemented. The operator
@@ -168,8 +182,9 @@ for every operation described by the app.
 The first release's research scope covers Anki and Oura. Confirm Oura's
 permission for local historical storage, user CSV export, hosted research
 retention, intended analysis and controlled collaborators. Resolve whether its Aggregator/End
-Customer requirements apply. Implement the accepted revocation notification and
-offline-data process; current desktop polling is not continuous notification.
+Customer requirements apply. Use the independent authorization monitor and
+guarded research workspaces described in [OURA_RESEARCH_REVOCATION.md](OURA_RESEARCH_REVOCATION.md).
+Periodic checks are not instant revocation notifications.
 No provider app, ethics application or account is submitted by these documents.
 
 Before publication, review actual Supabase processing terms, administrator MFA,
@@ -189,9 +204,10 @@ them without an account, and configure matching operator/notice/version/hash
 values. Suggested paths are /quantified-cognition/privacy and
 /quantified-cognition/research on the operator's site; these are proposed paths,
 not published pages. Publish the current partner/role register alongside them.
-Keep all three online feature flags false through preparation. Only enable a
-specific feature after its permissions, implementation and live pilot checks
-pass; source publication alone is not activation.
+Preserve the current feature switches during preparation: Oura enabled, Google
+Health and research disabled. Research enrollment and uploads open only through
+a separate operator launch decision after their remaining checks pass; source
+publication alone is not activation.
 
 ## Change decisions
 

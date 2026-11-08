@@ -1,8 +1,9 @@
 # Beta checklist
 
 Current target: a desktop beta with local Anki analysis and CSV export.
-**Oura, Google Health and research uploads stay disabled.** Installation, testing
-and ordinary deployment must not enable them. Checked items have evidence;
+**Oura is enabled with an approved API application; Google Health and research
+uploads stay disabled.** Installation, testing and ordinary deployment preserve
+those switches. Checked items have evidence;
 unchecked items remain work, not implied release approval.
 
 ## Completed
@@ -35,6 +36,11 @@ unchecked items remain work, not implied release approval.
 
 ## Before distributing the desktop beta
 
+- [ ] Before making the repository public, resolve GitHub's retained pre-cleanup
+  commit objects/cache. Reachable history is clean, but the 8 November API check
+  still returned private author metadata from an unreferenced old commit.
+  See [release candidate notes](RELEASE_CANDIDATE.md).
+
 - [x] Install the packaged add-on in backed-up, disposable full AnkiQt profiles
   on 25.09.2 and 26.09.3. Check fresh install and v0.16.0 cache upgrade.
 - [x] Walk through Yes / Not now / No before first results; later opt-in,
@@ -62,15 +68,15 @@ unchecked items remain work, not implied release approval.
 - [x] Fix sync-completion refresh after an earlier daily export; check unchanged
   history reuse, cancellation of older captures, closing-sync durability and
   saved-report-only CSV retries using native Anki collections and real Qt hooks.
-- [ ] Perform actual AnkiWeb synchronization using an empty test account. No
-  test account is available yet; the disposable Windows sync profile is prepared.
-  Hook-level synced-history tests do not establish cloud authentication/transport.
-- [ ] Test macOS UI, Keychain storage, background shutdown and export locations
-  on a Mac. No macOS test environment is available in this session.
+- [x] Sync synthetic reviews through AnkiWeb using a dedicated test account.
+  The v0.21.0-rc.3 receiver refreshed its saved scores and fixed CSV automatically.
 - [ ] Give a few Anki users the concise instructions; record confusing labels
   and revisit with their real accumulated follow-ups. No invitations were sent.
 
 An accessibility audit is excluded from this pass at the user's request.
+
+macOS remains unverified for this release. After launch, users can report
+macOS issues on [GitHub](https://github.com/ChristianKleineidam/quantified_cognition/issues).
 
 Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
 
@@ -100,16 +106,15 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   and registered extracts. Publish concise Terms and matching policy/notice v8;
   keep every online feature closed. See [ENCRYPTION.md](ENCRYPTION.md) and
   [HOSTED_ENCRYPTION_RESULT.json](HOSTED_ENCRYPTION_RESULT.json).
-- [ ] Complete [Oura approval](OURA_APPROVAL.md) and
-  [Google Health requirements](GOOGLE_HEALTH.md), separately. Configure developer
-  credentials for permitted accounts while keeping production controls off until
-  the required approvals and authorized launch. The initial Oura account pilot
-  passed; Google Health's real-account pilot remains pending.
+- [x] Obtain Oura API application approval and removal of the ten-user limit.
+  Ken confirmed both on 6 November in ticket #8481236, following request #8471927.
+  See [approval evidence](OURA_APPLICATION_APPROVAL.json). Oura is the sole health
+  integration for this release; Google Health remains disabled and out of scope.
 - [ ] Verify approved-account authorization, refresh/revocation, corrections,
   pagination, naps/stages, steps and Oura workouts without logging credentials
   or raw responses. Check Daily-only grants, missing workout intensity,
   duplicates/overlap, 24-hour windows and corrections/deletions. Oura credentials
-  have been validated through the developer pilot; all online features remain disabled.
+  have been validated through the developer pilot; research uploads remain disabled.
 - [x] Complete the initial Oura developer-account integration pilot: sign-in,
   paginated sleep/steps/workouts, refresh rotation, incremental sync, encrypted
   cache, CSV and disconnect/revocation. Clear imported test measurements and
@@ -137,6 +142,6 @@ Evidence, reproducible commands and limits: [DESKTOP_BETA.md](DESKTOP_BETA.md).
   review. Enable a feature only through a separately authorized launch; update
   the closed-state monitor's expectation then. Keep unrelated flags false.
 
-Deployment evidence: [DEPLOYED.md](DEPLOYED.md). Desktop statistical readiness
-does not complete provider approval, permitted research enrollment or an online
-pilot. The current service remains closed while those checks are pending.
+Deployment evidence: [DEPLOYED.md](DEPLOYED.md). Oura application approval and the
+initial account pilot are complete. Research remains closed pending its remaining
+data-handling checks and an explicit operator launch decision.

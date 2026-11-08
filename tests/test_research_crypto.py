@@ -1,5 +1,6 @@
 import base64
 import copy
+import csv
 import hashlib
 import json
 import uuid
@@ -13,6 +14,18 @@ import pytest
 from addon import research_crypto as crypto
 from addon.crypto_runtime import primitives
 from tools import research_crypto as operator
+
+
+def empty_reviews():
+    schema = json.loads(Path(crypto.__file__).with_name("research_schema.json").read_text())
+    return {
+        "columns": schema["review_columns"], "rows": [],
+        "context": {
+            "prediction_basis": "reconstructed_current_fsrs", "anki_version": "26.9.3",
+            "calculation_version": 7, "parameters_hash": "a" * 64,
+            "generated_at": "2026-11-07T00:00:00Z", "deleted_history_status": "synthetic",
+        },
+    }
 
 
 def packet():
@@ -37,7 +50,17 @@ def packet():
         metadata=metadata,
         columns=schema["columns"],
         rows=[row],
+        reviews=empty_reviews(),
     )
+
+
+def review_packet():
+    data = packet()
+    data["reviews"]["rows"] = [
+        ["P" * 22, 1, "2026-10-01", 3, 1, 0.8, 86400, 1, 0, True, False, True, False],
+        ["P" * 22, 2, "2026-10-01", 1, 0, 0.6, 600, 2, 0, False, True, True, False],
+    ]
+    return data
 
 
 @pytest.fixture
@@ -66,6 +89,70 @@ def test_hpke_roundtrip_randomness_and_minimal_readable_header(recipient):
         "sharing_notice_hash",
         "sharing_notice_version",
     }
+
+
+def test_encrypted_reviews_support_brier_scores_and_latest_snapshot_replacement(
+    tmp_path, recipient, monkeypatch
+):
+    first = review_packet()
+    revised = copy.deepcopy(first)
+    revised["submission_id"] = str(uuid.uuid4())
+    # A removed historical review must not survive by merging two snapshots.
+    revised["reviews"]["rows"] = revised["reviews"]["rows"][:1]
+    revised["reviews"]["rows"][0][10] = True
+    records = []
+    for data, day in ((first, "05"), (revised, "06")):
+        encrypted = crypto.seal_package(data)
+        assert crypto.open_package(encrypted, recipient) == data
+        assert "P" * 22 not in json.dumps(encrypted)
+        records.append({"package": encrypted, "received_at": f"2026-11-{day}T00:00:00Z"})
+    source = tmp_path / "download.json"
+    source.write_text(json.dumps(records))
+    output = tmp_path / "analysis.csv"
+    monkeypatch.setattr(operator, "load_private", lambda *a, **k: recipient)
+    operator.decrypt_download(source, output, tmp_path / "synthetic.dpapi")
+    with output.with_name("analysis-reviews.csv").open(encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 1 and rows[0]["submission_id"] == revised["submission_id"]
+    assert (float(rows[0]["success"]) - float(rows[0]["prediction"])) ** 2 == pytest.approx(0.04)
+    assert rows[0]["prediction_basis"] == "reconstructed_current_fsrs"
+
+
+@pytest.mark.parametrize("column,value", [
+    ("card_id", "1234567890123"), ("ordinal", 2), ("prediction", float("nan")),
+    ("prediction", 1.01), ("prediction", True), ("success", 0),
+    ("first_on_day", 1), ("elapsed_seconds", -1), ("date", "2026-10-02"),
+])
+def test_review_field_allowlist_and_values_are_checked(recipient, column, value):
+    data = review_packet()
+    data["reviews"]["rows"][0][data["reviews"]["columns"].index(column)] = value
+    with pytest.raises(ValueError):
+        crypto.seal_package(data)
+
+
+def test_unexpected_review_fields_are_rejected_and_missing_predictions_stay_missing(recipient):
+    data = review_packet()
+    data["reviews"]["rows"][0][5] = None
+    assert crypto.open_package(crypto.seal_package(data), recipient) == data
+    data["reviews"]["context"]["raw_card_id"] = 123
+    with pytest.raises(ValueError):
+        crypto.seal_package(data)
+
+
+def test_legacy_daily_only_encrypted_packages_still_decrypt(tmp_path, recipient, monkeypatch):
+    data = packet()
+    data.pop("reviews")
+    schema = json.loads(Path(crypto.__file__).with_name("research_schema.json").read_text())
+    old_row = dict(zip(data["columns"], data["rows"][0], strict=True))
+    data.update(schema_version=6, columns=schema["legacy_columns"],
+                rows=[[old_row[name] for name in schema["legacy_columns"]]])
+    encrypted = crypto.seal_package(data)
+    assert crypto.open_package(encrypted, recipient) == data
+    source, output = tmp_path / "legacy.json", tmp_path / "legacy.csv"
+    source.write_text(json.dumps([encrypted]))
+    monkeypatch.setattr(operator, "load_private", lambda *a, **k: recipient)
+    operator.decrypt_download(source, output, tmp_path / "synthetic.dpapi")
+    assert output.exists() and not output.with_name("legacy-reviews.csv").exists()
 
 
 def test_workout_summaries_roundtrip_and_raw_workout_fields_are_rejected(recipient):
@@ -169,6 +256,17 @@ def test_local_analysis_export_keeps_provenance_and_validates_all_before_writing
     with pytest.raises(ValueError):
         operator.decrypt_download(source, other, Path("synthetic-key.dpapi"))
     assert not other.exists()
+    assert not other.with_name("rejected-reviews.csv").exists()
+
+
+@pytest.mark.parametrize("limit", ["MAX_PLAINTEXT", "MAX_COMPRESSED"])
+def test_oversized_packages_fail_instead_of_truncating_reviews(recipient, monkeypatch, limit):
+    data = review_packet()
+    original = copy.deepcopy(data)
+    monkeypatch.setattr(crypto, limit, 1)
+    with pytest.raises(ValueError, match="size limit"):
+        crypto.seal_package(data)
+    assert data == original
 
 
 def test_bundled_wheels_match_pins_and_retain_upstream_licensing():

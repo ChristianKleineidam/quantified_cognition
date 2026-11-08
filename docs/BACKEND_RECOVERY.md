@@ -1,7 +1,8 @@
 # Backend operations and recovery
 
-Operator guide, 4 November 2026. Oura, Google Health and research uploads remain
-disabled. These jobs do not connect a provider, enroll a participant or submit a
+Operator guide, updated 8 November 2026. Oura connections are enabled; Google
+Health and research uploads remain disabled. These jobs do not connect a provider,
+enroll a participant or submit a
 research package. The operator approved encrypted recovery copies on Silentworker.
 
 ## Stop uploads
@@ -69,6 +70,11 @@ is inventoried on the server before streaming. Its participant inventory bounds
 the snapshot; participants added afterward belong to a later copy. A consistent
 read transaction streams JSON records through gzip and age encryption. No
 plaintext database dump is staged on disk.
+
+The encrypted research-authorization access-token table is deliberately excluded.
+Restores clear any existing monitoring credentials, keep research closed and
+hold all restored copies. Fresh authorization is required before Oura research
+use. See [OURA_RESEARCH_REVOCATION.md](OURA_RESEARCH_REVOCATION.md).
 
 `qs_backup_agent` can read those private tables, lock a harmless participant
 marker and manage only its own fixed recovery-copy inventory. It cannot change

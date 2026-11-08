@@ -1,5 +1,6 @@
 import schema from "./schema.json" with { type: "json" };
 import { googleOAuth } from "./google.mjs";
+import { ouraResearch } from "./oura-research.mjs";
 import { createOperations, routeLabel } from "./operations.mjs";
 
 const encoder = new TextEncoder();
@@ -48,7 +49,7 @@ function credentials(request) {
   return { id, secret };
 }
 export function validatePackage(value, env) {
-  exact(value, ["schema_version", "enrollment_id", "submission_id", "created_at", "metadata", "columns", "rows"]);
+  exact(value, ["schema_version", "enrollment_id", "submission_id", "created_at", "metadata", "columns", "rows", "reviews"]);
   if (value.schema_version !== schema.package_version || !UUID.test(value.submission_id) ||
       !UUID.test(value.enrollment_id) ||
       typeof value.created_at !== "string" || !Number.isFinite(Date.parse(value.created_at))) fail(400);
@@ -76,6 +77,41 @@ export function validatePackage(value, env) {
       if (name === "parameters_hash" && cell && !/^[0-9a-f]{64}$/.test(cell)) fail(400);
       if (name === "oura_sleep_algorithm_versions" && cell && !/^[a-zA-Z0-9._;-]{1,64}$/.test(cell)) fail(400);
     }
+  }
+  validateReviews(value.reviews, new Set(value.rows.map(row => row[0])));
+}
+
+function validateReviews(reviews, days) {
+  exact(reviews, ["columns", "rows", "context"]);
+  if (JSON.stringify(reviews.columns) !== JSON.stringify(schema.review_columns) ||
+      !Array.isArray(reviews.rows) || reviews.rows.length > schema.max_review_rows) fail(400);
+  const context = reviews.context;
+  exact(context, schema.review_context_fields);
+  if (context.prediction_basis !== "reconstructed_current_fsrs" ||
+      !Number.isSafeInteger(context.calculation_version) || context.calculation_version < 7 ||
+      typeof context.parameters_hash !== "string" || !/^[0-9a-f]{64}$/.test(context.parameters_hash) ||
+      ["anki_version", "generated_at", "deleted_history_status"].some(
+        name => typeof context[name] !== "string" || context[name].length > 256) ||
+      !Number.isFinite(Date.parse(context.generated_at)) || !/(Z|[+-]\d\d:\d\d)$/.test(context.generated_at)) fail(400);
+  let previousCard = "", previousOrdinal = 0;
+  for (const row of reviews.rows) {
+    if (!Array.isArray(row) || row.length !== schema.review_columns.length) fail(400);
+    const record = Object.fromEntries(schema.review_columns.map((name, i) => [name, row[i]]));
+    if (typeof record.card_id !== "string" || !/^[A-Za-z0-9_-]{22}$/.test(record.card_id) ||
+        record.card_id < previousCard || !Number.isSafeInteger(record.ordinal) ||
+        record.ordinal !== (record.card_id === previousCard ? previousOrdinal + 1 : 1) ||
+        !days.has(record.date) || !Number.isInteger(record.rating) || ![1,2,3,4].includes(record.rating) ||
+        !Number.isInteger(record.success) || record.success !== Number(record.rating > 1) ||
+        !Number.isInteger(record.review_type) || ![0,1,2,3].includes(record.review_type) ||
+        !Number.isSafeInteger(record.episode) || record.episode < 0) fail(400);
+    previousCard = record.card_id; previousOrdinal = record.ordinal;
+    for (const [name, upper] of [["prediction", 1], ["elapsed_seconds", 100 * 366 * 86400]]) {
+      const value = record[name];
+      if (value !== null && (typeof value !== "number" || !Number.isFinite(value) ||
+          value < 0 || value > upper)) fail(400);
+    }
+    if (["first_on_day", "last_on_day", "has_post_state", "formation_blocked"].some(
+      name => typeof record[name] !== "boolean")) fail(400);
   }
 }
 
@@ -105,6 +141,7 @@ export function validateEnvelope(value, env) {
 }
 
 export function createHandler({ env, fetch: fetcher, now = () => Date.now(), operations, log = () => {}, waitUntil }) {
+  const ouraMonitor = ouraResearch({ env, fetch: fetcher, now, fail, rpc: (name, params) => rpc(name, params) });
   const enabled = feature => env[feature + "_ENABLED"] === "true";
   const callback = () => env.SERVICE_URL.replace(/\/$/, "") + "/oauth/callback";
   async function hmac() {
@@ -146,7 +183,8 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
     const value = await response.json();
     if (typeof value.access_token !== "string" || typeof value.refresh_token !== "string" ||
         !Number.isFinite(value.expires_in) || value.expires_in <= 0) fail(502);
-    return json({ access_token: value.access_token, refresh_token: value.refresh_token, expires_in: value.expires_in });
+    return json({ access_token: value.access_token, refresh_token: value.refresh_token,
+      expires_in: value.expires_in, authorization_proof: await ouraMonitor.receipt(value) });
   }
   async function rpc(name, params) {
     let serverKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -182,6 +220,8 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
     try {
       const url = new URL(request.url);
       const route = url.pathname.replace(/^.*\/qs-service/, "");
+      if (route === "/internal/oura-authorization" && request.method === "POST")
+        return json(await ouraMonitor.job(request.headers.get("authorization")));
       if (request.method === "GET" && route === "/status") return json({
         oura_enabled: enabled("OURA"), google_health_enabled: enabled("GOOGLE_HEALTH"), research_enabled: enabled("RESEARCH"),
         operations_version: 1,
@@ -251,6 +291,13 @@ export function createHandler({ env, fetch: fetcher, now = () => Date.now(), ope
           return json(info);
         }
         const { id, secret } = credentials(request); const hash = await sha256(secret);
+        if (route === "/research/oura-authorization" && request.method === "POST") {
+          if (!enabled("OURA")) fail(503);
+          await admit(request, "oauth", id + ":" + hash);
+          const data = await body(request);
+          exact(data, ["access_token", "authorization_proof", "receipt_secret"]);
+          return json(await ouraMonitor.bind(id, secret, data));
+        }
         if (route === "/research/deletion-status" && request.method === "POST") {
           await admit(request, "delete", id + ":" + hash);
           return json(await rpc("qs_deletion_status", { p_id: id, p_receipt_hash: hash }));

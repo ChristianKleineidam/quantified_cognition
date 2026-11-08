@@ -41,7 +41,7 @@ def _now() -> str:
 
 @dataclass(frozen=True)
 class SharingConfig:
-    notice_version: str = "research-sharing-v10"
+    notice_version: str = "research-sharing-v12"
     custom_notice_text: str = ""
 
     @classmethod
@@ -60,7 +60,7 @@ class SharingConfig:
         # Anki merges saved configuration over new defaults. A saved version of
         # our built-in notice must advance with its text; custom notices keep
         # their explicit version. Historical choices remain in the audit.
-        if not text and version in {f"research-sharing-v{number}" for number in range(1, 10)}:
+        if not text and version in {f"research-sharing-v{number}" for number in range(1, 12)}:
             version = cls().notice_version
         return cls(
             notice_version=version,
@@ -82,7 +82,7 @@ class SharingConfig:
         if self.custom_notice_text:
             return self.custom_notice_text
         data = (
-            "Daily recall and overall, short-term and long-term memory formation scores, "
+            "Overall, short-term and long-term recall and memory formation scores, "
             "counts, uncertainty and coverage; Oura daily total sleep, "
             "light/deep/REM/awake durations, sleep-period counts, "
             "data availability and steps when available; dates, sources and calculation versions. "
@@ -95,9 +95,14 @@ class SharingConfig:
             "Anki version, FSRS settings fingerprint, timezone, day boundary, calculation "
             "settings, Oura algorithm versions, date conventions "
             "and sync times are included. "
+            "Individual Anki review records include a stable pseudonymous card identifier, "
+            "review order and day, answer rating and success, elapsed time since the previous "
+            "review, review type, and eligibility flags. Each available recall probability "
+            "is reconstructed with your current FSRS settings; missing predictions remain "
+            "missing. These records support prediction checks and later statistical analysis. "
             "A random participant ID links contributions, together with your sharing "
             "choice and whether it preceded your first results view. "
-            "Card questions and answers, card/deck names and IDs, individual reviews, "
+            "Card questions and answers, card/deck names and original Anki IDs, "
             "exact sleep, workout or review times, workout labels and activity names, "
             "raw health records, heart rate, location, name, email, "
             "Oura account and device IDs and "
@@ -114,6 +119,11 @@ class SharingConfig:
             "Measurements are encrypted on your computer before upload; the research "
             "decryption key stays off the hosted service. Consent records and minimal "
             "upload and deletion metadata are handled separately. "
+            "Sending Oura research data also sends an access token, stored encrypted, "
+            "for periodic server checks of continued permission while Anki is closed. "
+            "Refresh tokens are not retained on the server. Unverified or expired access "
+            "pauses research use; confirmed loss of access withdraws the complete contribution "
+            "and starts tracked deletion of its research copies. "
             "JollyJoyJourney operates this research programme. Approved research collaborators "
             "may receive controlled access as described in the research information. "
             "Research data is kept while needed for the programme. We regularly review "

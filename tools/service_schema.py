@@ -1,4 +1,4 @@
-"""Generate the server allowlist from the actual CSV contract (no user data)."""
+"""Generate the server allowlist from the research package contract (no user data)."""
 
 import argparse
 import json
@@ -6,13 +6,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from addon.export import CSV_FIELDS  # noqa: E402
+from addon.export import LEGACY_RESEARCH_COLUMNS, RESEARCH_PACKAGE_COLUMNS  # noqa: E402
 from addon.research import RESEARCH_METADATA_FIELDS, SharingConfig  # noqa: E402
+from addon.review_data import MAX_REVIEW_ROWS, REVIEW_COLUMNS, REVIEW_CONTEXT_FIELDS  # noqa: E402
 from addon.sleep_sessions import SESSION_CSV_FIELDS, STATUSES  # noqa: E402
 from addon.workouts import STATUSES as WORKOUT_STATUSES  # noqa: E402
 from addon.workouts import WORKOUT_DAILY_FIELDS, WORKOUT_STUDY_FIELDS  # noqa: E402
 
-columns = [name for name in CSV_FIELDS if name not in RESEARCH_METADATA_FIELDS]
+columns = RESEARCH_PACKAGE_COLUMNS
 text = {
     "date",
     "generated_at_utc",
@@ -74,7 +75,11 @@ enums.update(
     }
 )
 schema = {
-    "package_version": 6,
+    "package_version": 7,
+    "legacy_columns": LEGACY_RESEARCH_COLUMNS,
+    "review_columns": list(REVIEW_COLUMNS),
+    "review_context_fields": list(REVIEW_CONTEXT_FIELDS),
+    "max_review_rows": MAX_REVIEW_ROWS,
     "columns": columns,
     "metadata": list(RESEARCH_METADATA_FIELDS),
     "numeric": [name for name in columns if name not in text and name not in enums],

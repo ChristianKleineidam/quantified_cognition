@@ -27,8 +27,9 @@ with tempfile.TemporaryDirectory(dir=root / ".reference", prefix="sharing-previe
     profile = Path(directory) / "collection.anki2"
     dialog = SharingDialog(parent, str(profile), sharing_state(profile))
     dialog.show()
-    app.processEvents()
-    destination = root / ".reference" / "sharing-preview.png"
+    for _ in range(4):
+        app.processEvents()
+    destination = root / ".reference" / "sharing-preview-compact.png"
     dialog.grab().save(str(destination))
     print(destination)
     dialog.hide()

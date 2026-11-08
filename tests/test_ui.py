@@ -11,7 +11,7 @@ from aqt.qt import QApplication, QWidget  # noqa: E402
 from addon.backend import Report  # noqa: E402
 from addon.metrics import Attempt, DailyResult, Settings, daily_results  # noqa: E402
 from addon.storage import DailySettings, load_daily_settings, save_daily_settings  # noqa: E402
-from addon.ui import DailySettingsDialog, MemoryReportDialog  # noqa: E402
+from addon.ui import CsvExportOptions, MemoryReportDialog  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -45,24 +45,24 @@ def test_native_report_opens_on_full_history_with_optional_date_filter(dialog, a
     assert not dialog.date_fields.isVisible()
     assert dialog.date_range() == (None, None)
     assert dialog.table.rowCount() == 0  # Details are lazy, collapsed by default.
-    dialog.metric_selector.setCurrentIndex(1)
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("formation"))
     assert [day.day for day in dialog.chart.days] == [monday, friday]
     dialog.inspect_button.setChecked(True)
     assert dialog.table.rowCount() == 2
     assert dialog.table.item(1, 1).text() == "-70.00 pp"
     dialog.select_day(date.fromisoformat(monday.isoformat()))  # A new date instance.
     assert dialog.day_selector.currentData() == monday
-    assert "-70.00 pp" in dialog.summary.text()
+    assert "70.0 percentage points below" in dialog.summary.text()
     assert "No pending follow-ups" in dialog.completeness.text()
     assert dialog.export_button.isEnabled()
-    dialog.filter_dates.setChecked(True)
+    dialog.range_selector.setCurrentIndex(1)
     assert dialog.date_fields.isVisible()
     assert dialog.date_range() == (monday, friday)
     dialog.start_date.setDate(friday)
     assert dialog.table.rowCount() == 1
     dialog.metric_selector.setCurrentIndex(0)
     assert dialog.date_range() == (friday, friday)
-    dialog.filter_dates.setChecked(False)
+    dialog.range_selector.setCurrentIndex(0)
     assert not dialog.date_fields.isVisible()
     assert [day.day for day in dialog.chart.days] == [monday, friday]
     assert dialog.table.rowCount() == 2
@@ -181,20 +181,30 @@ def test_one_metric_selector_shows_band_scores_and_overall_followup_availability
         "CEST",
     )
     dialog.accept_report(report)
-    dialog.metric_selector.setCurrentIndex(1)
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("formation"))
     dialog.inspect_button.setChecked(True)
     assert dialog.table.item(2, 1).text() == "-30.00 pp"
     dialog.select_day(day)
-    assert "-30.00 pp" in dialog.summary.text()
-    dialog.metric_selector.setCurrentIndex(2)
+    assert "30.0 percentage points below" in dialog.summary.text()
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("formation_short_term"))
     assert dialog.table.item(2, 1).text() == "+30.00 pp"
     assert dialog.table.item(2, 3).text() == "1"
     assert dialog.chart.metric == "formation_short_term"
     assert "2/2 follow-ups" in dialog.completeness.text()
-    dialog.metric_selector.setCurrentIndex(3)
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("formation_long_term"))
     assert dialog.table.item(2, 1).text() == "-90.00 pp"
     assert dialog.chart.metric == "formation_long_term"
     assert "2/2 follow-ups" in dialog.completeness.text()
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("recall_short_term"))
+    dialog.select_day(date(2026, 8, 21))
+    assert dialog.day_label.text() == "Review day"
+    assert "30.0 percentage points above" in dialog.summary.text()
+    assert "1 evaluated" in dialog.details.text()
+    assert not dialog.completeness.text()
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("recall_long_term"))
+    dialog.select_day(date(2026, 9, 10))
+    assert "90.0 percentage points below" in dialog.summary.text()
+    assert dialog.chart.metric == "recall_long_term"
 
 
 def test_legacy_saved_report_shows_uncalculated_bands(dialog):
@@ -205,7 +215,7 @@ def test_legacy_saved_report_shows_uncalculated_bands(dialog):
         report, days=[DailyResult(day.day, day.recall, day.formation) for day in report.days]
     )
     dialog.accept_report(legacy)
-    dialog.metric_selector.setCurrentIndex(2)
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("recall_short_term"))
     dialog.inspect_button.setChecked(True)
     assert dialog.table.item(1, 1).text() == "—"
     assert dialog.table.item(1, 3).text() == "—"
@@ -235,9 +245,9 @@ def test_formation_shows_pending_followups_for_selected_day(dialog):
         "CEST",
     )
     dialog.accept_report(report)
-    dialog.metric_selector.setCurrentIndex(2)
+    dialog.metric_selector.setCurrentIndex(dialog.metric_selector.findData("formation_short_term"))
     assert dialog.day_selector.currentData() == source
-    assert "better" in dialog.summary.text()
+    assert "Better" in dialog.details.text()
     assert "Provisional" in dialog.completeness.text()
     assert "30/1,000" in dialog.completeness.text()
     assert "3%" in dialog.completeness.text()
@@ -245,7 +255,7 @@ def test_formation_shows_pending_followups_for_selected_day(dialog):
     assert "100%" not in dialog.completeness.text()
 
 
-def test_daily_settings_dialog_restores_and_saves_profile_preferences(app, tmp_path, monkeypatch):
+def test_csv_options_restore_and_save_profile_preferences(app, tmp_path, monkeypatch):
     from addon import ui
 
     def file_job(task, success, failure):
@@ -261,10 +271,29 @@ def test_daily_settings_dialog_restores_and_saves_profile_preferences(app, tmp_p
     previous = DailySettings(True, str(tmp_path / "first.csv"))
     save_daily_settings(collection_path, previous)
     parent = QWidget()
-    dialog = DailySettingsDialog(parent, collection_path)
+    saved = []
+    dialog = CsvExportOptions(parent, collection_path, lambda: saved.append(True))
     assert dialog.enabled.isChecked()
     assert dialog.csv_input.text() == previous.csv_path
-    dialog.csv_input.setText(str(tmp_path / "second.csv"))
-    dialog.save()
+    dialog.enabled.setChecked(False)
+    assert load_daily_settings(collection_path) == replace(previous, enabled=False)
+    dialog.enabled.setChecked(True)
+    assert load_daily_settings(collection_path) == previous
+    monkeypatch.setattr(dialog, "choose_location", lambda: str(tmp_path / "second.csv"))
+    dialog.browse()
     assert load_daily_settings(collection_path).csv_path == str(tmp_path / "second.csv")
+    assert len(saved) == 3
     dialog.close()
+
+
+def test_canceling_first_automatic_csv_picker_keeps_updates_off(app, tmp_path, monkeypatch):
+    from addon import ui
+
+    monkeypatch.setattr(ui, "run_file_job", lambda task, success, failure: success(task()))
+    parent = QWidget()
+    collection_path = str(tmp_path / "collection.anki2")
+    options = CsvExportOptions(parent, collection_path, lambda: pytest.fail("Unexpected save"))
+    monkeypatch.setattr(options, "choose_location", lambda: "")
+    options.enabled.setChecked(True)
+    assert not options.enabled.isChecked()
+    assert load_daily_settings(collection_path) == DailySettings()

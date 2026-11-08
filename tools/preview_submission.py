@@ -33,12 +33,9 @@ dialog = SharingDialog(
 )
 dialog.enrolled = True
 dialog.package = {"submission_id": "synthetic"}
-dialog.details_button.setText("Full sharing notice and study information")
 dialog.preview.setText("180 days · 2026-04-27 to 2026-10-23\nRecipient · Example memory study")
 dialog.preview.show()
-dialog.privacy.setText(
-    '<a href="https://example.org/privacy">Study information and privacy policy</a>'
-)
+dialog.set_policy_links("https://example.org/privacy")
 dialog.status.setText("Review the package, then choose Send. Nothing has been uploaded.")
 dialog.update_actions()
 dialog.show()

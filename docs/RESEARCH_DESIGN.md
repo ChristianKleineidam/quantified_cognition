@@ -54,11 +54,21 @@ and describe this limitation. Do not identify people by linking external data.
 
 ## Data and outcome definitions
 
-The research dataset consists of the disclosed daily package, currently package
-schema 6, plus a separate minimal enrollment/consent record. It contains no raw
-cards, individual reviews or review-pair records. Data categories and exclusions
+The research dataset consists of daily summaries and pseudonymous individual
+review records, currently package schema 7, plus a separate minimal enrollment/consent
+record. Review rows contain card pseudonyms, day, within-card order, rating,
+success, reconstructed probability, elapsed seconds, review type and eligibility
+flags. The prediction context identifies current FSRS reconstruction, Anki and
+calculation versions and the settings fingerprint. Data categories and exclusions
 are specified in the policy; the package allowlist in the software remains
 authoritative for what can actually be transmitted.
+
+Use available per-review probabilities and outcomes to calculate Brier scores,
+calibration and discrimination statistics. Report the eligible set and missing
+predictions. Evaluate reconstructed predictions as such, using their recorded
+current-parameter context. Account for repeated cards and review days.
+Later uploads replace the participant's complete review snapshot, including
+historical corrections and deletions. Within-card order may change after such edits.
 
 Daily recall is observed success minus FSRS-predicted success for each card's
 first attempt on an Anki day, averaged and expressed in percentage points.

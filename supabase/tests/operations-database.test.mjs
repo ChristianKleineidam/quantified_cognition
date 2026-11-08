@@ -24,7 +24,7 @@ test("Postgres operational limits, atomic accounting, monitoring and privileges"
     await protocol(db);
     await isolated("all private tables have RLS and ordinary clients cannot read or call operational RPCs",async()=>{
       const rows=await db.query("select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='qs_private' and c.relkind='r'");
-      assert.equal(rows.rows.length,8); assert.ok(rows.rows.every(r=>r.relrowsecurity));
+      assert.equal(rows.rows.length,9); assert.ok(rows.rows.every(r=>r.relrowsecurity));
       for (const role of ["anon","authenticated"]) {
         await db.exec("savepoint privilege_check; set local role "+role);
         await assert.rejects(one("select public.qs_admit('submit',$1)",[hash]),/permission denied/);

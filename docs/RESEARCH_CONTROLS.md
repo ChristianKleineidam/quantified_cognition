@@ -156,8 +156,10 @@ access. It removes resurrected measurements, suppresses their use and reconciles
 active storage counters. A restored backup's own old ledger is insufficient.
 The independent encrypted recovery service and external minimal ledger are now
 implemented on Silentworker; see [BACKEND_RECOVERY.md](BACKEND_RECOVERY.md).
-Provider-specific deletion/revocation acceptance and real-account checks remain
-activation requirements.
+Oura research monitoring now runs independently of Anki. See
+[revocation handling](OURA_RESEARCH_REVOCATION.md) for access-token checks,
+research-use leases, copy/backup deletion, expiry/outage holds and the managed
+analysis guard. Research enrollment and uploads remain disabled.
 
 After deployment on Supabase, `qs-research-maintenance` is registered every five
 minutes. It processes mandatory deadlines, overdue reviews, expired access,
@@ -206,5 +208,22 @@ a new seed using `--migration` pointing at an empty file created with
 `supabase migration new`. Do not rewrite an applied seed or reinterpret old signed
 copies. The script never approves a protocol. Publish the documents, record actual
 permissions and accepted signature method, and test the complete flow before any
-separately authorized activation. Keep all three feature flags false throughout
-this implementation and ordinary deployment.
+separately authorized activation. Ordinary deployment preserves the configured
+switches: Oura enabled, Google Health and research uploads disabled. Oura's API
+application is approved; research enrollment remains a separate launch action.
+
+Protocol v11 and package v7 add pseudonymous individual review records and the
+short/long recall summaries. Review predictions and outcomes are encrypted
+alongside daily data. The hosted service checks encryption, notice, enrollment,
+provider permissions and size limits; it cannot inspect the encrypted review
+fields. Client preparation and operator decryption enforce the exact field
+allowlists. The v11 protocol is staged closed and unapproved, with Google
+permission constrained to false. Older consent cannot authorize this expansion.
+The original before-first-results preference audit remains unchanged.
+
+The review pseudonym key is profile-specific, protected by the OS credential
+store, and never uploaded. No original Anki card/review IDs, card text, deck
+names or review clock times enter the package. The newest full review snapshot
+replaces earlier ones in each participant's analysis export; snapshots are not
+merged by row ID. Review extracts use the existing participant-scoped access,
+retention review and withdrawal tracking, including collaborator copies.

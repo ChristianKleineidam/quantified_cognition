@@ -98,6 +98,17 @@ def test_sm2_and_synced_logs_native_predictions_live_collection_unchanged(collec
             ids[3] // 1000,
         )
         assert by_day[friday].recall.predicted_percent == pytest.approx(predicted * 100)
+    reviews = report.review_records
+    assert [row["ordinal"] for row in reviews] == [1, 2, 3, 4]
+    assert [row["rating"] for row in reviews] == [3, 1, 3, 3]
+    assert [row["success"] for row in reviews] == [1, 0, 1, 1]
+    assert reviews[0]["prediction"] is None
+    assert reviews[-1]["prediction"] == pytest.approx(predicted)
+    assert reviews[-1]["elapsed_seconds"] == (ids[3] - ids[2]) / 1000
+    assert not reviews[1]["last_on_day"] and not reviews[2]["first_on_day"]
+    assert reviews[1]["first_on_day"] and reviews[2]["last_on_day"]
+    assert [row["review_type"] for row in reviews] == [0, 1, 2, 1]
+    assert all(row["card_id"] == cid for row in reviews)
 
 
 def test_cancelled_reconstruction_rolls_back_partial_snapshot_writes(collection):
@@ -333,9 +344,15 @@ def test_native_history_split_uses_actual_delay_and_is_saved_and_exported(collec
     assert day.formation_long_term.score_pp < 0
     assert load_report(database_path(collection.path)) == report
     with csv_path.open(encoding="utf-8-sig", newline="") as handle:
-        row = next(csv.DictReader(handle))
+        row, short, long = csv.DictReader(handle)
     assert row["formation_short_term_count"] == row["formation_long_term_count"] == "1"
     assert row["formation_short_term_max_days"] == "30"
+    assert row["recall_short_term_max_days"] == "30"
+    assert row["recall_short_term_count"] == row["recall_long_term_count"] == "0"
+    assert short["recall_short_term_count"] == long["recall_long_term_count"] == "1"
+    assert short["recall_long_term_count"] == long["recall_short_term_count"] == "0"
+    assert float(short["recall_short_term_score_pp"]) > 0
+    assert float(long["recall_long_term_score_pp"]) < 0
 
 
 def test_unchanged_inputs_reuse_saved_analysis_without_snapshot_or_write(collection, monkeypatch):

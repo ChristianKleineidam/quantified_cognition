@@ -5,9 +5,17 @@ the V2 OpenAPI 1.43 workout contract. The operator has registered the developer
 application with Daily and Workout selected and saved both credential names in
 server secrets. A consented developer-account pilot has now verified token
 exchange, refresh and revocation without exposing the client secret in logs.
-Oura is the sole health integration for the first release. The developer-limit
-beta is active. The request for wider access and optional research uploads was
-resubmitted on 6 November 2026. Research uploads are closed.
+Oura is the sole health integration for the first release. On **6 November 2026
+at 19:47 UTC**, Ken from Oura's Enterprise Support Team confirmed application
+approval and removal of the ten-user limit in ticket **#8481236**. This followed
+the combined wider-access/research request in **#8471927**.
+[Approval record](OURA_APPLICATION_APPROVAL.json) ·
+[Submitted request](OURA_REVIEW_SUBMISSION.md)
+
+Status updated **8 November 2026**: personal Oura connections are enabled.
+Research enrollment and uploads remain disabled. API use remains subject to
+the API Agreement and branding conditions; this approval is not an endorsement
+or a general trademark license.
 
 The **5 November developer pilot** imported paginated sleep, daily activity and
 workouts directly into a disposable local Anki profile, checked its encrypted
@@ -31,15 +39,16 @@ Workout requests retain only hashed ID, assigned day, start/end, intensity and
 categorical recording source; no labels, activity names, calories, distance or
 heart rate. Background sync validates every page before committing and
 reconciles successful windows. Private research storage has a separate explicit
-confirmation, precise aggregate allowlist, consent-timing metadata, receipts,
+confirmation, daily and pseudonymous-review allowlists, consent-timing metadata, receipts,
 idempotency, withdrawal and deletion. Personal use requires no research account.
 
-The independent controls `OURA_ENABLED=false` and `RESEARCH_ENABLED=false` keep
-online features closed until their operator enables them. An empty desktop
+The independent controls currently use `OURA_ENABLED=true` and
+`RESEARCH_ENABLED=false`: Oura connections are enabled while research stays
+closed. An empty desktop
 service URL leaves local Anki calculations/CSV available. These switches are
 deployment controls; they do not imply Oura approval by themselves.
 
-## Prepare before asking Oura
+## Application setup and release maintenance
 
 - Use the prepared [research design](RESEARCH_DESIGN.md),
   [participant information](RESEARCH_INFORMATION.md) and
@@ -68,33 +77,29 @@ deployment controls; they do not imply Oura approval by themselves.
   duration and intensity), policy URL, callback and support contact. Check partial
   grants: Workout denial must leave sleep/steps usable and workout values unknown.
 
-## Ask Oura to confirm the intended data uses explicitly
+## Submitted scope and continuing conditions
 
-New developer applications have a **10-user limit** until approved for wider
-use. A hosted service does not remove that limit. The current agreement also
-places conditions on caching/storage and on disclosure of Oura-derived data.
-Request written confirmation for local historical storage, fixed CSV exports
-used by other local QS tools, optional research packages stored on Supabase,
-research retention, who may access/extract them and any intended publication or
-onward sharing. Ask whether the planned research flow is treated as an
-Aggregator/End Customer arrangement and, if so, which approvals are needed.
-User consent and open-source licensing do not replace these permissions.
+The ten-user limit has been lifted for this application. The submitted request
+described local historical analysis and CSV exports, optional on-device-encrypted
+Oura/Anki research packages stored in Frankfurt, withdrawal and deletion, and
+collaborator access subject to Oura permission. Ken's reply approves the developer
+application; it does not activate our research service or waive the API Agreement.
+Any later onward-access arrangement must satisfy the agreement's conditions.
 
 The agreement requires stopping access/processing and deleting relevant data
 within its specified revocation/deletion timeframe (including the stated
-72-hour obligation). Before production, resolve how account-side revocation,
-offline desktops, stored research copies and backups will meet that obligation.
-The add-on detects API authorization failures, stops automatic retries and
-provides disconnect/delete and research-deletion controls. It currently polls
-while Anki is open; it has **no Oura webhook receiver** and cannot observe a
-revocation while every desktop is offline. Ask Oura which notification and
-retention arrangements are accepted for this architecture. Document and
-implement any required webhook/operator process after their requirements are
-known; do not describe polling as a guaranteed continuous revocation monitor.
+72-hour obligation). Account-side revocation, offline desktops, stored research
+copies and backups are covered by the independent controls below.
+The research service checks contributor authorization independently of Anki,
+using encrypted access tokens and short research-use leases. Confirmed loss of
+access invokes complete-contribution deletion and copy/backup tracking. Expiry
+and outages pause use. Oura's published webhooks do not list an OAuth revocation
+event; checks are periodic, not immediate notifications. See
+[implementation and operating limits](OURA_RESEARCH_REVOCATION.md).
 
 Do not feed participant Oura data to AI/LLM tools or train models on it without
 the permissions required by Oura's agreement. Keep development/demo fixtures
-synthetic. Confirm any intended statistical/modeling uses in the application.
+synthetic. Keep statistical work within the submitted purpose and agreement.
 
 ## Provider constraints to describe accurately
 
@@ -115,14 +120,13 @@ terms and charges; neither hosting choice bypasses the agreement.
 [Oura API support and membership](https://support.ouraring.com/hc/en-us/articles/4415266939155-The-Oura-API),
 [API agreement, effective 8 June 2026](https://cloud.ouraring.com/legal/api-agreement).
 
-## Remaining external steps
+## Remaining launch work
 
-The developer app, credentials, public policy and initial account pilot are
-prepared. The operator must obtain Oura's written
-permissions and user-limit approval; then enable the appropriate production
-flags. The project and service URL are recorded in `supabase/deployment.json`.
+The API application is approved, credentials are configured, the policy is public
+and the initial account pilot is complete. Record any subsequent provider
+conditions with the approval evidence. The project and service URL are recorded
+in `supabase/deployment.json`.
 Provider-side revocation, membership/permission failures and later scheduled
-sync behavior still need representative permitted-account checks. Wider-use and
-research approvals are still required.
-The repository is intended to make that pilot and application concrete,
-without requiring approval before the software can be developed and tested.
+sync behavior remain in the launch checklist. Research data-handling work and
+an explicit operator launch decision remain separate from API approval. Keep
+research enrollment and uploads disabled while those items are completed.

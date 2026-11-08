@@ -1,4 +1,4 @@
-"""Immutable aggregate packages, explicit uploads, and durable deletion retries."""
+"""Encrypted daily/review snapshots, explicit uploads, and durable deletion retries."""
 
 from __future__ import annotations
 
@@ -12,17 +12,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .enrollment import require_enrollment, withdraw_enrollment
-from .export import CSV_FIELDS, export_csv
+from .export import RESEARCH_PACKAGE_COLUMNS as PACKAGE_COLUMNS
+from .export import export_csv
 from .health import load_health
 from .private_storage import read_json, write_json
-from .research import RESEARCH_METADATA_FIELDS, sharing_state
+from .research import sharing_state
+from .research_crypto import providers as package_providers
 from .research_crypto import public_configuration, seal_package
+from .review_data import prepare_reviews
 from .service import ServiceError, call_service
-from .storage import database_path, load_report, profile_job_lock, results_directory
+from .storage import (
+    database_path,
+    load_report,
+    load_review_records,
+    profile_job_lock,
+    results_directory,
+)
 from .vault import read_secret, write_secret
 
-PACKAGE_COLUMNS = [key for key in CSV_FIELDS if key not in RESEARCH_METADATA_FIELDS]
-PACKAGE_VERSION = 6
+PACKAGE_VERSION = 7
 
 
 def _path(source):
@@ -92,8 +100,13 @@ def prepare_submission(source, config, sharing, *, reuse=True):
                 return saved, status
         with io.StringIO(newline="") as handle:
             health = load_health(source, include_google_health=False)
+            report = load_report(database_path(source))
+            if report is None:
+                raise ServiceError(
+                    "Open the memory report to calculate your history before sharing."
+                )
             export_csv(
-                load_report(database_path(source)),
+                report,
                 handle,
                 health_snapshot=health,
                 include_google_health=False,
@@ -117,6 +130,10 @@ def prepare_submission(source, config, sharing, *, reuse=True):
             "metadata": snapshot.metadata(),
             "columns": PACKAGE_COLUMNS,
             "rows": rows,
+            "reviews": prepare_reviews(
+                source, snapshot.participant_id, report,
+                load_review_records(database_path(source)),
+            ),
         }
         saved = {
             "service": config.base_url,
@@ -154,6 +171,10 @@ def upload_submission(source, config, sharing, submission_id):
         if not connection:
             raise ServiceError("Complete research enrollment before sending data.")
         token = connection["id"] + ":" + connection["secret"]
+        if "oura" in package_providers(package):
+            from .oura_research import renew_authorization
+
+            renew_authorization(source, config, required=True)
         if not connection.get("registered"):
             call_service(config, "/research/participant", {}, token=token)
             connection["registered"] = True
@@ -190,15 +211,22 @@ def retry_deletion(source):
         connection = read_secret(source, "research")
         if not connection or not connection.get("delete_pending"):
             return False
+        result = None
         if not connection.get("active_storage_deleted"):
-            result = call_service(
-                ServiceConfig(connection["service"]),
-                "/research/participant",
-                {"receipt_secret": connection["deletion_secret"]},
-                method="DELETE",
-                token=connection["id"] + ":" + connection["secret"],
-            )
-        else:
+            try:
+                result = call_service(
+                    ServiceConfig(connection["service"]),
+                    "/research/participant",
+                    {"receipt_secret": connection["deletion_secret"]},
+                    method="DELETE",
+                    token=connection["id"] + ":" + connection["secret"],
+                )
+            except ServiceError as error:
+                if error.status not in (401, 410):
+                    raise
+                # Automatic Oura withdrawal already invalidated the upload
+                # capability. The independently saved receipt still works.
+        if result is None:
             result = call_service(
                 ServiceConfig(connection["service"]),
                 "/research/deletion-status",

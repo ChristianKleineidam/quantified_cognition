@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .health import HEALTH_CSV_FIELDS, DailyHealth
-from .metrics import SHORT_TERM_MAX_DAYS
+from .metrics import FORMATION_METRICS, RECALL_METRICS, SHORT_TERM_MAX_DAYS
 from .research import RESEARCH_METADATA_FIELDS
 from .sleep_sessions import SESSION_CSV_FIELDS, study_features
 from .workouts import WORKOUT_DAILY_FIELDS, WORKOUT_STUDY_FIELDS, study_workouts
@@ -34,8 +34,11 @@ METRIC_FIELDS = (
     "outcome_days",
     "coverage_percent",
 )
-METRIC_PREFIXES = ("recall", "formation", "formation_short_term", "formation_long_term")
-CSV_FIELDS = (
+METRIC_PREFIXES = ("recall", *FORMATION_METRICS, *RECALL_METRICS[1:])
+RECALL_SPLIT_CSV_FIELDS = [
+    f"{metric}_{field}" for metric in RECALL_METRICS[1:] for field in METRIC_FIELDS
+] + ["recall_short_term_max_days"]
+_BASE_CSV_FIELDS = (
     ["date"]
     + [f"{metric}_{field}" for metric in ("recall", "formation") for field in METRIC_FIELDS]
     + [
@@ -48,7 +51,7 @@ CSV_FIELDS = (
         "minimum_formation_outcome_days",
         "uncertainty_method",
     ]
-    + [f"{metric}_{field}" for metric in METRIC_PREFIXES[2:] for field in METRIC_FIELDS]
+    + [f"{metric}_{field}" for metric in FORMATION_METRICS[1:] for field in METRIC_FIELDS]
     + ["formation_short_term_max_days"]
     + list(RESEARCH_METADATA_FIELDS)
     + ["formation_completeness"]
@@ -57,6 +60,9 @@ CSV_FIELDS = (
     + list(WORKOUT_DAILY_FIELDS)
     + list(WORKOUT_STUDY_FIELDS)
 )
+CSV_FIELDS = _BASE_CSV_FIELDS + RECALL_SPLIT_CSV_FIELDS
+LEGACY_RESEARCH_COLUMNS = [key for key in _BASE_CSV_FIELDS if key not in RESEARCH_METADATA_FIELDS]
+RESEARCH_PACKAGE_COLUMNS = [key for key in CSV_FIELDS if key not in RESEARCH_METADATA_FIELDS]
 
 
 def export_csv(
@@ -115,6 +121,7 @@ def export_csv(
                             else "approx95_model_floor_empirical_formation_day_cluster"
                         ),
                         "formation_short_term_max_days": SHORT_TERM_MAX_DAYS,
+                        "recall_short_term_max_days": SHORT_TERM_MAX_DAYS,
                     }
                 )
             if day is not None:

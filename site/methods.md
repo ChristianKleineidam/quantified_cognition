@@ -19,6 +19,9 @@ as a failed recall; Hard, Good and Easy count as successful recalls. It compares
 each outcome with the predicted chance of remembering and averages the
 differences across the day.
 
+Recall is shown overall and separately for reviews at most 30 days after the
+previous review and those more than 30 days later.
+
 A score above zero means you recalled more than predicted; below zero means
 less than predicted. Scores are expressed in percentage points. For example,
 if 80 successful answers were predicted across 100 eligible cards and you
@@ -66,6 +69,13 @@ of deep sleep replacing light sleep compares a change in sleep composition
 while holding total sleep and REM sleep constant.
 
 ## Uncertainty and interpreting changes
+
+Optional research packages include pseudonymous individual review predictions,
+ratings and outcomes. They support prediction checks such as the Brier score,
+the average squared difference between predicted probability and observed
+success, as well as further statistical analysis. These probabilities are
+reconstructed with current FSRS settings. The research information and privacy
+policy describe the records shared and the separate consent required.
 
 Scores include review counts, follow-up coverage and uncertainty intervals.
 Personal insights also show uncertainty and identify when there is

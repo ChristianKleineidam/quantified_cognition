@@ -12,8 +12,8 @@ from aqt.qt import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     Qt,
-    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
@@ -47,6 +47,9 @@ def _label(text=""):
     label = QLabel(text)
     label.setWordWrap(True)
     label.setTextFormat(Qt.TextFormat.PlainText)
+    policy = label.sizePolicy()
+    policy.setVerticalPolicy(QSizePolicy.Policy.Minimum)
+    label.setSizePolicy(policy)
     return label
 
 
@@ -80,38 +83,31 @@ class SharingDialog(QDialog):
         font.setBold(True)
         heading.setFont(font)
         layout.addWidget(heading)
-        layout.addWidget(
-            _label(
-                "The package includes daily recall and memory formation scores, plus any "
-                "saved Oura sleep stages and durations, naps, steps and workout summaries. "
-                "It also includes dates, review counts, uncertainty, calculation settings, "
-                "a random participant ID and whether you expressed interest before seeing results."
-            )
+        disclosure = (
+            "The package includes daily recall and memory formation scores, individual "
+            "review predictions, answer ratings and outcomes, elapsed time, review order "
+            "and type, and stable pseudonymous card identifiers. It also includes any "
+            "saved Oura sleep stages and durations, naps, steps and workout summaries. "
+            "It also includes dates, review counts, uncertainty, calculation settings, "
+            "a random participant ID and whether you expressed interest before seeing results.",
+            "The measurement package excludes card text, card and deck names, original Anki IDs, "
+            "raw health records, exact event times, workout labels, heart rate, location, "
+            "name, email, account and device IDs, and credentials.",
+            "Sending Oura research data also sends an access token, stored encrypted, to "
+            "check continued permission while Anki is closed. Refresh tokens stay off the "
+            "server. Revoking access withdraws the complete contribution.",
+            "Personal results are available either way. Joining requires explicit consent, "
+            "and you decide whether to send each package.",
         )
-        layout.addWidget(
-            _label(
-                "An upload excludes card text, card and deck names and IDs, individual reviews, "
-                "raw health records, exact event times, workout labels, heart rate, location, "
-                "name, email, account and device IDs, and credentials."
-            )
-        )
-        layout.addWidget(
-            _label(
-                "Personal results are available either way. Joining requires explicit consent, "
-                "and you decide whether to send each package."
-            )
-        )
-        self.details = QTextBrowser()
-        self.details.setPlainText(snapshot.study.notice_text)
-        self.details.setMinimumHeight(160)
-        self.details_button = QPushButton("Full sharing notice")
-        self.details_button.setAutoDefault(False)
-        self.details_button.setCheckable(True)
-        self.details_button.setChecked(bool(snapshot.study.custom_notice_text))
-        self.details_button.toggled.connect(self.details.setVisible)
-        layout.addWidget(self.details_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        layout.addWidget(self.details)
-        self.details.setVisible(bool(snapshot.study.custom_notice_text))
+        if snapshot.study.custom_notice_text:
+            disclosure = (snapshot.study.custom_notice_text,)
+        for paragraph in disclosure:
+            layout.addWidget(_label(paragraph))
+        self.privacy = _label()
+        self.privacy.setTextFormat(Qt.TextFormat.RichText)
+        self.privacy.setOpenExternalLinks(True)
+        self.set_policy_links()
+        layout.addWidget(self.privacy)
 
         self.choice_status = _label()
         layout.addWidget(self.choice_status)
@@ -120,10 +116,6 @@ class SharingDialog(QDialog):
         self.preview = _label()
         self.preview.hide()
         layout.addWidget(self.preview)
-        self.privacy = _label()
-        self.privacy.setTextFormat(Qt.TextFormat.RichText)
-        self.privacy.setOpenExternalLinks(True)
-        layout.addWidget(self.privacy)
 
         self.enrollment_form = QWidget()
         form = QVBoxLayout(self.enrollment_form)
@@ -166,7 +158,6 @@ class SharingDialog(QDialog):
         actions.addStretch()
         layout.addLayout(actions)
         layout.addStretch()
-        self.details_button.toggled.connect(self.update_actions)
 
         buttons = QHBoxLayout()
         self.buttons = []
@@ -232,7 +223,7 @@ class SharingDialog(QDialog):
             button.setVisible(not opted_in or changing)
         self.withdrawal_hint.setVisible(changing)
         self.close_button.setEnabled(not self.saving_choice)
-        self.save_info.setVisible(self.frozen is not None and not self.details.isHidden())
+        self.save_info.setVisible(self.frozen is not None)
         self.save_record.setVisible(self.has_consent_copy)
         self.delete.setVisible(self.manage and self.snapshot.current_choice is not None)
         self.refresh.setVisible(self.enrolled)
@@ -240,6 +231,13 @@ class SharingDialog(QDialog):
         for button in (self.save_info, self.save_record, self.delete, self.refresh):
             button.setEnabled(not self.busy)
         self.send.setEnabled(self.package is not None and not self.busy)
+
+    def set_policy_links(self, privacy_url="https://quantifiedcognition.jollyjoyjourney.com/privacy/"):
+        self.privacy.setText(
+            f'<a href="{html.escape(privacy_url, quote=True)}">Privacy policy</a> · '
+            '<a href="https://quantifiedcognition.jollyjoyjourney.com/research/">'
+            'Research information</a>'
+        )
 
     def run(self, task, success, failure=None):
         self.busy = True
@@ -290,8 +288,6 @@ class SharingDialog(QDialog):
             self.has_consent_copy = previous is not None
             bundle = self.frozen["bundle"]
             self.statement.setText(bundle["statement"])
-            self.details_button.setText("Full sharing notice and study information")
-            self.details.setPlainText(study.notice_text + "\n\n" + self.study_information())
             self.enrollment_form.setVisible(needs_enrollment)
             self.status.setText(message)
             self.update_actions()
@@ -330,7 +326,6 @@ class SharingDialog(QDialog):
             return
         self.package = None
         self.preview.hide()
-        self.privacy.clear()
         self.status.setText("Preparing your package…")
 
         def prepared(result):
@@ -339,12 +334,11 @@ class SharingDialog(QDialog):
             rows = self.package["rows"]
             self.preview.setText(
                 f"{len(rows):,} days · {rows[0][0]} to {rows[-1][0]}\n"
+                f"{len(self.package['reviews']['rows']):,} pseudonymous review records\n"
                 f"Recipient · {status['operator']}"
             )
             self.preview.show()
-            self.privacy.setText(
-                f'<a href="{html.escape(status["privacy_url"], quote=True)}">Privacy policy</a>'
-            )
+            self.set_policy_links(status["privacy_url"])
             self.status.setText("Choose Send this package to contribute these measurements once.")
             self.update_actions()
 
@@ -405,7 +399,6 @@ class SharingDialog(QDialog):
         self.enrolled = False
         self.enrollment_form.hide()
         self.preview.hide()
-        self.privacy.clear()
 
         def delete():
             if not queue_deletion(self.collection_path):

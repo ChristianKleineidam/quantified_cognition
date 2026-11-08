@@ -18,6 +18,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from statistics import mean
 
+from .metrics import FORMATION_METRICS, RECALL_METRICS
 from .phase_comparisons import (
     CLOSURE_TOLERANCE_MINUTES,
     CONTRASTS,
@@ -34,8 +35,8 @@ from .sleep_sessions import NAP_STAGES, study_features
 from .statistical_math import calendar_windows, draw_blocks
 from .workouts import study_workouts
 
-VERSION = 6
-METRICS = ("recall", "formation", "formation_short_term", "formation_long_term")
+VERSION = 7
+METRICS = RECALL_METRICS + FORMATION_METRICS
 SLEEP_STAGES = ("light_sleep", "deep_sleep", "rem_sleep")
 SLEEP_SHARE_FACTORS = tuple(f"{stage}_share" for stage in SLEEP_STAGES)
 MAIN_FACTORS = (
@@ -266,10 +267,11 @@ def build_series(
         if factor in WORKOUT_FACTORS and provider != "oura":
             continue
         for metric in METRICS:
+            formation = metric in FORMATION_METRICS
             if factor == "steps":
-                timings = ("previous_day",) if metric == "recall" else ("study_day",)
+                timings = ("study_day",) if formation else ("previous_day",)
             else:
-                timings = ("before",) if metric == "recall" else ("before", "after")
+                timings = ("before", "after") if formation else ("before",)
             for timing in timings:
                 series = Series(factor, metric, timing)
                 omitted = Counter()
@@ -284,7 +286,7 @@ def build_series(
                         reason = "no evaluated score"
                     elif score.count < report.settings.minimum_reviews:
                         reason = "too few evaluated reviews"
-                    elif metric != "recall":
+                    elif formation:
                         if (as_of - day.day).days < settings.formation_age_days:
                             reason = "formation still recent"
                         elif day.formation.coverage_percent < settings.formation_coverage:

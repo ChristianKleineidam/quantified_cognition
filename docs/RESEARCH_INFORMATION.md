@@ -6,7 +6,7 @@ formation and recall. Sharing those measurements can help us investigate how
 learning relates to sleep, activity and study patterns, and improve the methods
 used to measure it.
 
-Updated **6 November 2026**. Research enrollment and uploads are currently closed.
+Updated **8 November 2026**. Research enrollment and uploads are currently closed.
 
 ## What your contribution helps us learn
 
@@ -31,11 +31,22 @@ remain available whether you participate or not.
 
 Each submission is a package of available daily Anki scores, review counts,
 uncertainty, follow-up information, and calculation and sharing metadata.
+It also contains individual review predictions and outcomes, ratings, elapsed
+time, day, order and review type, linked by pseudonymous card identifiers.
+Predictions are reconstructed using your current FSRS settings. These records
+support checks of prediction accuracy and further statistical analysis.
 If you have synced Oura history, the package includes sleep stages, naps, steps
 and workout duration, intensity and timing summaries. You can contribute Anki
 data alone. The [privacy policy](PRIVACY.md) describes the included fields in detail.
 
-Card content, individual reviews and review pairs, exact sleep, workout or review times,
+Sending Oura research data also enables server checks of continued Oura access,
+using an encrypted access token. Refresh tokens are not retained on the server.
+Checks continue while Anki is closed. Unverified or expired access pauses
+research use; confirmed loss of access withdraws the complete contribution and
+starts tracked deletion of research copies. Checks normally run every five
+minutes. You can request deletion through the add-on or contact us directly.
+
+Card content, original Anki card and deck IDs, exact sleep, workout or review times,
 workout labels and activity names,
 provider account IDs, credentials, your name and email are excluded from the
 package. You review each package and explicitly send it. Uploads are never
@@ -53,7 +64,7 @@ access. Public findings contain anonymous summaries or synthetic examples;
 individual daily histories are not published.
 
 Measurements are linked using a random participant ID. Access is restricted, although
-unauthorized access or identification from patterns in daily histories remains
+unauthorized access or identification from patterns in review and daily histories remains
 a privacy risk.
 
 Submitted measurements support ongoing research, method validation and checking
@@ -78,7 +89,8 @@ and you can save a copy. The consent statement is:
 
 > I confirm that I am at least 18 and am contributing my own data. I have read
 > the research information and privacy policy. I explicitly consent to
-> JollyJoyJourney processing my submitted daily Anki measurements and any Oura
+> JollyJoyJourney processing my submitted daily Anki measurements, pseudonymous
+> individual review records and any Oura
 > sleep and activity summaries, including health-related data, for this research
 > programme, with controlled access by approved research collaborators as
 > described. I understand the retention criteria, that each upload requires my

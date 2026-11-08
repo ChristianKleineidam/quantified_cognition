@@ -48,6 +48,7 @@ def _tokens(value, config):
         "refresh_token": value["refresh_token"],
         "expires_at": time.time() + value["expires_in"],
         "service": config.validated_url(),
+        "authorization_proof": value.get("authorization_proof", ""),
     }
 
 
@@ -303,6 +304,13 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
                 credentials["sleep_session_version"] = 1
                 credentials["workout_version"] = 1
             write_secret(source, "oura", credentials)
+            from .oura_research import renew_authorization
+
+            try:
+                renew_authorization(source, config, credentials=credentials)
+            except ServiceError:
+                # Personal sync stays usable; server research leases expire closed.
+                pass
             return result
         except ServiceError as error:
             credentials.update(last_error=str(error), retry_at=now + error.retry_after)
@@ -313,6 +321,9 @@ def sync_oura(source, config, sharing, *, force=False, check_cancelled=lambda: N
 
 
 def disconnect_oura(source, config, sharing):
+    from .oura_research import withdraw_on_disconnect
+
+    research_message = withdraw_on_disconnect(source)
     with profile_job_lock(source, "oura"):
         credentials = read_secret(source, "oura")
         write_secret(source, "oura", None)
@@ -327,7 +338,7 @@ def disconnect_oura(source, config, sharing):
                 message += (
                     " Also revoke this app in your Oura account; the service could not be reached."
                 )
-        return result.snapshot, message
+        return result.snapshot, message + research_message
 
 
 def connection_status(source):

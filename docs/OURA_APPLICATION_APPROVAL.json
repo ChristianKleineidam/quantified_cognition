@@ -1,0 +1,16 @@
+{
+  "application": "Quantified Cognition",
+  "recorded_on": "2026-11-08",
+  "approval_received_at_utc": "2026-11-06T19:47:42Z",
+  "approval_ticket": "8481236",
+  "preceding_request_ticket": "8471927",
+  "source": "Email from Ken, Oura Enterprise Support Team",
+  "application_approved": true,
+  "ten_user_limit_lifted": true,
+  "conditions": [
+    "Continued compliance with the Oura API Agreement",
+    "Oura marks may be used only as allowed by its branding guidelines"
+  ],
+  "research_enrollment_enabled_by_this_record": false,
+  "research_uploads_enabled_by_this_record": false
+}

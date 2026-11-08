@@ -1,0 +1,5 @@
+# Public migration-source SHA-256 checksums in hosted synthetic-test evidence.
+043ba3962537e8f86c4dde3528ada13756529c27:docs/HOSTED_ENCRYPTION_RESULT.json:generic-api-key:104
+ddc1e5ad4c8daca050bdb6f9109139ae0834a344:docs/HOSTED_SMOKE_RESULT.json:generic-api-key:101
+# Historical prose about Google credentials and policy/verification; no credential value.
+1a23bac11fca744efae2bf66248721dbb69c0cdd:README.md:generic-api-key:79

@@ -36,7 +36,7 @@ def capture_snapshot(collection: Collection, destination: str | Path) -> None:
 
 
 # Bump when reconstruction or metric semantics change, even without a DB migration.
-CALCULATION_VERSION = 5
+CALCULATION_VERSION = 7
 
 
 def _deleted_review_count(collection: Collection) -> int:
@@ -154,6 +154,9 @@ class Report:
     reconstructed_deleted_reviews: int = 0
     deleted_history_status: str = "Legacy report: deleted histories excluded"
     calculation_version: int = CALCULATION_VERSION
+    # Original card IDs stay in the profile-local cache. Upload preparation
+    # replaces them with keyed pseudonyms. Review clock times are omitted.
+    review_records: list[dict] | None = field(default=None, compare=False, repr=False)
 
 
 @contextmanager
@@ -282,6 +285,7 @@ def _reconstruct_snapshot_report(
     deleted = _deleted_review_count(collection)
     policy = deleted_history_policy(collection)
     attempts = []
+    review_records = []
     preview_count = 0
     # Current deck/preset assignments are used. Historical preset changes are
     # absent from the revlog. Include all settings in the reproducibility hash.
@@ -322,6 +326,7 @@ def _reconstruct_snapshot_report(
         states = _post_states(collection, card_id, rows)
         requests, predictions_for, card_attempts = [], [], []
         previous = None
+        last_answer_id = None
         episode = 0
         seen_review = False
         for row in rows:
@@ -340,6 +345,7 @@ def _reconstruct_snapshot_report(
                 previous = None
                 if card_attempts:
                     card_attempts[-1] = replace(card_attempts[-1], formation_blocked=True)
+                last_answer_id = rid
                 continue
             if not _is_answer(row):
                 continue
@@ -361,14 +367,41 @@ def _reconstruct_snapshot_report(
                     None,
                     rid in states,
                     episode,
+                    previous_review_id=last_answer_id,
+                    review_type=kind,
                 )
             )
+            last_answer_id = rid
             previous = (rid, states[rid]) if rid in states else None
         probabilities = _probabilities(collection, requests)
         for index, probability in zip(predictions_for, probabilities, strict=True):
             old = card_attempts[index]
             card_attempts[index] = replace(old, prediction=probability)
         attempts.extend(card_attempts)
+        first_on_day = {}
+        last_on_day = {}
+        for attempt in card_attempts:
+            first_on_day.setdefault(attempt.day, attempt.review_id)
+            last_on_day[attempt.day] = attempt.review_id
+        for ordinal, attempt in enumerate(card_attempts, 1):
+            review_records.append({
+                "card_id": attempt.card_id,
+                "ordinal": ordinal,
+                "date": attempt.day.isoformat(),
+                "rating": attempt.rating,
+                "success": attempt.success,
+                "prediction": attempt.prediction,
+                "elapsed_seconds": (
+                    (attempt.review_id - attempt.previous_review_id) / 1000
+                    if attempt.previous_review_id is not None else None
+                ),
+                "review_type": attempt.review_type,
+                "episode": attempt.episode,
+                "first_on_day": first_on_day[attempt.day] == attempt.review_id,
+                "last_on_day": last_on_day[attempt.day] == attempt.review_id,
+                "has_post_state": attempt.has_post_state,
+                "formation_blocked": attempt.formation_blocked,
+            })
     if check_cancelled is not None:
         check_cancelled()
     study_windows = {}
@@ -392,4 +425,5 @@ def _reconstruct_snapshot_report(
         restored_reviews,
         policy.reason,
         CALCULATION_VERSION,
+        review_records,
     )

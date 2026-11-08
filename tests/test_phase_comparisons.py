@@ -220,7 +220,7 @@ def test_cached_phase_estimates_and_export_do_not_replay_fsrs(tmp_path, monkeypa
     )
     with target.open(encoding="utf-8-sig", newline="") as stream:
         rows = [r for r in csv.DictReader(stream) if r["analysis_kind"] == "phase_substitution"]
-    assert len(rows) == 42
+    assert len(rows) == 54
     assert all(r["shift_minutes"] == "10" and not r["correlation"] for r in rows)
     assert {r["phase_donor"] for r in rows} == {"light", "REM"}
     assert "PhasePoint" not in json.dumps(

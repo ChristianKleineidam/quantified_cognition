@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import time
-from datetime import date, timedelta
-from pathlib import Path
+from datetime import date
 
 from aqt import mw
 from aqt.qt import (
@@ -37,12 +36,10 @@ from .background import run_file_job
 from .daily import DailyUpdater
 from .export import export_csv_atomic
 from .health import load_health
-from .metrics import SHORT_TERM_MAX_DAYS, DailyResult, Metric, Settings, anki_day
+from .metrics import FORMATION_METRICS, SHORT_TERM_MAX_DAYS, DailyResult, Metric, Settings, anki_day
 from .research import SharingConfig, finish_csv_exposure, prepare_csv_exposure, sharing_state
 from .sharing_ui import sharing_gate
 from .storage import (
-    DATABASE_NAME,
-    DIRECTORY_NAME,
     DailySettings,
     UpdateResult,
     database_path,
@@ -73,6 +70,7 @@ class ScoreChart(QWidget):
         self.metric = "recall"
         self.filtered = False
         self.selected_day: date | None = None
+        self.plot_points: list[tuple[date, QPointF]] = []
         self.on_day_selected = None
         self.setMinimumHeight(210)
         self.setAccessibleName("Daily memory scores chart")
@@ -82,12 +80,14 @@ class ScoreChart(QWidget):
         )
 
     def mousePressEvent(self, event) -> None:
-        if self.days and self.on_day_selected is not None:
-            area_width = max(1, self.width() - 78)
-            fraction = max(0, min(1, (event.position().x() - 56) / area_width))
-            first, last = self.days[0].day, self.days[-1].day
-            target = first + timedelta(days=fraction * (last - first).days)
-            self.on_day_selected(min(self.days, key=lambda day: abs((day.day - target).days)).day)
+        if self.plot_points and self.on_day_selected is not None:
+            clicked = event.position()
+            day, _ = min(
+                self.plot_points,
+                key=lambda item: (item[1].x() - clicked.x()) ** 2
+                + (item[1].y() - clicked.y()) ** 2,
+            )
+            self.on_day_selected(day)
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
@@ -96,17 +96,20 @@ class ScoreChart(QWidget):
         painter.setPen(text_color)
         area = QRectF(56, 28, max(1, self.width() - 78), max(1, self.height() - 65))
         measured = [
-            (day, getattr(day, self.metric))
-            for day in self.days
-            if getattr(day, self.metric) is not None
-            and getattr(day, self.metric).score_pp is not None
+            (day, metric) for day in self.days
+            if (metric := getattr(day, self.metric)) is not None and metric.score_pp is not None
         ]
+        self.plot_points = []
         if not measured:
             painter.drawText(
                 area, Qt.AlignmentFlag.AlignCenter, "No evaluated scores yet"
             )
             return
-        span = min(100.0, max(10.0, max(abs(metric.score_pp) for _, metric in measured) * 1.1))
+        limit = max(abs(metric.score_pp) for _, metric in measured)
+        selected = next((metric for day, metric in measured if day.day == self.selected_day), None)
+        if selected is not None and selected.uncertainty_low_pp is not None:
+            limit = max(limit, abs(selected.uncertainty_low_pp), abs(selected.uncertainty_high_pp))
+        span = min(100.0, max(10.0, limit * 1.1))
         first_day, last_day = self.days[0].day, self.days[-1].day
         day_span = max(1, (last_day - first_day).days)
 
@@ -118,26 +121,55 @@ class ScoreChart(QWidget):
 
         muted = QColor(text_color)
         muted.setAlpha(65)
-        for value in (-span, 0.0, span):
+        for value in (-span, -span / 2, 0.0, span / 2, span):
             y = point(first_day, value).y()
             painter.setPen(QPen(muted, 1))
             painter.drawLine(QPointF(area.left(), y), QPointF(area.right(), y))
             painter.setPen(text_color)
             painter.drawText(
-                QRectF(0, y - 10, 49, 20), Qt.AlignmentFlag.AlignRight, f"{value:+.0f}"
+                QRectF(0, y - 10, 49, 20), Qt.AlignmentFlag.AlignRight,
+                f"{value:+.0f}" if value else "0",
             )
-        color = QColor("#1683b5" if self.metric == "recall" else "#c27118")
-        painter.setPen(QPen(color, 2))
+        painter.drawText(
+            QRectF(area.left(), area.center().y() - 21, area.width() - 4, 20),
+            Qt.AlignmentFlag.AlignRight, "FSRS prediction",
+        )
+        formation = self.metric in FORMATION_METRICS
+        color = QColor("#c27118" if formation else "#1683b5")
+        soft_color = QColor(color)
+        soft_color.setAlpha(140)
+        painter.setPen(text_color)
         painter.drawText(
             58, 18, "Daily scores (pp)" if self.filtered else "Full history · daily scores (pp)"
         )
         for day, metric in measured:
             current = point(day.day, metric.score_pp)
-            provisional = self.metric != "recall" and day.formation.pending_count > 0
-            painter.setBrush(self.palette().brush(self.backgroundRole()) if provisional else color)
-            radius = 5 if day.day == self.selected_day else 3
-            painter.drawEllipse(current, radius, radius)
+            self.plot_points.append((day.day, current))
+            provisional = formation and day.formation.pending_count > 0
+            painter.setPen(QPen(soft_color, 1) if provisional else Qt.PenStyle.NoPen)
+            painter.setBrush(Qt.BrushStyle.NoBrush if provisional else soft_color)
+            painter.drawEllipse(current, 2.5, 2.5)
+        if selected is not None:
+            current = point(self.selected_day, selected.score_pp)
+            painter.setPen(QPen(color, 1.5))
+            if selected.uncertainty_low_pp is not None:
+                low = point(self.selected_day, max(-span, selected.uncertainty_low_pp))
+                high = point(self.selected_day, min(span, selected.uncertainty_high_pp))
+                painter.drawLine(low, high)
+                for end in (low, high):
+                    painter.drawLine(end - QPointF(4, 0), end + QPointF(4, 0))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(current, 6, 6)
         painter.setPen(text_color)
+        if last_day.year - first_day.year >= 2:
+            step = max(1, (last_day.year - first_day.year) // max(1, int(area.width() / 85)))
+            for year in range(first_day.year, last_day.year + 1, step):
+                tick = point(max(first_day, date(year, 1, 1)), 0).x()
+                painter.drawText(
+                    QRectF(tick - 22, area.bottom() + 8, 44, 24),
+                    Qt.AlignmentFlag.AlignHCenter, str(year),
+                )
+            return
         painter.drawText(QRectF(area.left(), area.bottom() + 8, 140, 24), first_day.isoformat())
         painter.drawText(
             QRectF(area.right() - 140, area.bottom() + 8, 140, 24),
@@ -146,126 +178,103 @@ class ScoreChart(QWidget):
         )
 
 
-class DailySettingsDialog(QDialog):
-    def __init__(self, parent, collection_path: str):
+class CsvExportOptions(QWidget):
+    def __init__(self, parent, collection_path: str, on_saved):
         super().__init__(parent)
         self.collection_path = collection_path
-        self.file_busy = False
-        self.close_requested = False
+        self.on_saved = on_saved
+        self.settings = DailySettings()
         self.disposed = False
         self.destroyed.connect(lambda: setattr(self, "disposed", True))
-        self.setWindowTitle("Quantified Cognition · Daily settings")
-        self.resize(650, 320)
         layout = QVBoxLayout(self)
-        self.enabled = QCheckBox("Automatically update the results database and CSV every Anki day")
+        self.scope = QLabel()
+        self.scope.setWordWrap(True)
+        layout.addWidget(self.scope)
+        self.save_copy = QPushButton("Save a copy…")
+        layout.addWidget(self.save_copy, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.enabled = QCheckBox("Keep a CSV updated automatically")
         layout.addWidget(self.enabled)
         explanation = QLabel(
-            "Updates daily and when you finish reviewing, with calculation and CSV writing "
-            "in the background. Closing Anki preserves unexported reviews so the final "
-            "export can finish automatically. Failed exports retry quietly."
+            "Anki keeps the same file updated with all measures across your full history."
         )
         explanation.setWordWrap(True)
         layout.addWidget(explanation)
-        layout.addWidget(QLabel("Fixed CSV file location"))
-        path_row = QHBoxLayout()
+        self.path_row = QWidget()
+        path_row = QHBoxLayout(self.path_row)
+        path_row.setContentsMargins(0, 0, 0, 0)
         self.csv_input = QLineEdit()
-        self.csv_input.setAccessibleName("Fixed CSV file location")
-        self.csv_input.setPlaceholderText("Choose an absolute path ending in .csv")
+        self.csv_input.setAccessibleName("Automatic CSV file location")
+        self.csv_input.setReadOnly(True)
         path_row.addWidget(self.csv_input)
-        self.browse_button = QPushButton("Browse…")
+        self.browse_button = QPushButton("Change location…")
         self.browse_button.clicked.connect(self.browse)
         path_row.addWidget(self.browse_button)
-        layout.addLayout(path_row)
-        self.enabled.toggled.connect(self.csv_input.setEnabled)
-        self.enabled.toggled.connect(self.browse_button.setEnabled)
-        location = QLabel(
-            f"Separate results database:\n"
-            f"{Path(collection_path).parent / DIRECTORY_NAME / DATABASE_NAME}"
-        )
-        location.setTextFormat(Qt.TextFormat.PlainText)
-        location.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        location.setWordWrap(True)
-        layout.addWidget(location)
-        note = QLabel(
-            "These settings apply to this profile. Use a separate CSV file for each profile."
-        )
-        note.setWordWrap(True)
-        layout.addWidget(note)
-        buttons = QHBoxLayout()
-        buttons.addStretch()
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.clicked.connect(self.reject)
-        buttons.addWidget(self.cancel_button)
-        self.save_button = QPushButton("Save")
-        self.save_button.clicked.connect(self.save)
-        self.save_button.setDefault(True)
-        buttons.addWidget(self.save_button)
-        layout.addLayout(buttons)
+        layout.addWidget(self.path_row)
+        self.path_row.hide()
+        self.enabled.toggled.connect(self.toggle_automatic)
         self.set_file_busy(True)
         run_file_job(lambda: load_daily_settings(collection_path), self.loaded, self.file_failed)
 
     def set_file_busy(self, busy: bool) -> None:
         self.file_busy = busy
         self.enabled.setEnabled(not busy)
-        self.save_button.setEnabled(not busy)
-        self.csv_input.setEnabled(not busy and self.enabled.isChecked())
-        self.browse_button.setEnabled(not busy and self.enabled.isChecked())
+        self.browse_button.setEnabled(not busy)
 
     def loaded(self, settings: DailySettings) -> None:
-        if self.disposed or self.close_requested:
+        if self.disposed:
             return
+        self.settings = settings
+        self.enabled.blockSignals(True)
         self.enabled.setChecked(settings.enabled)
+        self.enabled.blockSignals(False)
+        self.path_row.setVisible(settings.enabled)
         self.csv_input.setText(settings.csv_path)
         self.set_file_busy(False)
 
     def file_failed(self, error: Exception) -> None:
-        if self.disposed or self.close_requested:
+        if self.disposed:
             return
-        self.set_file_busy(False)
-        self.cancel_button.setEnabled(True)
+        self.loaded(self.settings)
         showWarning(str(error), parent=self)
 
-    def browse(self) -> None:
+    def choose_location(self) -> str:
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "Choose the daily CSV file",
-            self.csv_input.text() or "anki-memory-scores.csv",
+            "Choose the automatic CSV file",
+            self.settings.csv_path or "anki-memory-scores.csv",
             "CSV files (*.csv)",
         )
-        if path:
-            self.csv_input.setText(path if path.lower().endswith(".csv") else path + ".csv")
+        return path + ".csv" if path and not path.lower().endswith(".csv") else path
 
-    def save(self) -> None:
+    def toggle_automatic(self, enabled: bool) -> None:
+        path = self.settings.csv_path
+        if enabled and not path:
+            path = self.choose_location()
+            if not path:
+                self.loaded(self.settings)
+                return
+        self.save(DailySettings(enabled, path))
+
+    def browse(self) -> None:
+        path = self.choose_location()
+        if path:
+            self.save(DailySettings(True, path))
+
+    def save(self, settings: DailySettings) -> None:
         if self.file_busy:
             return
-        settings = DailySettings(self.enabled.isChecked(), self.csv_input.text().strip())
+        self.path_row.setVisible(settings.enabled)
+        self.csv_input.setText(settings.csv_path)
         self.set_file_busy(True)
-        self.cancel_button.setEnabled(False)
+        on_saved = self.on_saved
 
         def saved(_result) -> None:
-            if self.disposed:
-                return
-            self.file_busy = False
-            self.accept()
+            self.loaded(settings)
+            on_saved()
 
         run_file_job(
             lambda: save_daily_settings(self.collection_path, settings), saved, self.file_failed
         )
-
-    def reject(self) -> None:
-        # Loading may be abandoned. An already authorized save finishes before
-        # closing so that its completion result cannot be lost.
-        if self.file_busy and not self.cancel_button.isEnabled():
-            return
-        self.close_requested = True
-        super().reject()
-
-    def closeEvent(self, event) -> None:
-        if self.file_busy and not self.cancel_button.isEnabled():
-            event.ignore()
-            return
-        self.close_requested = True
-        super().closeEvent(event)
 
 
 class MemoryReportDialog(QDialog):
@@ -304,13 +313,13 @@ class MemoryReportDialog(QDialog):
         )
         explanation.setWordWrap(True)
         layout.addWidget(explanation)
-        self.measurement_note = measurement_limitations(self)
-        layout.addWidget(self.measurement_note)
 
         controls = QHBoxLayout()
         self.metric_selector = QComboBox()
         for label, key in (
-            ("Daily recall", "recall"),
+            ("Recall · overall", "recall"),
+            (f"Recall · last review ≤{SHORT_TERM_MAX_DAYS} days ago", "recall_short_term"),
+            (f"Recall · last review >{SHORT_TERM_MAX_DAYS} days ago", "recall_long_term"),
             ("Memory formation · overall", "formation"),
             (f"Memory formation · up to {SHORT_TERM_MAX_DAYS} days", "formation_short_term"),
             (f"Memory formation · over {SHORT_TERM_MAX_DAYS} days", "formation_long_term"),
@@ -318,20 +327,15 @@ class MemoryReportDialog(QDialog):
             self.metric_selector.addItem(label, key)
         self.metric_selector.setAccessibleName("Memory metric")
         controls.addWidget(self.metric_selector)
-        self.filter_dates = QCheckBox("Filter dates")
-        self.filter_dates.setEnabled(False)
-        controls.addWidget(self.filter_dates)
+        self.range_selector = QComboBox()
+        self.range_selector.setAccessibleName("Date range")
+        self.range_selector.addItems(["All history", "Custom dates"])
+        self.range_selector.setEnabled(False)
+        controls.addWidget(self.range_selector)
         controls.addStretch()
-        self.refresh_button = QPushButton("Update")
-        self.refresh_button.setToolTip(
-            "Check for changed reviews or FSRS settings in the background."
-        )
-        self.refresh_button.clicked.connect(self.refresh)
-        controls.addWidget(self.refresh_button)
         self.export_button = QPushButton("Export CSV…")
-        self.export_button.setToolTip("Export all metrics for the dates shown.")
-        self.export_button.clicked.connect(self.export)
-        self.export_button.setEnabled(False)
+        self.export_button.setCheckable(True)
+        self.export_button.toggled.connect(self.toggle_export_options)
         controls.addWidget(self.export_button)
         layout.addLayout(controls)
 
@@ -354,12 +358,19 @@ class MemoryReportDialog(QDialog):
         dates.addStretch()
         self.date_fields.hide()
         layout.addWidget(self.date_fields)
-        self.filter_dates.toggled.connect(self.date_fields.setVisible)
-        self.filter_dates.toggled.connect(self.render_report)
+        self.range_selector.currentIndexChanged.connect(
+            lambda index: self.date_fields.setVisible(index == 1)
+        )
+        self.range_selector.currentIndexChanged.connect(self.render_report)
+        self.export_container = QVBoxLayout()
+        self.export_options: CsvExportOptions | None = None
+        layout.addLayout(self.export_container)
 
         self.context = QLabel()
         self.context.setWordWrap(True)
-        layout.addWidget(self.context)
+        self.chart = ScoreChart(self)
+        self.chart.on_day_selected = self.select_day
+        layout.addWidget(self.chart, 1)
 
         inspector = QHBoxLayout()
         self.day_label = QLabel("Anki day")
@@ -373,6 +384,10 @@ class MemoryReportDialog(QDialog):
         self.day_selector.currentIndexChanged.connect(self.render_selection)
         inspector.addWidget(self.day_selector)
         inspector.addStretch()
+        self.inspect_button = QPushButton("Daily table")
+        self.inspect_button.setCheckable(True)
+        self.inspect_button.toggled.connect(self.toggle_table)
+        inspector.addWidget(self.inspect_button)
         layout.addLayout(inspector)
         self.summary = QLabel("Loading memory scores…")
         self.summary.setWordWrap(True)
@@ -390,14 +405,6 @@ class MemoryReportDialog(QDialog):
         self.completeness.setWordWrap(True)
         self.completeness.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(self.completeness)
-        self.chart = ScoreChart(self)
-        self.chart.on_day_selected = self.select_day
-        layout.addWidget(self.chart, 1)
-
-        self.inspect_button = QPushButton("Inspect daily data")
-        self.inspect_button.setCheckable(True)
-        self.inspect_button.toggled.connect(self.toggle_table)
-        layout.addWidget(self.inspect_button)
         self.table = QTableWidget(0, 7)
         self.table.setAccessibleName("Daily memory data")
         self.table.setHorizontalHeaderLabels(
@@ -422,6 +429,24 @@ class MemoryReportDialog(QDialog):
         )
         self.table.hide()
         layout.addWidget(self.table, 1)
+        limits_row = QHBoxLayout()
+        limits = QLabel(
+            "Experimental estimates. Use other evidence alongside them for major "
+            "or medical decisions."
+        )
+        limits.setWordWrap(True)
+        limits_row.addWidget(limits, 1)
+        methods = QPushButton("Methods && limitations")
+        methods.setCheckable(True)
+        limits_row.addWidget(methods)
+        layout.addLayout(limits_row)
+        self.measurement_note = measurement_limitations(self)
+        self.measurement_note.hide()
+        self.context.hide()
+        layout.addWidget(self.context)
+        layout.addWidget(self.measurement_note)
+        methods.toggled.connect(self.context.setVisible)
+        methods.toggled.connect(self.measurement_note.setVisible)
         self.metadata = QLabel()
         self.metadata.setWordWrap(True)
         self.metadata.setTextFormat(Qt.TextFormat.PlainText)
@@ -431,22 +456,19 @@ class MemoryReportDialog(QDialog):
         self.export_status.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(self.export_status)
         close_row = QHBoxLayout()
-        daily_button = QPushButton("Daily settings…")
-        daily_button.clicked.connect(lambda _checked=False: open_daily_settings(self.addon_name))
-        close_row.addWidget(daily_button)
-        sharing_button = QPushButton("Research sharing…")
-        sharing_button.clicked.connect(
-            lambda _checked=False: open_research_sharing(self.addon_name)
-        )
-        close_row.addWidget(sharing_button)
-        oura_button = QPushButton("Health data…")
-        oura_button.clicked.connect(lambda _checked=False: open_oura_data(self.addon_name))
-        close_row.addWidget(oura_button)
         insights_button = QPushButton("Personal insights…")
         insights_button.clicked.connect(
             lambda _checked=False: open_personal_insights(self.addon_name)
         )
         close_row.addWidget(insights_button)
+        oura_button = QPushButton("Health data…")
+        oura_button.clicked.connect(lambda _checked=False: open_oura_data(self.addon_name))
+        close_row.addWidget(oura_button)
+        sharing_button = QPushButton("Research sharing…")
+        sharing_button.clicked.connect(
+            lambda _checked=False: open_research_sharing(self.addon_name)
+        )
+        close_row.addWidget(sharing_button)
         self.retry_button = QPushButton("Retry CSV export")
         self.retry_button.clicked.connect(self.retry_csv)
         self.retry_button.hide()
@@ -462,11 +484,36 @@ class MemoryReportDialog(QDialog):
         return self.metric_selector.currentData()
 
     def toggle_table(self, checked: bool) -> None:
-        self.chart.setVisible(not checked)
         self.table.setVisible(checked)
-        self.inspect_button.setText("Show chart" if checked else "Inspect daily data")
         if checked:
             self.render_table()
+
+    def toggle_export_options(self, checked: bool) -> None:
+        if self.export_options is None and checked and self.collection_path is not None:
+            def update_automatic_csv():
+                if (
+                    _daily_updater is not None
+                    and mw is not None
+                    and mw.col is not None
+                    and mw.col.path == self.collection_path
+                ):
+                    _daily_updater.check(force=True)
+
+            self.export_options = CsvExportOptions(self, self.collection_path, update_automatic_csv)
+            self.export_options.save_copy.clicked.connect(self.export)
+            self.export_container.addWidget(self.export_options)
+        if self.export_options is not None:
+            self.export_options.setVisible(checked)
+            self.update_export_options()
+
+    def update_export_options(self) -> None:
+        if self.export_options is not None:
+            self.export_options.scope.setText(
+                "All measures across the selected dates."
+                if self.range_selector.currentIndex() == 1
+                else "All measures across your full history."
+            )
+            self.export_options.save_copy.setEnabled(self.report is not None and not self.busy)
 
     def refresh(self) -> None:
         if self.busy or mw is None or mw.col is None:
@@ -474,10 +521,10 @@ class MemoryReportDialog(QDialog):
         if self.collection_path is not None and mw.col.path != self.collection_path:
             self.close()
             return
-        self.refresh_button.setEnabled(False)
         self.busy = True
-        self.export_button.setEnabled(False)
-        self.summary.setText("Checking for changed reviews and FSRS settings…")
+        self.update_export_options()
+        if self.report is None:
+            self.summary.setText("Calculating memory scores…")
         collection_path = mw.col.path
         config_manager = mw.addonManager
 
@@ -498,8 +545,7 @@ class MemoryReportDialog(QDialog):
             return
         collection_path = mw.col.path
         self.busy = True
-        self.refresh_button.setEnabled(False)
-        self.export_button.setEnabled(False)
+        self.update_export_options()
         self.summary.setText("Loading saved memory scores…")
 
         def loaded(report: Report | None) -> None:
@@ -542,8 +588,7 @@ class MemoryReportDialog(QDialog):
             and not self.exposure_recorded
         ):
             self.busy = True
-            self.refresh_button.setEnabled(False)
-            self.export_button.setEnabled(False)
+            self.update_export_options()
             self.summary.setText("Preparing your results…")
 
             def recorded(_snapshot) -> None:
@@ -563,13 +608,11 @@ class MemoryReportDialog(QDialog):
                 self.failed,
             )
             return
-        if report.days and not self.filter_dates.isEnabled():
+        if report.days and not self.range_selector.isEnabled():
             self.start_date.setDate(report.days[0].day)
             self.end_date.setDate(report.days[-1].day)
-            self.filter_dates.setEnabled(True)
+            self.range_selector.setEnabled(True)
         self.report = report
-        self.refresh_button.setEnabled(True)
-        self.export_button.setEnabled(True)
         self.render_report()
         if after_display is not None:
             after_display()
@@ -585,8 +628,7 @@ class MemoryReportDialog(QDialog):
         ):
             self.close()
             return
-        self.refresh_button.setEnabled(True)
-        self.export_button.setEnabled(self.report is not None)
+        self.update_export_options()
         if isinstance(error, UpdateCancelled):
             self.render_report()
             return
@@ -615,7 +657,7 @@ class MemoryReportDialog(QDialog):
         super().reject()
 
     def date_range(self) -> tuple[date | None, date | None]:
-        if not self.filter_dates.isChecked():
+        if self.range_selector.currentIndex() == 0:
             return None, None
         return self.start_date.date().toPyDate(), self.end_date.date().toPyDate()
 
@@ -628,17 +670,19 @@ class MemoryReportDialog(QDialog):
         if start is not None and end is not None:
             days = [day for day in days if start <= day.day <= end]
         self.days = days
-        formation = self.metric_key() != "recall"
+        formation = self.metric_key() in FORMATION_METRICS
         self.day_label.setText("Study day" if formation else "Review day")
         self.context.setText(
             "Formation belongs to the study day and is measured at the next review. "
             "Short and long term refer to the time until that review."
             if formation
-            else "Recall uses the first attempt on each card per Anki day."
+            else "Recall uses the first attempt on each card per Anki day. Delay bands use "
+            "the actual time since the previous review."
         )
         self.chart.days = days
         self.chart.metric = self.metric_key()
-        self.chart.filtered = self.filter_dates.isChecked()
+        self.chart.filtered = self.range_selector.currentIndex() == 1
+        self.update_export_options()
         self.day_selector.blockSignals(True)
         self.day_selector.clear()
         for day in reversed(days):
@@ -706,37 +750,49 @@ class MemoryReportDialog(QDialog):
         if selected is None:
             self.summary.setText(
                 "No eligible reviews in this date range."
-                if self.filter_dates.isChecked()
+                if self.range_selector.currentIndex() == 1
                 else "No eligible reviews in your study history."
             )
             self.details.clear()
             self.completeness.clear()
             return
-        metric = getattr(selected, self.metric_key())
+        key = self.metric_key()
+        metric = getattr(selected, key)
+        formation = key in FORMATION_METRICS
         if metric is None:
             self.summary.setText("— · not calculated")
             self.details.setText("Update to calculate this delay band from your review history.")
         else:
-            self.summary.setText(f"{_score(metric)} · {metric.status}")
+            score = metric.score_pp
+            if score is None:
+                self.summary.setText("No evaluated reviews")
+            elif score == 0:
+                self.summary.setText("Matches the predicted recall rate")
+            else:
+                direction = "above" if score > 0 else "below"
+                self.summary.setText(f"{abs(score):.1f} percentage points {direction} prediction")
+            comparison = (
+                "No clear difference" if metric.status == "on par" else metric.status.capitalize()
+            )
             if metric.count:
                 self.details.setText(
-                    f"Approx. 95% range: {_uncertainty(metric)} pp · "
+                    f"{comparison} · Approx. 95% range: {_uncertainty(metric)} pp · "
                     f"{metric.count:,} evaluated"
                     + (
                         f" across {metric.outcome_days:,} outcome days"
-                        if self.metric_key() != "recall"
+                        if formation
                         else ""
                     )
                     + f"\nRecalled {metric.recalled_percent:.1f}% · "
                     f"FSRS predicted {metric.predicted_percent:.1f}%"
                     + (
                         "\nRange unavailable: follow-ups are concentrated on too few outcome days."
-                        if self.metric_key() != "recall" and metric.uncertainty_low_pp is None
+                        if formation and metric.uncertainty_low_pp is None
                         else ""
                     )
                 )
             else:
-                self.details.setText("No evaluable observations yet.")
+                self.details.setText(comparison)
             self.details.setToolTip(
                 "The approximate range accounts for model and sample variability. Formation "
                 "groups outcomes by review day and corrects for few or unevenly represented days. "
@@ -744,7 +800,7 @@ class MemoryReportDialog(QDialog):
                 "The range describes evaluated follow-ups, "
                 "not the unknown outcomes of pending cards."
             )
-        if self.metric_key() != "recall":
+        if formation:
             cohort = selected.formation
             self.completeness.setText(
                 f"{cohort.completeness.capitalize()} · {cohort.count:,}/{cohort.cohort_count:,} "
@@ -757,22 +813,25 @@ class MemoryReportDialog(QDialog):
                     else ""
                 )
             )
-        else:
+        elif key == "recall" and selected.recall.excluded_count:
             self.completeness.setText(
                 f"{selected.recall.excluded_count:,} cards excluded without a "
                 "pre-review prediction."
             )
+        else:
+            self.completeness.clear()
 
     def render_table(self) -> None:
+        key = self.metric_key()
         self.table.setRowCount(len(self.days))
         for row, day in enumerate(reversed(self.days)):
-            metric = getattr(day, self.metric_key())
+            metric = getattr(day, key)
             cohort = day.formation
             availability = (
                 f"{cohort.count}/{cohort.cohort_count} evaluated; "
                 f"{cohort.pending_count} pending; {cohort.excluded_count} excluded"
-                if self.metric_key() != "recall"
-                else f"{day.recall.excluded_count} excluded"
+                if key in FORMATION_METRICS
+                else f"{day.recall.excluded_count} excluded" if key == "recall" else "—"
             )
             values = [
                 day.day.isoformat(),
@@ -801,9 +860,8 @@ class MemoryReportDialog(QDialog):
         if result.recalculated and self.collection_path is not None:
             notify_insights_updated(self.collection_path)
         self.export_status.setText(
-            f"Scores saved. Fixed CSV export failed: {result.csv_error}"
-            if result.csv_error
-            else ("Fixed CSV updated." if result.csv_exported else "")
+            f"Scores saved. Automatic CSV export failed: {result.csv_error}"
+            if result.csv_error else ""
         )
         self.retry_button.setVisible(result.csv_error is not None)
         self.retry_button.setEnabled(True)
@@ -814,8 +872,7 @@ class MemoryReportDialog(QDialog):
             return
         collection_path = self.collection_path
         self.busy = True
-        self.refresh_button.setEnabled(False)
-        self.export_button.setEnabled(False)
+        self.update_export_options()
         self.retry_button.setEnabled(False)
         self.export_status.setText("Retrying the fixed CSV export…")
 
@@ -829,10 +886,9 @@ class MemoryReportDialog(QDialog):
             if self.close_when_finished:
                 self.close()
                 return
-            self.refresh_button.setEnabled(True)
-            self.export_button.setEnabled(self.report is not None)
+            self.update_export_options()
             self.retry_button.setEnabled(True)
-            self.export_status.setText(f"Scores saved. Fixed CSV export failed: {error}")
+            self.export_status.setText(f"Scores saved. Automatic CSV export failed: {error}")
 
         run_file_job(retry, self.accept_update, failed)
 
@@ -849,9 +905,7 @@ class MemoryReportDialog(QDialog):
         report = self.report
         start, end = self.date_range()
         self.busy = True
-        self.refresh_button.setEnabled(False)
-        self.export_button.setEnabled(False)
-        self.summary.setText("Exporting CSV in the background…")
+        self.update_export_options()
 
         def finished() -> bool:
             if self.disposed:
@@ -860,8 +914,6 @@ class MemoryReportDialog(QDialog):
             if self.close_when_finished:
                 self.close()
                 return False
-            self.refresh_button.setEnabled(True)
-            self.export_button.setEnabled(True)
             self.render_report()
             return True
 
@@ -970,24 +1022,6 @@ def open_oura_data(addon_name: str) -> None:
         _oura_dialog.destroyed.connect(clear)
         _oura_dialog.show()
         _oura_dialog.load()
-
-    sharing_gate(mw, addon_name, ready)
-
-
-def open_daily_settings(addon_name: str) -> None:
-    if mw is None or mw.col is None:
-        showWarning("Open an Anki profile before configuring daily memory updates.")
-        return
-
-    def ready(_config) -> None:
-        try:
-            dialog = DailySettingsDialog(mw, mw.col.path)
-            accepted = dialog.exec() == QDialog.DialogCode.Accepted
-        except (OSError, ValueError) as exc:
-            showWarning(str(exc), parent=mw)
-            return
-        if accepted and _daily_updater is not None:
-            _daily_updater.check(force=True)
 
     sharing_gate(mw, addon_name, ready)
 

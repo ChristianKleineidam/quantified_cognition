@@ -383,10 +383,16 @@ class OuraDialog(QDialog):
     def disconnect(self):
         from aqt.utils import askUser
 
+        research_notice = (
+            "If this profile contributed Oura data, its complete research "
+            "contributions will also be withdrawn and deleted. "
+            if self.prefix == "oura" else ""
+        )
         if self.busy or not askUser(
             f"Disconnect {self.provider} and delete its measurements from this Anki profile? "
-            "The fixed CSV will be refreshed. Previously exported files and research "
-            "submissions are managed separately.",
+            "The fixed CSV will be refreshed. "
+            + research_notice
+            + "Previously exported personal files remain under your control.",
             parent=self,
         ):
             return

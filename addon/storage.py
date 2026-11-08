@@ -9,6 +9,7 @@ import tempfile
 import threading
 import time
 import uuid
+import zlib
 from collections.abc import Callable
 from contextlib import closing, contextmanager
 from dataclasses import asdict, dataclass, fields
@@ -32,8 +33,8 @@ from .research import (
 DIRECTORY_NAME = "quantified-self-memory"
 DATABASE_NAME = "results.sqlite3"
 PREFERENCES_NAME = "daily-settings.json"
-SCHEMA_VERSION = 2
-EXPORT_VERSION = 7
+SCHEMA_VERSION = 4
+EXPORT_VERSION = 8
 DAILY_COLUMNS = ["date"] + [
     f"{metric}_{field}" for metric in METRIC_PREFIXES for field in METRIC_FIELDS
 ]
@@ -184,7 +185,7 @@ def save_daily_settings(collection_path: str | Path, settings: DailySettings) ->
 
 def _initialize(connection: sqlite3.Connection) -> None:
     version = connection.execute("pragma user_version").fetchone()[0]
-    if version not in (0, 1, SCHEMA_VERSION):
+    if version not in (0, 1, 2, 3, SCHEMA_VERSION):
         raise ValueError("The results database was created by a newer add-on version.")
     definitions = ["date text primary key"]
     for prefix in METRIC_PREFIXES:
@@ -202,6 +203,10 @@ def _initialize(connection: sqlite3.Connection) -> None:
             definitions.append(f"{prefix}_{field} {kind}")
     connection.execute(f"create table if not exists daily_results ({', '.join(definitions)})")
     connection.execute("create table if not exists metadata (key text primary key, value text)")
+    connection.execute(
+        "create table if not exists review_predictions (singleton integer primary key "
+        "check(singleton=1), payload blob not null)"
+    )
     available = {row[1] for row in connection.execute("pragma table_info(daily_results)")}
     for definition in definitions[1:]:
         column = definition.split()[0]
@@ -256,7 +261,8 @@ def save_report(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     metadata = {
-        field.name: getattr(report, field.name) for field in fields(Report) if field.name != "days"
+        field.name: getattr(report, field.name)
+        for field in fields(Report) if field.name not in ("days", "review_records")
     }
     metadata["settings"] = asdict(report.settings)
     rows = []
@@ -273,6 +279,14 @@ def save_report(
         connection.execute("begin")
         _initialize(connection)
         connection.execute("delete from daily_results")
+        connection.execute("delete from review_predictions")
+        if report.review_records is not None:
+            connection.execute(
+                "insert into review_predictions values (1, ?)",
+                (zlib.compress(json.dumps(
+                    report.review_records, separators=(",", ":"), allow_nan=False
+                ).encode("utf-8")),),
+            )
         connection.executemany(
             f"insert into daily_results ({', '.join(DAILY_COLUMNS)}) "
             f"values ({', '.join('?' for _ in DAILY_COLUMNS)})",
@@ -331,7 +345,7 @@ def load_report(path: str | Path) -> Report | None:
         return None
     with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as connection:
         version = connection.execute("pragma user_version").fetchone()[0]
-        if version not in (1, SCHEMA_VERSION):
+        if version not in (1, 2, 3, SCHEMA_VERSION):
             raise ValueError("Unsupported results database version.")
         connection.row_factory = sqlite3.Row
         stored = connection.execute("select value from metadata where key = 'report'").fetchone()
@@ -354,6 +368,20 @@ def load_report(path: str | Path) -> Report | None:
             ]
             days.append(DailyResult(date.fromisoformat(row["date"]), *metrics))
         return Report(days=days, **metadata)
+
+
+def load_review_records(path: str | Path) -> list[dict]:
+    """Read the review cache from the same transactionally saved report generation."""
+    path = Path(path).resolve()
+    with closing(sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)) as connection:
+        if connection.execute("pragma user_version").fetchone()[0] != SCHEMA_VERSION:
+            raise ValueError("Open the memory report to update review predictions before sharing.")
+        row = connection.execute(
+            "select payload from review_predictions where singleton=1"
+        ).fetchone()
+    if row is None:
+        raise ValueError("Open the memory report to calculate review predictions before sharing.")
+    return json.loads(zlib.decompress(row[0]))
 
 
 def daily_update_due(path: str | Path, day: date, csv_path: str | Path) -> bool:

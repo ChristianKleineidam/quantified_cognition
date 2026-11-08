@@ -13,9 +13,16 @@ export function payload(id, extra = {}) {
 export async function protocol(db) {
   await db.exec(`insert into qs_governance.protocols
     (version,bundle_hash,bundle,notice_version,notice_hash,signature_method,approved,approval_reference,oura_permitted,google_permitted,enrollment_open)
-    values ('synthetic-v1','${"b".repeat(64)}','{}','${notice.version}','${notice.hash}',
+    values ('synthetic-v1','${"b".repeat(64)}','{"oura_authorization_monitoring":"access-token-v1"}','${notice.version}','${notice.hash}',
     'explicit_consent',true,'synthetic test approval',true,true,true) on conflict do nothing`);
 }
 export async function enroll(db, id, hash, extra = {}) {
   await db.query("select public.qs_enroll($1,$2,$3)",[id,hash,evidence(id,extra)]);
+}
+export async function authorizeOura(db, id, hash, receiptHash = "e".repeat(64)) {
+  const generation = crypto.randomUUID();
+  await db.query("select public.qs_oura_authorization_bind($1,$2,$3,$4,now()+interval '1 day',$5,true)",
+    [id,hash,generation,{nonce:"synthetic",body:"synthetic-encrypted-token"},receiptHash]);
+  await db.query("select public.qs_oura_authorization_result($1,$2,'verified')",[id,generation]);
+  return generation;
 }

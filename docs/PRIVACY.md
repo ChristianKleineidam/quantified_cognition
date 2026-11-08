@@ -4,7 +4,7 @@ Quantified Cognition analyzes your Anki history on your computer. Connecting a
 health account and contributing to research are choices you make separately.
 Research packages are sent only after you review and explicitly submit them.
 
-Updated **6 November 2026**. Oura connections are limited during the beta.
+Updated **8 November 2026**.
 Research enrollment and uploads are currently closed.
 
 ## Your data and choices
@@ -24,7 +24,7 @@ benefits and risks.
 
 ## Information used by the add-on
 
-Local profile files hold calculated scores, health measurements, personal
+Local profile files hold calculated scores and review predictions, health measurements, personal
 insights and sharing history. Sleep, workout and review times help match main
 sleep, naps and exercise to studying. Analysis can use temporary local Anki snapshots
 that contain card text. These files stay outside research uploads. Personal
@@ -40,12 +40,21 @@ daily steps directly from Oura. It also imports workout timing,
 duration, intensity and recording source. We do not save workout labels,
 activity names, calories, distance or heart-rate records. Available history and
 missing measurements depend on Oura. You sign in on Oura's website.
-Our connection service exchanges and renews access tokens without storing
-them in the research database. The add-on saves credentials in your operating
-system's protected local store.
+Our connection service exchanges and renews tokens. The add-on saves credentials
+in your operating system's protected local store. Personal connections do not
+retain tokens on the server.
 
-**Research packages contain daily measurements:** recall and overall,
-short-term and long-term memory formation scores; predicted and observed
+When you send a research package containing Oura data, the service also keeps an
+encrypted access token to check continued permission while Anki is closed.
+Refresh tokens are not stored on the server. Checks normally run every five
+minutes and discard response bodies. Research use pauses when access cannot be
+verified, including token expiry or service outages. Normal Anki sync can renew
+verification. Expired monitoring tokens are removed. Confirmed loss of access
+withdraws the complete contribution and starts deletion of its research copies.
+These checks are periodic; revocation is not detected instantly.
+
+**Research packages contain daily measurements:** overall, short-term and
+long-term recall and memory formation scores; predicted and observed
 recall; evaluated, cohort, pending and excluded counts; follow-up coverage,
 uncertainty and quality indicators. Available Oura data include total,
 light, deep, REM and awake sleep durations,
@@ -56,6 +65,15 @@ Oura workout summaries include recorded-workout indicators, counts, total and
 easy/moderate/hard durations, the 24 hours before and after studying, gaps to
 studying, between-review counts and availability status.
 
+**Individual Anki review records** contain a pseudonymous card identifier,
+review day and order, answer rating and success, elapsed time since the previous
+review, review type and flags describing eligibility for the measurements.
+Available recall probabilities are reconstructed using your current FSRS settings.
+Missing predictions stay missing. These records let us assess prediction accuracy
+and conduct further statistical analysis. Card pseudonyms remain consistent across
+your contributions and are generated on your computer with a protected random key.
+That key is excluded from uploads.
+
 Packages also contain dates, sources, method and Anki versions, an FSRS settings
 fingerprint, timezone, Anki day boundary, calculation settings, generation and
 sync times, provider date conventions, and relevant sleep types and algorithm
@@ -65,7 +83,7 @@ results help us understand participation patterns. Unknown earlier exposure is
 recorded as unknown; the full local event log is excluded.
 
 **Excluded from research packages:** card questions and answers; card and deck
-names and IDs; individual reviews and review pairs; exact sleep, workout or review
+names and original Anki IDs; exact sleep, workout or review
 times; workout labels and activity names; raw health records and record IDs;
 heart rate; location; name and email;
 provider account or device IDs; passwords and tokens. Personal insight charts,
@@ -134,7 +152,7 @@ described above.
 We protect data with restricted access, encrypted connections, protected
 credentials and controlled research workspaces. Authorized hosting personnel
 can also process data to provide and secure the service. Research records are
-pseudonymous: dates, timezone and patterns in daily histories can still identify
+pseudonymous: dates, timezone and patterns in review and daily histories can still identify
 someone. These safeguards reduce, but cannot eliminate, the risks of
 identification or unauthorized access.
 
@@ -188,10 +206,13 @@ Offline requests need to reach us before we can act on them. A participant ID
 or submission reference helps us locate records. We ask only for information
 needed to locate the data and verify your request.
 
-Disconnecting a provider removes its local measurements and requests revocation
-of access. You can also revoke access in the provider's account settings.
-Research submissions and files you have exported have separate deletion
-controls; exported files remain under your control.
+Disconnecting Oura removes its local measurements, requests revocation and queues
+withdrawal/deletion of this profile's complete contribution if it used Oura for
+research. You can also revoke access in Oura's account settings; server checks
+operate independently of Anki. Explicit deletion requests can be made through
+the add-on or by contacting us, including while Anki is closed. Research-copy
+deletion is tracked separately until confirmed; personal files you exported
+remain under your control.
 
 Subject to the GDPR's conditions, you can request access, correction, erasure,
 restriction and a portable copy of your data, and object to legitimate-interest

@@ -1,5 +1,12 @@
 # Public project website
 
+**8 November 2026, research revocation disclosures.** Deployment
+`90c88359-a8b7-4292-94f3-4cd5a494f5a5` publishes the policy and participant
+information frozen in protocol v13. The disclosure explains encrypted access-token
+checks while Anki is closed, authorization holds and complete-contribution
+withdrawal. All 17 public assets match the 19-file build over HTTPS; headers,
+custom 404 and retired-manual redirects passed. Research remains disabled.
+
 The public information website uses **Cloudflare Pages**, with the custom domain
 `quantifiedcognition.jollyjoyjourney.com`. It is a static information site;
 publishing it is separate from changing the provider or research switches.
@@ -115,3 +122,29 @@ Upload project. All 17 public files matched the 19-file build over HTTPS;
 headers, canonical documents, custom 404 and retired-manual redirects passed.
 Terms and the new privacy wording were also verified in the browser. No cache
 purge, DNS change, new service or online feature activation was required.
+
+## 7 November review-data update
+
+The privacy policy, research information, Methods and landing page now describe
+encrypted pseudonymous individual review records alongside daily summaries.
+The information and explicit-consent bundle is version 11; earlier choices and
+consent evidence are preserved without expanding their scope.
+
+Deployment `cb209d0c-68e8-41d5-b889-2cf1af521c35` succeeded on the existing
+Pages project. All 17 public assets matched the 19-file build over HTTPS,
+including downloadable policy/information copies. Security headers, the custom
+404 and retired-manual redirects passed. Research enrollment and uploads remain
+disabled; the Oura developer beta and disabled Google Health setting are unchanged.
+
+## 8 November Oura access-status update
+
+Recorded Ken's 6 November API application approval and removal of the ten-user
+limit in ticket #8481236. The homepage and privacy policy no longer describe
+Oura connections as limited or application approval as pending. Research
+enrollment and uploads remain closed.
+
+Deployment `6a1ffc34-1e70-4c00-8fc8-d2b317fc3412` succeeded. All 17 public assets
+matched the 19-file build over HTTPS, including the downloadable privacy policy.
+Security headers, the custom 404 and retired-manual redirects passed. The revised
+privacy document is saved in closed research protocol v12, with the existing
+sharing notice v11 and unchanged measurement fields, purposes and service switches.

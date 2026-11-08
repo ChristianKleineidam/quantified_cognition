@@ -1,5 +1,51 @@
 # Backend deployment state
 
+**8 November 2026, independent Oura research authorization.** The scheduled
+authorization monitor runs while Anki is closed. Explicitly submitted Oura
+contributions use encrypted access tokens, normally checked every five minutes,
+with at most ten minutes of research-use authorization. Invalid-token responses
+withdraw the complete contribution; expiry, ambiguous errors and scope/membership
+failures pause use. Oura's 401 scope denials preserve partial Daily/Workout grants.
+Submissions, extract release and guarded analysis enforce the authorization state.
+
+Revocation uses the existing deletion inventory, deadlines, external backup
+ledger and actual copy-removal confirmations. Monitoring tokens are excluded
+from backups and research extracts. Restored research remains held. The live
+empty monitor and scheduler passed without retaining a real user's token or
+enrolling a participant. All six Edge source files were compared after deployment.
+Silentworker's updated monitor and deletion-ledger jobs succeeded. Verification
+passed 59 backend tests and 17 native PostgreSQL concurrency/recovery tests,
+plus 55 focused desktop consent/Oura tests. The full desktop suite passed 464
+tests earlier in this change. Security advisors found no warning or error;
+the private monitor table intentionally has RLS enabled without client policies.
+
+Research protocol v13 and notice v12 include the monitoring disclosure. All
+protocols remain closed/unapproved, Oura connections remain enabled, and Google
+Health and research uploads remain disabled. Public policy/information pages
+match the new frozen documents. See [revocation operations](OURA_RESEARCH_REVOCATION.md)
+and [verification evidence](OURA_RESEARCH_REVOCATION_RESULT.json) for limits.
+
+**8 November 2026, Oura approval recorded.** Ken from Oura's Enterprise Support
+Team approved the API application and lifted its ten-user limit on 6 November
+at 19:47 UTC, ticket #8481236, following the combined request in #8471927.
+See [approval evidence](OURA_APPLICATION_APPROVAL.json). Oura connections remain
+enabled; Google Health, research enrollment and research uploads remain disabled.
+Recording approval changes no service switch or research-protocol permission.
+Earlier dated entries below describe the configuration when those checks ran.
+
+**7 November 2026, encrypted review snapshots.** Package v7 adds pseudonymous
+review predictions and outcomes alongside daily summaries. Sharing notice v11
+and enrollment protocol v11 are deployed, with approval, enrollment and all
+research provider permissions false. Original preference/exposure evidence is
+preserved. The Google exclusion constraint also covers v11.
+
+Function version 29 matches all five local source files. The live status reports
+research uploads and Google Health disabled, with Oura unchanged for the developer
+beta. Enrollment information, enrollment and submissions returned HTTP 503 using
+a synthetic client; no participant measurements were uploaded. Security advisors
+reported no findings. Verification passed 460 desktop tests and 43 backend tests.
+All 17 public website assets matched the updated disclosure build over HTTPS.
+
 **6 November 2026, Oura-only research scope.** Protocol v10 and its matching
 sharing notice are staged. The protocol's database constraint prevents enabling
 Google Health data for this version. Protocol approval, enrollment and Oura
@@ -153,6 +199,8 @@ verification from that date is historical and superseded by the 4 November
 deployments above. Repeat current closed-state checks before a separately
 authorized online pilot.
 
+## Current configuration, 8 November 2026
+
 | Setting | Value |
 | --- | --- |
 | Project | Quantified Cognition |
@@ -160,14 +208,14 @@ authorized online pilot.
 | Project ref | `wfjlzecckihsgcvauqwt` |
 | Region | Frankfurt, `eu-central-1` |
 | Database | PostgreSQL 17.11 |
-| Function | `qs-service`, deployed version 17 |
-| Latest migration | `20261106143209_monitor_oura_expectation.sql` |
+| Function | `qs-service`, deployed version 29 |
+| Latest migration | `20261108144850_research_protocol_v12.sql` |
 | Enrollment/lifecycle controls | Version 1; deployed, research closed |
 | Operational controls | Version 1; shared request/storage quotas |
 | Monitor | Active, every five minutes; private alerts |
 | Independent monitor | Silentworker; existing Home Assistant notification channel |
 | Recovery | Encrypted daily copies; independent deletion ledger; 7 days / 1 GiB |
-| Oura access | **Enabled** under the developer limit (`OURA_ENABLED=true`) |
+| Oura access | **Enabled**, API application approved and ten-user limit lifted (`OURA_ENABLED=true`) |
 | Google Health access | **Disabled** (`GOOGLE_HEALTH_ENABLED=false`) |
 | Research registration/uploads | **Disabled** (`RESEARCH_ENABLED=false`) |
 | Real participant/research data | **None** |
@@ -343,14 +391,14 @@ keys, access tokens and state-signing values are excluded from that file and
 from the add-on archive. Current server-secret hashes confirmed all three explicit
 disable values; no credential values were printed during verification.
 
-## Before enabling online features
+## Before opening research
 
-Review the published [JollyJoyJourney privacy policy](PRIVACY.md) and study
-information for any required approval changes, finish the [Oura approval checklist](OURA_APPROVAL.md)
-and its storage/revocation/deletion requirements and permitted-account pilot,
-and complete [Google setup/research requirements](GOOGLE_HEALTH.md) with its own
-credentials and permitted live-account pilot. Review retention, logs, backup
-deletion and abuse controls as described in [DEPLOYMENT.md](DEPLOYMENT.md).
+Oura application approval and the initial account pilot are complete. Configure
+every actual research workspace to use the authorization guard and copy inventory
+in [OURA_RESEARCH_REVOCATION.md](OURA_RESEARCH_REVOCATION.md), and review retention,
+logs, backup deletion and abuse controls as described in
+[DEPLOYMENT.md](DEPLOYMENT.md). Google Health is outside the first release and
+remains disabled.
 
 Do not change the three flags as part of ordinary deployment, add-on installation,
 or testing. Enabling is a separate operator action after the required policy and
