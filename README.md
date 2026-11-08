@@ -4,10 +4,8 @@ Source repository: [ChristianKleineidam/quantified_cognition](https://github.com
 
 A desktop add-on that compares recall with Anki's own FSRS predictions. It reconstructs past reviews with **today's FSRS parameters**, including pre-FSRS (SM-2) reviews and reviews synced from AnkiDroid, AnkiMobile, and AnkiWeb.
 
-The release listing text is saved in [ANKIWEB_DESCRIPTION.txt](docs/ANKIWEB_DESCRIPTION.txt).
-The public information website is hosted on Cloudflare Pages at
-[quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/);
-see [website publishing](docs/WEBSITE.md).
+Learn more at
+[quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/).
 **Oura integration and voluntary research uploads are available.**
 
 Version 0.18.0 renames the add-on from Quantified Self Memory to Quantified Cognition.
@@ -19,7 +17,7 @@ so existing installations retain their settings, saved results and sharing histo
 
 Requires Anki **25.09 or later** with FSRS enabled in Deck Options. No extra Python packages are required in Anki. The add-on runs on desktop; synced mobile/web reviews are analyzed on desktop.
 
-1. From the repository root, run `python tools/build_addon.py` with Python 3.10 or later. This creates `dist/quantified-cognition-0.23.0-rc.1.ankiaddon`; generated packages are not committed to the repository.
+1. Download the `.ankiaddon` file from the [latest release](https://github.com/ChristianKleineidam/quantified_cognition/releases/latest).
 2. In Anki, select **Tools → Add-ons → Install from file**, select the file, and restart Anki.
 3. Open **Tools → Quantified Cognition…**.
 4. Choose overall recall or formation, or either metric’s 30-day delay band. Recall uses the time since the previous review, and formation uses the time until the next review. Inspect a day with the date selector or by clicking the chart. **Daily table** opens a detailed table below the chart.
@@ -86,18 +84,14 @@ The fixed daily CSV and manual memory export append Oura measurements, availabil
 
 ## Sharing choice and consent timing
 
-Version 0.19.1 uses the existing participant ID for explicit research consent.
+Explicit research consent is linked to a random participant ID.
 The original sharing preference/exposure history is preserved. Enrollment checks
 eligibility, presents saveable information and obtains explicit consent through
 **Agree and join research**; no measurements upload until a separate preview
 and Send. The server requires valid enrollment and a current retention review.
 Tracked research extracts and collaborator copies have deletion tasks and
-confirmation records. There is no fixed research measurement expiry.
-The backend migrations are deployed and their closed-state checks passed;
-research enrollment and uploads are available with explicit consent and per-package confirmation. Oura's API application is
-approved, its ten-user limit has been lifted, and the account pilot is complete.
-The focused hosted research rehearsal and guarded analysis workspace are complete. See
-[research controls](docs/RESEARCH_CONTROLS.md) for the flow and operator procedures.
+confirmation records. See the [participant information](docs/RESEARCH_INFORMATION.md)
+and [privacy policy](docs/PRIVACY.md) for participation, data use and retention.
 
 Before opening the first personal report, including cached results, the add-on asks **Yes, I’m interested / Not now / No, keep it private**. It also asks before a new user enables automatic CSV output. **Not now** is the default, and every choice allows personal use. Use **Research sharing…** in the memory report to change your preference later. Study enrollment is a separate step.
 
@@ -107,7 +101,7 @@ CSV exports include sharing metadata, including `research_consent_active`, `rese
 
 On upgrade from versions that did not track viewing, existing results files cause `unknown_legacy` classification. The app cannot assume that those users have never seen their results. Future consent timing remains logged without manufacturing a known pre-view status. Exposure describes when results became available, not proof that a person read them. These records allow stratification by consent timing; they do not establish that all sources of participant self-selection are absent.
 
-When participation is open, open **Research sharing…** to check eligibility, read the study information and consent. The same window then shows the package's date range, day count, recipient, and privacy policy. The included and excluded data are visible in the dialog. **Send this package** submits the entire fixed package once. Supabase stores encrypted packages in private PostgreSQL tables. A separate secret authorizes upload and deletion. Receipts and package IDs prevent duplicate submissions after uncertain failures. **Prepare latest data** prepares a new snapshot. Upload retries always require an explicit user action.
+Open **Research sharing…** to check eligibility, read the study information and consent. The same window then shows the package's date range, day count, recipient, and privacy policy. The included and excluded data are visible in the dialog. **Send this package** submits the entire fixed package once. Supabase stores encrypted packages in private PostgreSQL tables. A separate secret authorizes upload and deletion. Receipts and package IDs prevent duplicate submissions after uncertain failures. **Prepare latest data** prepares a new snapshot. Upload retries always require an explicit user action.
 
 Changing to Not now/No queues deletion of previous uploads and discards unsent packages. **Delete uploaded data…** requests deletion separately. Offline requests remain encrypted, block uploads and retry while Anki is open. Acknowledged deletion removes active research packages; an unlinked random-ID tombstone rejects stale requests. Backup/research-extract retention must be configured and disclosed by the operator. A later contribution creates a new upload identity while keeping original local consent timing. Personal Oura sync is independent. Opening a populated Oura table or exporting health measurements counts as a results exposure opportunity. Neither opting in nor background calculations automatically submits research data.
 
@@ -185,28 +179,14 @@ Add-ons**, select **Quantified Cognition**, choose **Toggle Enabled**, and
 restart Anki. To uninstall it, use **Delete** in the same dialog and restart.
 Disabling or uninstalling does not delete your profile-local data, exported CSVs
 or any previously submitted research data. Keep the backup before removing
-local files. Online features remain disabled in the current beta.
+local files.
 
 Report reproducible problems using the desktop beta issue template. Include
 versions and sanitized errors, rather than your collection, CSV or health data.
 
 ## Development
 
-Automated verification runs directly on [Silentworker](docs/SILENTWORKER.md).
-This project does not use GitHub Actions. New commits on `main` run the test
-suites, statistical regression gates, lint and package checks in an isolated
-executor; unchanged commits reuse their recorded result.
-
-For release preparation, use the [beta checklist](docs/BETA_CHECKLIST.md).
-The [research design](docs/RESEARCH_DESIGN.md),
-[participant information](docs/RESEARCH_INFORMATION.md) and
-[privacy policy](docs/PRIVACY.md) define the intended research programme.
-The [research operating plan](docs/RESEARCH_OPERATIONS.md) separates those
-commitments from the enrollment, retention and provider controls still needed
-before activation. Version 0.18.2 packages these documents; it does not open
-research enrollment or change the current sharing notice.
-The hosted service has [request/storage quotas and private monitoring](docs/BACKEND_OPERATIONS.md);
-Research enrollment and uploads remain closed.
+To build from source or run the checks locally, use Python 3.10 or later:
 
 ```powershell
 python -m venv .venv
@@ -215,6 +195,10 @@ python -m venv .venv
 .\.venv\Scripts\ruff.exe check addon tests tools
 .\.venv\Scripts\python.exe tools/build_addon.py
 ```
+
+The build creates `dist/quantified-cognition-0.23.0.ankiaddon`.
+See the [beta checklist](docs/BETA_CHECKLIST.md) for desktop verification and
+the [research design](docs/RESEARCH_DESIGN.md) for the scientific methods.
 
 Concurrency tests answer a real card while fingerprinting, FSRS calculation, result saving and CSV writing are each paused, and verify file-only automatic retries during review, cancellation of ordinary jobs and failed-copy cleanup. Subprocess tests immediately close after the final native card answer, stop Qt and return from the main thread while export is still pending, including with an older calculation running. They also exercise interrupted-handoff recovery at the next profile opening, persistent capture ordering and file-only export retries. Other tests use synthetic collections, including SM-2-era history, same-day relearning, next-day pairing, resets, previews, current-parameter changes, CSV output, DST boundaries, and preservation of the live collection. Runtime integration tests run against the real Anki Rust backend. The project is licensed under AGPL-3.0-or-later.
 
