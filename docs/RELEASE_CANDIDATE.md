@@ -1,35 +1,29 @@
-# Quantified Cognition 0.23.0 release candidate 1
+# Quantified Cognition 0.23.0 release
 
-Prepared **8 November 2026**, tag `v0.23.0-rc.1`. This candidate includes overall,
-short-term and long-term recall, the simpler full-history report and automatic
-CSV controls, encrypted pseudonymous review snapshots, and independent Oura
-research authorization and withdrawal handling. Automatic withdrawal receipts
-remain usable after the upload credential is invalidated.
+Prepared 8 November 2026 for the public desktop beta with Oura and voluntary
+research participation. Google Health stays disabled. The original sharing
+preference and before-results audit are preserved; explicit enrollment and each
+package's Send remain separate choices.
 
-Oura connections are enabled. Google Health and research enrollment/uploads
-remain disabled. This candidate does not activate research or publish the add-on
-on AnkiWeb. macOS remains unverified; users can report issues after launch.
+The final consent bundle is protocol v14, notice v12. The launch adds configurable
+research-monitor expectations, preserves the upload kill switch, and retains
+independent Oura authorization, encrypted measurements, tracked withdrawals and
+actual copy-deletion acknowledgment. Source migrations prepare documents closed;
+operator activation is a separate recorded operation.
 
-The release procedure reviews all pending source and document changes, scans
-the candidate and reachable Git history for credentials and private benchmark
-data, commits the reviewed files, and runs that exact commit through
-[Silentworker](SILENTWORKER.md). Tagging follows a successful run. The final
-package is built from the tag's Git archive, with fixed ZIP metadata. A separate
-release record contains the commit, test result, source-file hashes and package
-checksum without changing the tested commit.
+Run the exact final commit through [Silentworker](SILENTWORKER.md), then tag it
+`v0.23.0` and build from the tag's Git archive. Store the tested commit, run,
+source hashes, package checksum and clean-profile installation result in the
+release provenance artifact. Do not move an existing tag or replace a published
+asset with a different build under the same checksum.
 
-## Privacy publication gate
+Before publication, scan committed source, reachable history and the package for
+credentials and private benchmark/profile data. The operator has accepted that
+his email address is already public; it is not a publication blocker. Private
+profiles, health data, benchmarks, generated packages and operator keys remain
+ignored. The reviewed historical secret-scan false positives are restricted to
+exact fingerprints in `.gitleaksignore`.
 
-Reachable history excludes the private email address, benchmark counts and the
-unwanted middle name from old document drafts. The latest check found that GitHub still
-returns private author metadata from an old rewritten, unreferenced commit.
-Keep the repository private until the retained GitHub objects/cache are removed
-or a clean publication route is chosen. Passing a local source/history scan does
-not clear GitHub's retained objects. The support-request draft and affected
-commit references stay outside the repository.
-
-The secret scan has three reviewed historical false positives: two public
-migration checksums and one documentation paragraph. `.gitleaksignore` names
-only their exact commit/file/line fingerprints; it does not exclude entire files
-or disable credential rules. Private profiles, health data, benchmarks, generated
-packages, operator keys and local reports remain ignored.
+The earlier `v0.23.0-rc.1` tag remains an immutable historical candidate. Its
+checks do not establish that a newer untagged package was tested. macOS testing
+is deferred by the operator; report issues on GitHub after launch.

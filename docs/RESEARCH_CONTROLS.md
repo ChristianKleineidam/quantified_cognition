@@ -1,9 +1,9 @@
 # Enrollment and research-data controls
 
 Implemented in the **0.19.4 source** and deployed on **4 November 2026** with
-synthetic-data and live closed-state verification. Oura, Google Health and
-research uploads remain disabled. Every prepared protocol remains
-`approved=false`, `enrollment_open=false` and both provider permissions false.
+synthetic-data and live closed-state verification. The current release uses protocol v14 and notice v12. Oura and research can be
+opened through the recorded operator launch configuration. Google Health stays
+disabled. Historical protocols remain closed; ordinary migrations never activate research.
 An environment flag alone cannot approve enrollment.
 
 ## Participant flow
@@ -24,9 +24,7 @@ The exact documents and statement are frozen in `addon/research_enrollment.json`
 Their version/hash must match the approved server protocol. Protocol v5 records
 an explicit consent action linked to the existing random profile participant ID
 (`signature_method=explicit_consent`), without a separate signature-name field.
-No legal name or email is requested. Confirm acceptance of this consent process
-in the review/provider process; any required change needs an updated protocol
-before activation. It does not verify a person's civil identity.
+No legal name or email is requested. Changes to this consent process require an updated protocol before use. It does not verify a person's civil identity.
 
 The append-only local sharing audit also records the actual consent event
 (`enrollment_signed`, retained for audit compatibility),

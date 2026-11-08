@@ -6,7 +6,7 @@ formation and recall. Sharing those measurements can help us investigate how
 learning relates to sleep, activity and study patterns, and improve the methods
 used to measure it.
 
-Updated **8 November 2026**. Research enrollment and uploads are currently closed.
+Updated **8 November 2026**.
 
 ## What your contribution helps us learn
 
@@ -23,7 +23,7 @@ changes in study habits can affect the findings.
 
 ## Taking part
 
-When enrollment opens, adults aged 18 or over can contribute their own data.
+Adults aged 18 or over can contribute their own data.
 You can share existing history and contribute again when you have more data.
 There are no extra tests, scheduled visits or required changes to your routine.
 Participation is voluntary and unpaid. Your personal results and insights

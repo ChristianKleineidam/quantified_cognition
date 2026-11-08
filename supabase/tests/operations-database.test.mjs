@@ -22,6 +22,23 @@ test("Postgres operational limits, atomic accounting, monitoring and privileges"
     for (const name of (await readdir(directory)).filter(n=>n.endsWith(".sql")).sort())
       await db.exec(await readFile(new URL(name,directory),"utf8"));
     await protocol(db);
+    await isolated("launch expectations accept research only when configured and always reject Google",async()=>{
+      const status={oura_enabled:false,research_enabled:false,google_health_enabled:false,operations_version:1};
+      const matches=async value=>(await one("select qs_private.feature_state_matches($1) ok",[value])).ok;
+      assert.equal(await matches(status),true);
+      assert.equal(await matches({...status,research_enabled:true}),false);
+      await db.exec("update qs_private.ops_state set oura_expected_enabled=true,research_expected_enabled=true");
+      const live={...status,oura_enabled:true,research_enabled:true};
+      assert.equal(await matches(live),true);
+      assert.equal(await matches({...live,research_enabled:false}),false);
+      assert.equal(await matches({...live,google_health_enabled:true}),false);
+      assert.equal(await matches({}),false);
+      for(const role of ["anon","authenticated","service_role","qs_monitor_reader","qs_backup_agent"]) {
+        await db.exec("savepoint expectations;set local role "+role);
+        await assert.rejects(one("update qs_private.ops_state set research_expected_enabled=false"),/permission denied/);
+        await db.exec("rollback to expectations");
+      }
+    });
     await isolated("all private tables have RLS and ordinary clients cannot read or call operational RPCs",async()=>{
       const rows=await db.query("select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='qs_private' and c.relkind='r'");
       assert.equal(rows.rows.length,9); assert.ok(rows.rows.every(r=>r.relrowsecurity));

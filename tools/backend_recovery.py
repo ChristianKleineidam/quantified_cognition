@@ -234,6 +234,7 @@ def restore(dsn, source, ledger):
         target.execute("alter table qs_private.submissions enable trigger oura_research_upload")
         target.execute("""update qs_governance.protocols set approved=false,enrollment_open=false,
             oura_permitted=false,google_permitted=false""")
+        target.execute("update qs_private.ops_state set research_expected_enabled=false")
         target.execute("update qs_governance.retention set state='held' where state='active'")
         target.execute("update qs_governance.extracts set state='held' where state='released'")
         target.execute("""select setval('qs_governance.audit_id_seq',

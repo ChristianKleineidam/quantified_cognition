@@ -5,7 +5,6 @@ health account and contributing to research are choices you make separately.
 Research packages are sent only after you review and explicitly submit them.
 
 Updated **8 November 2026**.
-Research enrollment and uploads are currently closed.
 
 ## Your data and choices
 

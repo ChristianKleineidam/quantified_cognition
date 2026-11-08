@@ -3,3 +3,5 @@
 edce3042e3987c1148eae2286ffab27265536b2d:docs/HOSTED_SMOKE_RESULT.json:generic-api-key:101
 # Historical prose about Google credentials and policy/verification; no credential value.
 1a23bac11fca744efae2bf66248721dbb69c0cdd:README.md:generic-api-key:79
+# Public source SHA-256 for the workspace guard in synthetic hosted-test evidence.
+1ca6efb6e8b7c4b618462d3854a50a907b5545da:docs/research-e2e-2026-11-08.json:generic-api-key:56

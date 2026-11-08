@@ -39,6 +39,16 @@ def test_monitor_detects_independent_outages_and_each_stale_heartbeat():
     oura_open = {**database, "oura_expected_enabled": True}
     assert assess({**status, "oura_enabled": True}, oura_open, backup, now) == []
     assert "feature_state_unexpected" in assess(status, oura_open, backup, now)
+    research_open = {**oura_open, "research_expected_enabled": True}
+    live = {**status, "oura_enabled": True, "research_enabled": True}
+    assert assess(live, research_open, backup, now) == []
+    assert "feature_state_unexpected" in assess(live, oura_open, backup, now)
+    assert "feature_state_unexpected" in assess(
+        {**live, "google_health_enabled": True}, research_open, backup, now
+    )
+    assert "feature_state_unexpected" in assess(
+        {**live, "research_enabled": False}, research_open, backup, now
+    )
     assert "backup_stale" in assess(
         status, database, {**backup, "last_backup_at": (now - timedelta(days=2)).isoformat()}, now
     )

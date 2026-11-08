@@ -71,6 +71,7 @@ def test_encrypted_copy_is_tracked_removed_and_cannot_restore_a_withdrawn_partic
     tmp_path,
 ):
     person, other = db.participant(), db.participant()
+    db.admin.execute("update qs_private.ops_state set research_expected_enabled=true")
     db.admin.execute("update qs_governance.protocols set oura_permitted=true")
     with db.session() as actor:
         generation = str(uuid.uuid4())
@@ -126,6 +127,9 @@ def test_encrypted_copy_is_tracked_removed_and_cannot_restore_a_withdrawn_partic
         )
         assert result["resurrected_submissions_removed"] == 1
         with psycopg.connect(**{**settings, "dbname": name}) as target:
+            assert target.execute(
+                "select research_expected_enabled from qs_private.ops_state"
+            ).fetchone()[0] is False
             assert target.execute("select count(*) from qs_private.submissions").fetchone()[0] == 1
             assert target.execute(
                 "select count(*) from qs_private.oura_research_authorizations"

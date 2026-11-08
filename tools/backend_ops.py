@@ -88,12 +88,15 @@ def assess(status, database, backup, now, *, backup_required=True):
     """Return fixed, non-sensitive codes suitable for the existing alert channel."""
     issues = []
     oura_expected = isinstance(database, dict) and database.get("oura_expected_enabled") is True
+    research_expected = (
+        isinstance(database, dict) and database.get("research_expected_enabled") is True
+    )
     if not isinstance(status, dict):
         issues.append("public_status_unreachable")
     elif (
         status.get("oura_enabled") is not oura_expected
         or status.get("google_health_enabled") is not False
-        or status.get("research_enabled") is not False
+        or status.get("research_enabled") is not research_expected
     ):
         issues.append("feature_state_unexpected")
     if not isinstance(database, dict):
@@ -154,7 +157,7 @@ def monitor(config):
     try:
         with connection(config) as db:
             row = db.execute("""select clock_timestamp(),maintenance_at,probe_checked_at,
-                research_maintenance_at,probe_ok,oura_expected_enabled,
+                research_maintenance_at,probe_ok,oura_expected_enabled,research_expected_enabled,
                 oura_authorization_monitor_at,oura_authorization_monitor_required
                 from qs_private.ops_state where singleton""").fetchone()
             database = dict(
@@ -166,6 +169,7 @@ def monitor(config):
                         "research_maintenance_at",
                         "probe_ok",
                         "oura_expected_enabled",
+                        "research_expected_enabled",
                         "oura_authorization_monitor_at",
                         "oura_authorization_monitor_required",
                     ),

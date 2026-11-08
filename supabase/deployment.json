@@ -21,8 +21,8 @@
   "google_health_approval_recorded": false,
   "production_access_enabled": false,
   "verified_at_utc": "2026-11-08T16:23:46.628898+00:00",
-  "function_version": 34,
-  "migration_version": "20261108151651",
+  "function_version": 39,
+  "migration_version": "20261108213942",
   "operations_version": 1,
   "monitor_job": "qs-operations-monitor",
   "monitor_interval_minutes": 5,
@@ -39,14 +39,14 @@
     "research_controls_schema_exists": false,
     "pending_research_updates_deployed": false
   },
-  "applied_migration_count": 24,
+  "applied_migration_count": 28,
   "research_controls_version": 1,
-  "research_protocol_version": "research-enrollment-v13",
-  "research_protocol_bundle_hash": "b1ad6e227ae37df1c4d44c63dedc10f2cf793e732cc0fd1b71e791ade4bfb189",
+  "research_protocol_version": "research-enrollment-v14",
+  "research_protocol_bundle_hash": "aa255542743b21b08500a7ca0e34987194f174fd49df831af75647839d19b442",
   "research_protocols_approved": 0,
   "research_protocols_open": 0,
-  "source_revision": "f2b2f1921faf2703a3c3c4a19aab5eb9957f333e",
-  "function_bundle_sha256": "752d3b5f0ebbd87310af10d704afe104354f496dd3287e9185a8801c4c411fcd",
+  "source_revision": "1ca6efb6e8b7c4b618462d3854a50a907b5545da",
+  "function_bundle_sha256": "7837f22527866312c9a457a8d68d04d051abb914ccc1a06509962b73c59156b5",
   "research_maintenance_job": "qs-research-maintenance",
   "research_maintenance_interval_minutes": 5,
   "deployment_checks": {
@@ -233,5 +233,14 @@
     "evidence": "docs/OURA_RESEARCH_REVOCATION_RESULT.json",
     "research_enabled": false,
     "open_or_approved_protocols": 0
+  },
+  "launch_target": {
+    "addon_version": "0.23.0",
+    "protocol": "research-enrollment-v14",
+    "oura_enabled": true,
+    "research_enabled": true,
+    "google_health_enabled": false,
+    "activation": "Explicit operation after exact-revision release verification",
+    "procedure": "docs/LAUNCH.md"
   }
 }

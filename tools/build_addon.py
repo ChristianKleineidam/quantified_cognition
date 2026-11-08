@@ -7,7 +7,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 root = Path(__file__).resolve().parents[1]
-version = "0.23.0-rc.1"
+version = "0.23.0"
 destination = root / "dist" / f"quantified-cognition-{version}.ankiaddon"
 destination.parent.mkdir(exist_ok=True)
 manifest = {
@@ -30,11 +30,11 @@ def write_entry(archive, name, content):
 
 with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
     write_entry(archive, "manifest.json", json.dumps(manifest, indent=2))
-    for path in sorted((root / "addon").iterdir()):
+    for path in sorted((root / "addon").iterdir(), key=lambda path: path.name):
         if path.suffix in (".py", ".json", ".md"):
             write_entry(archive, path.name, path.read_bytes())
     write_entry(archive, "README.md", (root / "README.md").read_bytes())
-    for path in sorted((root / "addon/crypto_wheels").iterdir()):
+    for path in sorted((root / "addon/crypto_wheels").iterdir(), key=lambda path: path.name):
         if path.suffix in (".whl", ".json", ".md"):
             write_entry(archive, "crypto_wheels/" + path.name, path.read_bytes())
     write_entry(archive, "LICENSE", (root / "LICENSE").read_bytes())
@@ -45,6 +45,8 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "RESEARCH_INFORMATION.md",
         "RESEARCH_DESIGN.md",
         "RESEARCH_OPERATIONS.md",
+        "DATA_PROTECTION_ASSESSMENT.md",
+        "LAUNCH.md",
         "RESEARCH_CONTROLS.md",
         "ENCRYPTION.md",
         "HOSTED_SMOKE_RESULT.json",
@@ -54,6 +56,8 @@ with ZipFile(destination, "w", ZIP_DEFLATED) as archive:
         "OURA_APPLICATION_APPROVAL.json",
         "OURA_RESEARCH_REVOCATION.md",
         "OURA_RESEARCH_REVOCATION_RESULT.json",
+        "RESEARCH_WORKSPACE.md",
+        "research-e2e-2026-11-08.json",
         "GOOGLE_HEALTH.md",
         "INSIGHTS.md",
         "PERFORMANCE.md",

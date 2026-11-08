@@ -24,7 +24,7 @@ STATEMENT = (
 
 def bundle():
     return {
-        "version": "research-enrollment-v13",
+        "version": "research-enrollment-v14",
         "oura_authorization_monitoring": "access-token-v1",
         "operator": "JollyJoyJourney",
         "signature_method": "explicit_consent",
@@ -85,8 +85,8 @@ if __name__ == "__main__":
             + ");\n\n"
             + "-- This protocol permits only Anki and, if separately approved, Oura.\n"
             + "alter table qs_governance.protocols\n"
-            + "    add constraint research_v13_no_google_health\n"
-            + "    check (version <> 'research-enrollment-v13' or not google_permitted);\n"
+            + "    add constraint research_v14_no_google_health\n"
+            + "    check (version <> 'research-enrollment-v14' or not google_permitted);\n"
         )
         args.migration.write_text(sql, encoding="utf-8")
     print(frozen["sha256"])

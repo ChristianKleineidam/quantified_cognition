@@ -8,8 +8,8 @@ The release listing text is saved in [ANKIWEB_DESCRIPTION.txt](docs/ANKIWEB_DESC
 The public information website is hosted on Cloudflare Pages at
 [quantifiedcognition.jollyjoyjourney.com](https://quantifiedcognition.jollyjoyjourney.com/);
 see [website publishing](docs/WEBSITE.md).
-It describes the intended public release and has not been uploaded to AnkiWeb.
-**Oura integration is available. Research enrollment and uploads are closed.**
+The public desktop beta includes Oura integration and voluntary research participation.
+**Oura integration and voluntary research uploads are available.**
 
 Version 0.18.0 renames the add-on from Quantified Self Memory to Quantified Cognition.
 The installer package ID (`quantified_self_memory`), profile directory
@@ -95,7 +95,7 @@ and Send. The server requires valid enrollment and a current retention review.
 Tracked research extracts and collaborator copies have deletion tasks and
 confirmation records. There is no fixed research measurement expiry.
 The backend migrations are deployed and their closed-state checks passed;
-research enrollment and uploads remain closed. Oura's API application is
+research enrollment and uploads are available with explicit consent and per-package confirmation. Oura's API application is
 approved, its ten-user limit has been lifted, and the account pilot is complete.
 Remaining research data-handling checks and an operator launch decision precede
 research activation. See
@@ -113,7 +113,7 @@ When participation is open, open **Research sharing…** to check eligibility, r
 
 Changing to Not now/No queues deletion of previous uploads and discards unsent packages. **Delete uploaded data…** requests deletion separately. Offline requests remain encrypted, block uploads and retry while Anki is open. Acknowledged deletion removes active research packages; an unlinked random-ID tombstone rejects stale requests. Backup/research-extract retention must be configured and disclosed by the operator. A later contribution creates a new upload identity while keeping original local consent timing. Personal Oura sync is independent. Opening a populated Oura table or exporting health measurements counts as a results exposure opportunity. Neither opting in nor background calculations automatically submits research data.
 
-Version 0.22 adds pseudonymous individual review records to the encrypted research package alongside daily summaries. Records contain a stable card pseudonym, within-card order, Anki day, rating, binary outcome, available reconstructed probability, elapsed time, review type and measurement-eligibility flags. They support Brier scores, calibration and other later analyses. Predictions use current FSRS settings and may have been fitted to these outcomes; they are retrospective comparisons, not held-out validation. Card content, deck names, original Anki IDs and review clock times remain excluded. Non-rescheduling preview and administrative records are excluded, and missing predictions remain null. New notice v11 and enrollment v11 require renewed explicit consent without rewriting the original preference/exposure audit. Research uploads remain disabled. The download tool exports a separate review CSV using the newest complete snapshot per participant; it never merges old review rows into a corrected history.
+Version 0.22 adds pseudonymous individual review records to the encrypted research package alongside daily summaries. Records contain a stable card pseudonym, within-card order, Anki day, rating, binary outcome, available reconstructed probability, elapsed time, review type and measurement-eligibility flags. They support Brier scores, calibration and other later analyses. Predictions use current FSRS settings and may have been fitted to these outcomes; they are retrospective comparisons, not held-out validation. Card content, deck names, original Anki IDs and review clock times remain excluded. Non-rescheduling preview and administrative records are excluded, and missing predictions remain null. New notice v11 and enrollment v11 require renewed explicit consent without rewriting the original preference/exposure audit. The download tool exports a separate review CSV using the newest complete snapshot per participant; it never merges old review rows into a corrected history.
 
 ## What the scores mean
 

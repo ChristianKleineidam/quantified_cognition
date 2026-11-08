@@ -1,5 +1,10 @@
 # Research data and activation plan
 
+Current launch guidance: [public beta acceptance](BETA_CHECKLIST.md),
+[data-protection assessment](DATA_PROTECTION_ASSESSMENT.md) and
+[launch procedure](LAUNCH.md). Dated deployment descriptions below are historical.
+
+
 Version 1, **2 November 2026**. Operator: **JollyJoyJourney**. This document
 contains operator procedures and
 implementation requirements; it is not a claim that unpublished controls are

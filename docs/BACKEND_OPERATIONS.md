@@ -96,8 +96,9 @@ The job uses `pg_net` to request public status without credentials. The next run
 collects the response, so a change normally appears within about ten minutes.
 No OAuth token, health record or research package is requested by the monitor.
 Both monitors read the expected Oura state from `qs_private.ops_state.oura_expected_enabled`.
-Update it when the operator changes `OURA_ENABLED`. Both monitors expect Google
-Health and research uploads to be disabled. The scheduled probe also checks
+Update it when the operator changes `OURA_ENABLED`. Both monitors read the research expectation from
+`qs_private.ops_state.research_expected_enabled`. Google Health must stay disabled.
+Use [the launch/closure procedure](LAUNCH.md) when changing the research flag. The scheduled probe also checks
 operations version 1.
 
 Private PostgreSQL alerts are now also checked by the independent Silentworker

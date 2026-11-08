@@ -1,10 +1,11 @@
-"""Check a deployed, disabled backend without uploading health/research data."""
+"""Check the intended backend feature state without uploading measurements."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import uuid
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -35,13 +36,14 @@ def request(url, *, method="GET", headers=None, data=None, return_headers=False)
         return (*result, response.headers) if return_headers else result
 
 
-def check(service_url, *, publishable_key=None, check_quota=False):
+def check(service_url, *, publishable_key=None, check_quota=False,
+          expected_oura=False, expected_research=False):
     root = service_url.rstrip("/")
     status, payload = request(root + "/status")
     assert status == 200, f"Status endpoint returned {status}"
-    assert payload.get("oura_enabled") is False, "Oura must remain disabled"
+    assert payload.get("oura_enabled") is expected_oura, "Unexpected Oura state"
     assert payload.get("google_health_enabled") is False, "Google Health must remain disabled"
-    assert payload.get("research_enabled") is False, "Research uploads must remain disabled"
+    assert payload.get("research_enabled") is expected_research, "Unexpected research state"
     assert payload.get("operations_version") == 1, "Backend quotas/monitoring version is missing"
     assert payload.get("research_controls_version") == 1, (
         "Enrollment/lifecycle controls are missing"
@@ -62,17 +64,34 @@ def check(service_url, *, publishable_key=None, check_quota=False):
         "/research/submissions",
         "/research/enrollment",
     ):
-        code, _ = request(root + route, method="POST", headers=auth, data={})
-        assert code == 503, f"{route} returned {code}; expected disabled (503)"
+        research = route.startswith("/research/")
+        if route.startswith("/oauth/") and expected_oura:
+            continue  # Do not exercise real provider credentials to check a flag.
+        expected = 401 if research and expected_research else 503
+        code, _ = request(root + route, method="POST",
+                          headers={} if expected == 401 else auth, data={})
+        assert code == expected, f"{route} returned {code}; expected {expected}"
         results["endpoint_checks"][route] = code
-    code, _ = request(root + "/oauth/callback?code=synthetic-disabled-probe")
-    assert code == 503, f"OAuth callback returned {code}; expected disabled (503)"
-    results["endpoint_checks"]["/oauth/callback"] = code
+    if not expected_oura:
+        code, _ = request(root + "/oauth/callback?code=synthetic-disabled-probe")
+        assert code == 503, f"OAuth callback returned {code}; expected disabled (503)"
+        results["endpoint_checks"]["/oauth/callback"] = code
     code, _ = request(root + "/google/oauth/callback?code=synthetic-disabled-probe")
     assert code == 503, f"Google callback returned {code}; expected disabled (503)"
     results["endpoint_checks"]["/google/oauth/callback"] = code
-    code, _ = request(root + "/research/enrollment-information")
-    assert code == 503, "Enrollment must remain disabled"
+    code, info = request(root + "/research/enrollment-information")
+    if expected_research:
+        frozen = json.loads((Path(__file__).resolve().parents[1]
+                             / "addon/research_enrollment.json").read_text("utf-8"))
+        assert code == 200 and info.get("bundle_hash") == frozen["sha256"], (
+            "The live enrollment documents do not match the release"
+        )
+        assert info.get("version") == frozen["bundle"]["version"]
+        assert info.get("notice_hash") == payload.get("notice_hash")
+        assert info.get("signature_method") == "explicit_consent"
+    else:
+        assert code == 503, "Enrollment must remain disabled"
+    results["endpoint_checks"]["enrollment-information"] = code
     # Exercises the hosted function -> private RPC -> DB connection without
     # creating measurements. This leaves a synthetic deletion tombstone/receipt,
     # preventing a lost registration response from resurrecting that identity.
@@ -134,6 +153,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("service_url")
     parser.add_argument("--publishable-key", help="Optional public key for anonymous REST probes")
+    parser.add_argument("--expect-oura-enabled", action="store_true")
+    parser.add_argument("--expect-research-enabled", action="store_true")
     parser.add_argument(
         "--check-quota",
         action="store_true",
@@ -146,6 +167,8 @@ if __name__ == "__main__":
                 arguments.service_url,
                 publishable_key=arguments.publishable_key,
                 check_quota=arguments.check_quota,
+                expected_oura=arguments.expect_oura_enabled,
+                expected_research=arguments.expect_research_enabled,
             ),
             indent=2,
         )
