@@ -8,7 +8,8 @@ study routines, sleep, supplements and other changes, using the studying you
 already do.
 
 [Project website](https://quantifiedcognition.jollyjoyjourney.com/) ·
-[Download the latest release](https://github.com/ChristianKleineidam/quantified_cognition/releases/latest)
+[Install from AnkiWeb](https://ankiweb.net/shared/info/1278210131) ·
+[GitHub releases](https://github.com/ChristianKleineidam/quantified_cognition/releases/latest)
 
 ## Get started
 
@@ -16,10 +17,12 @@ Requires desktop Anki with FSRS enabled in Deck Options. See the release notes
 for supported Anki versions. Windows and Linux have been tested; macOS has not
 yet been verified.
 
-1. Download the `.ankiaddon` file from the latest release.
-2. In Anki, choose **Tools → Add-ons → Install from file**, select the file,
-   and restart Anki.
+1. In Anki, open **Tools → Add-ons** and click **Get Add-ons…**.
+2. Enter code **`1278210131`**, install the add-on, and restart Anki.
 3. Open **Tools → Quantified Cognition…**.
+
+You can also download a `.ankiaddon` file from GitHub releases and use
+**Install from file**.
 
 The report shows your full study history and checks for new data in the
 background, including pre-FSRS reviews and reviews synced from mobile or AnkiWeb.
