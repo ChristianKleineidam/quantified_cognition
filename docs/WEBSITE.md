@@ -1,5 +1,14 @@
 # Public project website
 
+**9 November 2026, AnkiWeb publication.** The homepage's primary install link
+now opens [Quantified Cognition on AnkiWeb](https://ankiweb.net/shared/info/1278210131).
+The README explains installation with add-on code `1278210131` and retains GitHub
+releases as an alternative. Deployment `8f85713b-7859-492e-8750-3109040ed0b8`
+publishes source `521186d7ab9eee6a2093fe34e8a607e8f6a02a7e`. All 17 public assets
+match the reviewed build over HTTPS; the v14 participant documents, security
+headers and custom 404 passed verification. This website update made no changes
+to provider or research configuration.
+
 **8 November 2026, research revocation disclosures.** Deployment
 `90c88359-a8b7-4292-94f3-4cd5a494f5a5` publishes the policy and participant
 information frozen in protocol v13. The disclosure explains encrypted access-token
