@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+from collections.abc import Callable
 from pathlib import Path
 
 from aqt.qt import (
@@ -40,7 +41,7 @@ from .submissions import (
 )
 from .ui_layout import scrollable_report
 
-_pending: set[str] = set()
+_pending: dict[str, Callable[[], None]] = {}
 
 
 def _label(text=""):
@@ -464,6 +465,12 @@ class SharingDialog(QDialog):
             super().closeEvent(event)
 
 
+def close_sharing(collection_path: str) -> None:
+    cancel = _pending.pop(collection_path, None)
+    if cancel is not None:
+        cancel()
+
+
 def sharing_gate(main_window, addon_name: str, on_ready, *, force: bool = False) -> None:
     if main_window.col is None:
         showWarning("Open an Anki profile before choosing research sharing.", parent=main_window)
@@ -471,38 +478,67 @@ def sharing_gate(main_window, addon_name: str, on_ready, *, force: bool = False)
     collection_path = main_window.col.path
     if collection_path in _pending:
         return
-    _pending.add(collection_path)
     config_manager = main_window.addonManager
+    dialog: SharingDialog | None = None
+
+    def cancel() -> None:
+        if dialog is not None:
+            dialog.closed = True
+            dialog.done(QDialog.DialogCode.Rejected)
+
+    _pending[collection_path] = cancel
 
     def prepare():
         config = SharingConfig.from_config(config_manager.getConfig(addon_name))
         return sharing_state(collection_path, config)
 
     def active() -> bool:
-        return main_window.col is not None and main_window.col.path == collection_path
+        return (
+            _pending.get(collection_path) is cancel
+            and main_window.col is not None
+            and main_window.col.path == collection_path
+        )
+
+    def release() -> None:
+        if _pending.get(collection_path) is cancel:
+            del _pending[collection_path]
 
     def fail(error: Exception) -> None:
-        _pending.discard(collection_path)
-        if active():
+        current = active()
+        release()
+        if current:
             showWarning(f"Could not load the sharing choice:\n{error}", parent=main_window)
 
     def ask(snapshot: SharingSnapshot) -> None:
-        if not active():
-            _pending.discard(collection_path)
-            return
-        services = ServiceConfig.from_config(config_manager.getConfig(addon_name))
-        dialog = SharingDialog(main_window, collection_path, snapshot, services, manage=force)
-        dialog.exec()
-        _pending.discard(collection_path)
-        if active():
-            on_ready(dialog.snapshot.study)
+        def open_prompt() -> None:
+            nonlocal dialog
+            if not active():
+                release()
+                return
+            services = ServiceConfig.from_config(config_manager.getConfig(addon_name))
+            prompt = SharingDialog(main_window, collection_path, snapshot, services, manage=force)
+            dialog = prompt
+
+            def finished(_result: int) -> None:
+                current = active()
+                release()
+                prompt.closed = True
+                prompt.deleteLater()
+                if current and prompt.snapshot.current_choice is not None:
+                    on_ready(prompt.snapshot.study)
+
+            prompt.finished.connect(finished)
+            prompt.open()
+
+        # Even a completed sync can still have an Anki progress window closing.
+        main_window.progress.single_shot(0, open_prompt, requires_collection=False)
 
     def prepared(snapshot: SharingSnapshot) -> None:
         if not active():
-            _pending.discard(collection_path)
+            release()
             return
         if snapshot.current_choice is not None and not force:
-            _pending.discard(collection_path)
+            release()
             on_ready(snapshot.study)
         else:
             run_file_job(

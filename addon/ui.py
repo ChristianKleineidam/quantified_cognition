@@ -38,7 +38,7 @@ from .export import export_csv_atomic
 from .health import load_health
 from .metrics import FORMATION_METRICS, SHORT_TERM_MAX_DAYS, DailyResult, Metric, Settings, anki_day
 from .research import SharingConfig, finish_csv_exposure, prepare_csv_exposure, sharing_state
-from .sharing_ui import sharing_gate
+from .sharing_ui import close_sharing, sharing_gate
 from .storage import (
     DailySettings,
     UpdateResult,
@@ -1111,9 +1111,36 @@ def register(addon_name: str) -> None:
     # A modeless report must not survive a profile switch with another user's data.
     from aqt import gui_hooks
 
-    gui_hooks.profile_did_open.append(offer_sharing)
+    startup_collection = None
+
+    def offer_after_startup_sync() -> None:
+        nonlocal startup_collection
+        collection = startup_collection
+        startup_collection = None
+        if collection is None:
+            return
+
+        def offer_for_profile() -> None:
+            if mw.col is collection and not _daily_updater.closing_profile:
+                offer_sharing()
+
+        mw.progress.single_shot(0, offer_for_profile, requires_collection=False)
+
+    def profile_opened() -> None:
+        nonlocal startup_collection
+        startup_collection = mw.col
+        # Anki starts automatic sync after profile_did_open returns.
+        if startup_collection is not None and not mw.can_auto_sync():
+            offer_after_startup_sync()
+
+    gui_hooks.profile_did_open.append(profile_opened)
+    gui_hooks.sync_did_finish.append(offer_after_startup_sync)
 
     def close_report() -> None:
+        nonlocal startup_collection
+        startup_collection = None
+        if mw.col is not None:
+            close_sharing(mw.col.path)
         if _dialog is not None:
             _dialog.close()
         if _oura_dialog is not None:

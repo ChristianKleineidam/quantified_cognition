@@ -7,14 +7,14 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 root = Path(__file__).resolve().parents[1]
-version = "0.23.0"
+version = "0.23.1"
 destination = root / "dist" / f"quantified-cognition-{version}.ankiaddon"
 destination.parent.mkdir(exist_ok=True)
 manifest = {
     "package": "quantified_self_memory",
     "name": "Quantified Cognition",
     "min_point_version": 250900,
-    "max_point_version": 260903,
+    "max_point_version": 260904,
     "human_version": version,
 }
 

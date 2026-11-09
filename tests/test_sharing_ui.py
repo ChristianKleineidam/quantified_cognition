@@ -5,6 +5,7 @@ import threading
 import pytest
 
 pytest.importorskip("aqt")
+from aqt.progress import ProgressManager  # noqa: E402
 from aqt.qt import QEvent, QKeyEvent, Qt, QTimer  # noqa: E402
 from test_storage import report_with_followup  # noqa: E402
 from test_threading import app as thread_app  # noqa: E402
@@ -20,13 +21,20 @@ app = thread_app
 runtime = thread_runtime
 
 
+@pytest.fixture(autouse=True)
+def install_progress_manager(runtime, app):
+    main, _notices = runtime
+    main.app = app
+    main.progress = ProgressManager(main)
+
+
 @pytest.mark.parametrize("choice", ["opt_in", "declined", "deferred"])
 def test_prompt_precedes_any_data_and_every_choice_allows_results(
     runtime, app, monkeypatch, choice
 ):
     main, notices = runtime
     prompts, displayed = [], []
-    original_exec = sharing_ui.SharingDialog.exec
+    original_open = sharing_ui.SharingDialog.open
 
     def answer(dialog):
         state = sharing_state(main.col.path)
@@ -36,9 +44,9 @@ def test_prompt_precedes_any_data_and_every_choice_allows_results(
         assert not dialog.buttons[0].isDefault()
         prompts.append(threading.get_ident())
         QTimer.singleShot(0, lambda: dialog.choose(choice))
-        return original_exec(dialog)
+        original_open(dialog)
 
-    monkeypatch.setattr(sharing_ui.SharingDialog, "exec", answer)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", answer)
     dialogs = []
 
     def ready(config):
@@ -68,7 +76,7 @@ def test_later_opt_in_and_forced_reopen_preserve_first_decline(runtime, app, mon
     main, _ = runtime
     sharing_state(main.col.path, event_type="sharing_choice", choice="declined")
     sharing_state(main.col.path, event_type="results_exposed", surface="report")
-    original_exec = sharing_ui.SharingDialog.exec
+    original_open = sharing_ui.SharingDialog.open
     prompts, finished = [], []
 
     def answer(dialog):
@@ -86,13 +94,13 @@ def test_later_opt_in_and_forced_reopen_preserve_first_decline(runtime, app, mon
                 dialog.close_button.click()
 
         QTimer.singleShot(0, choose_or_close)
-        return original_exec(dialog)
+        original_open(dialog)
 
     def closed(*_args):
         raise ServiceError("Research enrollment is not open.")
 
     monkeypatch.setattr(sharing_ui, "enrollment_information", closed)
-    monkeypatch.setattr(sharing_ui.SharingDialog, "exec", answer)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", answer)
     sharing_ui.sharing_gate(main, "addon", lambda config: finished.append(config), force=True)
     pump_until(app, lambda: bool(finished))
     state = sharing_state(main.col.path)
@@ -107,15 +115,15 @@ def test_later_opt_in_and_forced_reopen_preserve_first_decline(runtime, app, mon
 def test_cached_old_results_still_wait_for_prompt_and_remain_unknown(runtime, app, monkeypatch):
     main, _ = runtime
     save_report(report_with_followup(), database_path(main.col.path))
-    original_exec = sharing_ui.SharingDialog.exec
+    original_open = sharing_ui.SharingDialog.open
     finished = []
 
     def answer(dialog):
         assert dialog.snapshot.history == "unknown_legacy"
         QTimer.singleShot(0, lambda: dialog.choose("opt_in"))
-        return original_exec(dialog)
+        original_open(dialog)
 
-    monkeypatch.setattr(sharing_ui.SharingDialog, "exec", answer)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", answer)
     sharing_ui.sharing_gate(main, "addon", lambda config: finished.append(config))
     pump_until(app, lambda: bool(finished))
     assert sharing_state(main.col.path).metadata()["research_consent_before_first_view"] is None
@@ -124,13 +132,13 @@ def test_cached_old_results_still_wait_for_prompt_and_remain_unknown(runtime, ap
 def test_escape_records_not_now_and_does_not_block_personal_use(runtime, app, monkeypatch):
     main, _ = runtime
     finished = []
-    original_exec = sharing_ui.SharingDialog.exec
+    original_open = sharing_ui.SharingDialog.open
 
     def answer(dialog):
         QTimer.singleShot(0, dialog.reject)
-        return original_exec(dialog)
+        original_open(dialog)
 
-    monkeypatch.setattr(sharing_ui.SharingDialog, "exec", answer)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", answer)
     sharing_ui.sharing_gate(main, "addon", lambda config: finished.append(config))
     pump_until(app, lambda: bool(finished))
     assert sharing_state(main.col.path).current_choice == "deferred"
@@ -141,7 +149,7 @@ def test_consent_database_writes_happen_off_the_ui_thread(runtime, app, monkeypa
 
     main, _ = runtime
     original_state = sharing_ui.sharing_state
-    original_exec = sharing_ui.SharingDialog.exec
+    original_open = sharing_ui.SharingDialog.open
     workers, finished = [], []
 
     def tracked(*args, **kwargs):
@@ -150,15 +158,75 @@ def test_consent_database_writes_happen_off_the_ui_thread(runtime, app, monkeypa
 
     def answer(dialog):
         QTimer.singleShot(0, lambda: dialog.choose("declined"))
-        return original_exec(dialog)
+        original_open(dialog)
 
     monkeypatch.setattr(sharing_ui, "sharing_state", tracked)
     monkeypatch.setattr(submissions, "sharing_state", tracked)
-    monkeypatch.setattr(sharing_ui.SharingDialog, "exec", answer)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", answer)
     sharing_ui.sharing_gate(main, "addon", lambda config: finished.append(config))
     pump_until(app, lambda: bool(finished))
     assert len(workers) == 3  # Initial load, prompt event, and choice event.
     assert all(worker != main.owner for worker in workers)
+
+
+def test_sharing_waits_for_progress_and_leaves_callbacks_free(runtime, app, monkeypatch):
+    main, _ = runtime
+    waiting, prompts, ready, callbacks = [], [], [], []
+    original_single_shot = main.progress.single_shot
+    original_open = sharing_ui.SharingDialog.open
+
+    def single_shot(*args, **kwargs):
+        waiting.append(True)
+        original_single_shot(*args, **kwargs)
+
+    def opened(dialog):
+        original_open(dialog)
+        prompts.append(dialog)
+
+    def blocking_exec(dialog):
+        # Give the regression a failure instead of a nested loop that hangs pytest.
+        prompts.append(dialog)
+        return 0
+
+    monkeypatch.setattr(main.progress, "single_shot", single_shot)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", opened)
+    monkeypatch.setattr(sharing_ui.SharingDialog, "exec", blocking_exec)
+    main.progress.start(label="Checking…")
+    sharing_ui.sharing_gate(main, "addon", ready.append)
+    pump_until(app, lambda: bool(waiting or prompts))
+    assert waiting and not prompts
+    main.progress.finish()
+    pump_until(app, lambda: bool(prompts))
+
+    main.taskman.run_on_main(lambda: callbacks.append(True))
+    pump_until(app, lambda: bool(callbacks))
+    assert prompts[0].isVisible() and not ready
+    prompts[0].choose("deferred")
+    pump_until(app, lambda: bool(ready))
+    assert sharing_state(main.col.path).current_choice == "deferred"
+
+
+def test_profile_close_dismisses_sharing_without_recording_a_choice(runtime, app, monkeypatch):
+    main, _ = runtime
+    prompts, ready = [], []
+    original_open = sharing_ui.SharingDialog.open
+
+    def opened(dialog):
+        original_open(dialog)
+        prompts.append(dialog)
+
+    monkeypatch.setattr(sharing_ui.SharingDialog, "open", opened)
+    sharing_ui.sharing_gate(main, "addon", ready.append)
+    pump_until(app, lambda: len(prompts) == 1)
+    sharing_ui.close_sharing(main.col.path)
+    assert not prompts[0].isVisible() and not ready
+    assert sharing_state(main.col.path).current_choice is None
+
+    sharing_ui.sharing_gate(main, "addon", ready.append)
+    pump_until(app, lambda: len(prompts) == 2)
+    prompts[1].choose("declined")
+    pump_until(app, lambda: bool(ready))
+    assert sharing_state(main.col.path).current_choice == "declined"
 
 
 def test_enter_on_existing_sharing_choice_closes_without_changing_it(runtime, app):
