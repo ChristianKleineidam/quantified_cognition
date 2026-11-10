@@ -256,6 +256,7 @@ def test_simultaneous_uploads_share_storage_budget_and_rejections_roll_back(db):
     assert all(error is None or error[1] == "quota_exceeded" for _, _, error in results)
     budget = db.accounting()
     assert budget["submissions"] == budget["daily_submissions"] == 4
+    assert budget["first_research_uploads"] == 4
     assert budget["payload_bytes"] == budget["daily_bytes"]
 
 
@@ -275,6 +276,11 @@ def test_simultaneous_duplicate_uploads_store_one_package_and_one_receipt(db, co
                for _, _, error in results)
     budget = db.accounting()
     assert budget["submissions"] == budget["daily_submissions"] == 1
+    with db.session() as connection:
+        db.submit(connection, db.packet(person, value="2026-10-03"))
+    budget = db.accounting()
+    assert budget["submissions"] == 2
+    assert budget["first_research_uploads"] == 1
 
 
 @pytest.mark.parametrize("revoke_first", [False, True])
@@ -342,6 +348,7 @@ def test_upload_and_deletion_race_cannot_resurrect_measurements(db, delete_first
     budget = db.accounting()
     assert budget["submissions"] == 0
     assert budget["daily_submissions"] == (0 if delete_first else 1)
+    assert budget["first_research_uploads"] == (0 if delete_first else 1)
     with db.session() as connection:
         assert connection.execute("select public.qs_register(%s,%s) as result",
                                   (person, HASH)).fetchone()["result"] is False

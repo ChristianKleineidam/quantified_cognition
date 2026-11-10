@@ -35,11 +35,15 @@ def test_monitor_and_backup_roles_cannot_mutate_research_or_read_unrelated_data(
     with psycopg.connect(**db.settings, autocommit=True) as connection:
         connection.execute("set role qs_monitor_reader")
         connection.execute("select * from qs_private.ops_state").fetchall()
+        assert connection.execute(
+            "select first_research_uploads from qs_private.storage_budget where singleton"
+        ).fetchone() == (0,)
         for statement in (
             "select * from qs_private.submissions",
             "select * from qs_private.participants",
             "select * from qs_governance.enrollments",
             "select public.qs_ops_record('submit',200,1)",
+            "update qs_private.storage_budget set first_research_uploads=100 where singleton",
         ):
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 connection.execute(statement)

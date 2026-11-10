@@ -15,12 +15,15 @@ from pathlib import Path
 RUNTIME = Path("/opt/quantified-cognition-ops")
 CONFIG = Path("/etc/quantified-cognition-ops")
 PYTHON = "/opt/quantified-cognition-tests/venv/bin/python"
+RESEARCH_COUNT_DIR = Path("/opt/homeassistant/config/quantified_cognition_research")
 
 
 def units(mode):
     backup = mode != "monitor"
     user = "qcbackup" if backup else "qcmonitor"
     state = "quantified-cognition-backup" if backup else "quantified-cognition-monitor"
+    research_count = "" if backup else f" --research-count-file {RESEARCH_COUNT_DIR}/first_uploads"
+    write_path = "" if backup else f"ReadWritePaths={RESEARCH_COUNT_DIR}\n"
     service = f"""[Unit]
 Description=Quantified Cognition {mode}
 Wants=network-online.target
@@ -31,7 +34,7 @@ Type=oneshot
 User={user}
 Group={user}
 WorkingDirectory={RUNTIME}
-ExecStart={PYTHON} -m tools.backend_ops {mode} --config %d/config
+ExecStart={PYTHON} -m tools.backend_ops {mode} --config %d/config{research_count}
 LoadCredentialEncrypted=config:{CONFIG / ("backup.credential" if backup else "monitor.credential")}
 StateDirectory={state}
 StateDirectoryMode=0755
@@ -39,7 +42,7 @@ UMask=0077
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
-ProtectHome=yes
+{write_path}ProtectHome=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
@@ -102,6 +105,8 @@ def main():
     RUNTIME.mkdir(mode=0o755, exist_ok=True)
     (RUNTIME / "tools").mkdir(mode=0o755, exist_ok=True)
     CONFIG.mkdir(mode=0o700, exist_ok=True)
+    RESEARCH_COUNT_DIR.mkdir(mode=0o755, exist_ok=True)
+    shutil.chown(RESEARCH_COUNT_DIR, user="qcmonitor", group="qcmonitor")
     recorded = {}
     for name in ("backend_ops.py", "backend_recovery.py"):
         source = Path(__file__).resolve().parent.parent / name

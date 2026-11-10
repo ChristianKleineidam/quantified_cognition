@@ -1,9 +1,7 @@
 # Backend operations and recovery
 
-Operator guide, updated 8 November 2026. Oura connections are enabled; Google
-Health and research uploads remain disabled. These jobs do not connect a provider,
-enroll a participant or submit a
-research package. The operator approved encrypted recovery copies on Silentworker.
+Operator guide, updated 10 November 2026. The operator approved encrypted
+recovery copies on Silentworker.
 
 ## Stop uploads
 
@@ -53,6 +51,21 @@ be reported. Home Assistant and the monitor share Silentworker: loss of that
 entire host can prevent delivery. This is not a third-host monitoring service.
 The health channel's existing diagnostic uploads contain operational status and
 bounded service logs, never recovery archives or research measurements.
+
+The same mobile destination gets a separate alert when a participant sends
+their first accepted research package. Silentworker reads only a running total.
+Home Assistant sends the difference from its last notification and groups first
+uploads that arrive between checks. Delivery normally takes a few minutes.
+Retries, later packages from the same participant and administrator imports do
+not increase the count. No participant IDs, measurements or credentials appear
+in the alert. Withdrawal does not change the anonymous total.
+
+After applying the matching migration and reinstalling the operations monitor,
+run `tools/silentworker/research_notifications.py` on Silentworker as root to
+install the Home Assistant package and load it. The installer uses the target
+in the existing Silentworker health rule. During a backend rollback, preserve
+the live upload counter along with the independent deletion ledger so the
+notification checkpoint can continue from the correct value.
 
 ## Recovery copies and the separate deletion ledger
 

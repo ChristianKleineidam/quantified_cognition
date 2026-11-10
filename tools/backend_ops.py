@@ -148,7 +148,7 @@ def public_status(url):
         return json.loads(data)
 
 
-def monitor(config):
+def monitor(config, *, research_count_file=None):
     status = database = backup = None
     try:
         status = public_status(config["status_url"])
@@ -158,7 +158,8 @@ def monitor(config):
         with connection(config) as db:
             row = db.execute("""select clock_timestamp(),maintenance_at,probe_checked_at,
                 research_maintenance_at,probe_ok,oura_expected_enabled,research_expected_enabled,
-                oura_authorization_monitor_at,oura_authorization_monitor_required
+                oura_authorization_monitor_at,oura_authorization_monitor_required,
+                (select first_research_uploads from qs_private.storage_budget where singleton)
                 from qs_private.ops_state where singleton""").fetchone()
             database = dict(
                 zip(
@@ -172,6 +173,7 @@ def monitor(config):
                         "research_expected_enabled",
                         "oura_authorization_monitor_at",
                         "oura_authorization_monitor_required",
+                        "first_research_uploads",
                     ),
                     row,
                     strict=True,
@@ -192,6 +194,14 @@ def monitor(config):
     now = utcnow()
     required = config.get("backup_required", True)
     issues = assess(status, database, backup, now, backup_required=required)
+    if research_count_file is not None and database is not None:
+        try:
+            count = database["first_research_uploads"]
+            if type(count) is not int or count < 0:
+                raise ValueError("Invalid research upload count")
+            atomic(research_count_file, count, mode=0o644)
+        except (OSError, ValueError):
+            issues.append("research_notification_count_unavailable")
     report = {
         "checked_at": now.isoformat(),
         "healthy": not issues,
@@ -376,11 +386,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("monitor", "ledger", "backup"))
     parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--research-count-file", type=Path)
     args = parser.parse_args()
     try:
         config = json.loads(args.config.read_text())
         result = (
-            monitor(config)
+            monitor(config, research_count_file=args.research_count_file)
             if args.mode == "monitor"
             else backup(
                 config,
